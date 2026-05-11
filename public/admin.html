@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Glamour Store</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2 { color: #e60050; text-align: center; }
+        
+        /* Login Screen */
+        #login-section { max-width: 400px; margin: 50px auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { width: 100%; padding: 10px; background: #e60050; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn:hover { background: #c50044; }
+
+        /* Dashboard */
+        #dashboard-section { display: none; /* Hidden by default until login is verified */ }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; border: none; cursor: pointer; background: #ddd; border-radius: 4px; font-weight: bold; }
+        .tab-btn.active { background: #e60050; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Orders Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #e60050; color: white; }
+        .items-list { font-size: 13px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-section" class="container">
+        <h1>Admin Dashboard</h1>
+        <button id="logout-btn" style="float: right; background: #333; color: white; padding: 5px 10px; border:none; border-radius: 4px; cursor:pointer;">Logout</button>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" data-target="orders">View Orders</button>
+            <button class="tab-btn" data-target="manage-products">Manage Inventory</button>
+            <button class="tab-btn" data-target="add-product">Add New Product</button>
+            <button class="tab-btn" data-target="manage-banners">Manage Homepage Slider</button>
+        </div>
+
+        <div id="orders-tab" class="tab-content active">
+            <h2>Customer Orders</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Address</th>
+                            <th>TrxID</th>
+                            <th>Total</th>
+                            <th>Items Bought</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="manage-products-tab" class="tab-content">
+            <h2>Manage Inventory</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th> 
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manage-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="add-product-tab" class="tab-content">
+            <h2>Add Product to Store</h2>
+            <form id="add-product-form" style="max-width: 500px; margin: auto;">
+                <div class="form-group">
+                    <input type="text" id="prod-name" placeholder="Product Name (e.g., Red Silk Saree)" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" id="prod-price" placeholder="Price in BDT" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" id="prod-stock" placeholder="Amount in Stock (e.g., 50)" required>
+                </div>
+                <div class="form-group">
+                    <select id="prod-category" required>
+                        <option value="" disabled selected>Select Category</option>
+                        <option value="women">Women</option>
+                        <option value="ornament">Ornaments</option>
+                        <option value="kids">Kids Zone</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                   <label for="prod-image">Upload Product Photo (.jpg, .png, .jpeg):</label>
+                   <input type="file" id="prod-image" accept="image/jpeg, image/png, image/jpg" required>
+                </div>
+                <button type="submit" class="btn" id="save-product-btn">Save Product to Database</button>
+            </form>
+        </div>
+
+        <div id="manage-banners-tab" class="tab-content">
+            <h2>Manage Homepage Slider Cards</h2>
+            <button id="add-card-btn" class="btn" style="background: #28a745; margin-bottom: 20px; width: 100%;">+ Add New Carousel Card</button>
+            
+            <div id="admin-cards-container" style="display: flex; flex-direction: column; gap: 30px;">
+            </div>
+        </div>
+
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html>

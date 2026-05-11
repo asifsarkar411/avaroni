@@ -1,0 +1,399 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #fcf9f9;
+    color: #333;
+}
+
+/* Navigation Bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffb6d8; /* Soft pink for ladies clothing theme */
+    padding: 15px 30px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #333;
+    margin: 0 15px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    color: #fff;
+}
+
+.cart-icon {
+    font-size: 20px;
+}
+
+/* Home Page Hero Section */
+.hero {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.hero img {
+    width: 100%;
+    max-width: 800px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Product Grid & Cards */
+.page-title {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.product-grid {
+    display: grid;
+    /* 🌟 THE FIX: This stops the stretching. Cards will stay exactly 250px wide */
+    grid-template-columns: repeat(auto-fill, 250px);
+    justify-content: center; /* Centers the product(s) nicely on the page */
+    gap: 25px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto; /* Keeps the whole grid centered */
+}
+
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.card h3 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: #e63946;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.btn {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background-color: #ffb6c1;
+    color: #333;
+}
+
+/* Cart Page */
+.cart-container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+}
+
+.cart-item img {
+    width: 60px;
+    border-radius: 5px;
+}
+
+.qty-btn {
+    background: #ddd;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.cart-summary {
+    text-align: right;
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Payment Form */
+.payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.payment-form input, .payment-form textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#bkash-instructions {
+    display: none;
+    background: #e1f5fe;
+    border: 2px solid #03a9f4;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+
+
+/* =========================================
+   MOBILE RESPONSIVE DESIGN (Media Queries)
+   ========================================= */
+@media (max-width: 768px) {
+    /* Stack the navbar vertically */
+    .navbar {
+        flex-direction: column;
+        padding: 15px 10px;
+    }
+
+    .nav-links {
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .nav-links a {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    /* Reduce padding on the product grid for smaller screens */
+    .product-grid {
+        padding: 20px 15px;
+        gap: 15px;
+    }
+
+    /* Stack cart items vertically so they aren't squished */
+    .cart-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .cart-item span, .cart-item strong {
+        margin: 5px 0 !important;
+    }
+}
+
+
+
+/* =========================================
+   PRODUCT IMAGE SIZING FIX
+   ========================================= */
+
+/* Desktop & Tablet Image Size */
+.product-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* 📱 Mobile Specific Fix (Screens smaller than 600px) */
+@media (max-width: 600px) {
+    /* Show 2 products side-by-side on mobile so they aren't huge */
+.product-grid {
+        /* On phones, this forces 2 products side-by-side so they don't look huge */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 10px;
+        padding: 10px;
+    }
+
+    /* Shrink the image height for mobile phones */
+    .product-image {
+        height: 160px; 
+    }
+
+    /* Shrink the text and buttons to fit the smaller cards */
+    .product-card h3 {
+        font-size: 14px; 
+        margin: 5px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Adds '...' if the name is too long */
+    }
+
+    .product-card .btn {
+        padding: 8px 5px;
+        font-size: 12px; 
+        width: 100%;
+    }
+}
+
+
+
+
+
+/* Container for the Logo and Text */
+.logo {
+    display: flex;
+    align-items: center; /* This vertically centers the image and text */
+    gap: 10px;           /* Adds space between the image and the name */
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 24px;
+    color: #97213f;
+}
+
+/* Control the size of your logo image */
+.nav-logo {
+    height: 40px;       /* Adjust this height to fit your navbar */
+    width: auto;        /* Keeps the image proportions correct */
+    border-radius: 30px; /* Optional: adds rounded corners to your logo */
+}
+
+/* 📱 Mobile adjustment */
+@media (max-width: 600px) {
+    .nav-logo {
+        height: 30px;   /* Slightly smaller for mobile phones */
+    }
+}
+
+
+
+
+
+/* =========================================
+   Sidebar Menu Styling
+========================================= */
+.sidebar {
+    height: 100vh;
+    width: 280px;
+    position: fixed;
+    z-index: 2000; /* Stays on top of everything */
+    top: 0;
+    right: -280px; /* Hidden off-screen to the right */
+    background-color: #c93f8b;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    overflow-x: hidden;
+    transition: right 0.3s ease-in-out; /* Smooth sliding animation */
+    padding-top: 80px;
+}
+
+.sidebar a {
+    padding: 15px 25px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #ffffff;
+    display: block;
+    transition: background 0.2s, color 0.2s;
+    border-bottom: 1px solid #ffb6d8;
+}
+
+.sidebar a i {
+    width: 25px; /* Aligns the icons neatly */
+    color: #ffffff; /* Your brand color */
+}
+
+.sidebar a:hover {
+    color: #e60050;
+    background-color: #ffb6d8;
+}
+.sidebar a i:hover {
+    color: #e60050;
+    background-color: #ffb6d8;
+}
+
+/* The X Close Button */
+.sidebar .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 36px;
+    border-bottom: none; /* Removes the underline from the X */
+    padding: 0;
+}
+
+.sidebar .close-btn:hover {
+    background-color: transparent;
+    color: #e60050;
+}
+
+
+/* =========================================
+   Homepage Hero Slider
+========================================= */
+.hero-slider {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: 400px; /* Adjust height as needed */
+    margin: 20px auto;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: #f4f4f4;
+}
+
+.slides {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s ease-in-out; /* Smooth slide animation */
+}
+
+.slide {
+    min-width: 100%;
+    height: 100%;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Keeps images looking professional without stretching */
+    display: block;
+}

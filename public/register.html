@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Secure Login</title>
+    <link rel="stylesheet" href="secure-auth.css">
+    <link rel="icon" href="./fabicon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="container">
+        <form id="registerForm">
+            <h2>Create Account</h2>
+            
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="reg-username" placeholder="Enter username" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" placeholder="Enter email" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="reg-password" placeholder="••••••••" required>
+                    <i class="fa-solid fa-eye" id="toggleRegPassword"></i>
+                </div>
+            </div>
+
+            <div id="reg-password-requirements" class="password-requirements-box" style="display: none; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-top: 5px; border: 1px solid rgba(0,255,136,0.2);">
+                <p style="color: #00ff88; font-size: 12px; margin-bottom: 5px; text-transform: uppercase;">Password must contain:</p>
+                <ul style="list-style: none; font-size: 12px; color: #ccc;">
+                    <li id="reg-req-length">✖ At least 8 characters</li>
+                    <li id="reg-req-upper">✖ At least 1 uppercase (A-Z)</li>
+                    <li id="reg-req-lower">✖ At least 1 lowercase (a-z)</li>
+                    <li id="reg-req-number">✖ At least 1 number (0-9)</li>
+                    <li id="reg-req-special">✖ At least 1 special char (@$!%*?&)</li>
+                </ul>
+            </div>
+
+            <button type="submit" class="btn" style="margin-top: 20px;">Register</button>
+            
+            <div style="margin-top: 10px;">
+                <a href="admin-login.html" class="nav-btn">Already have an account? Login here</a>
+            </div>
+        </form>
+    </div>
+    <script src="secure-auth.js"></script>
+</body>
+</html>

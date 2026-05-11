@@ -1,0 +1,406 @@
+// ==========================================
+// 🔒 SECURITY CHECK & INITIALIZATION
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Check if user is logged in
+    if (!localStorage.getItem('adminToken')) {
+        window.location.href = 'admin-login.html';
+        return; // Important: Stops the rest of the script from running if not logged in
+    } else {
+        showDashboard();
+    }
+
+    // 2. Attach Static Event Listeners
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    const addCardBtn = document.getElementById('add-card-btn');
+    if (addCardBtn) addCardBtn.addEventListener('click', createNewCard);
+
+    // 3. Tab Switching Logic
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const targetTab = event.target.getAttribute('data-target');
+            switchTab(targetTab);
+        });
+    });
+
+    // 4. Add Product Form Submit
+    const addProductForm = document.getElementById('add-product-form');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', handleAddProduct);
+    }
+});
+
+// Helper function to get auth headers securely
+function getAuthHeaders() {
+    const token = localStorage.getItem('adminToken');
+    return {
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+// ==========================================
+// CORE FUNCTIONS
+// ==========================================
+
+function logout() {
+    localStorage.removeItem('adminToken');
+    window.location.href = 'admin-login.html'; 
+}
+
+function showDashboard() {
+    const dashboardSection = document.getElementById('dashboard-section');
+    if (dashboardSection) {
+        dashboardSection.style.display = 'block'; 
+    }
+    
+    // Load default data on startup
+    fetchOrders();
+    loadAdminBanners(); 
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    const targetBtn = document.querySelector(`button[data-target="${tabName}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+    
+    const targetTab = document.getElementById(`${tabName}-tab`);
+    if (targetTab) targetTab.classList.add('active');
+
+    // Fetch data dynamically based on the active tab
+    if (tabName === 'orders') fetchOrders();
+    if (tabName === 'manage-products') fetchManageProducts();
+    if (tabName === 'manage-banners') loadAdminBanners();
+}
+
+// ==========================================
+// DYNAMIC EVENT DELEGATORS
+// ==========================================
+
+const manageTableBody = document.getElementById('manage-table-body');
+if (manageTableBody) {
+    manageTableBody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('toggle-btn')) {
+            toggleAvailability(e.target.getAttribute('data-id'));
+        } else if (e.target.classList.contains('delete-btn')) {
+            deleteProduct(e.target.getAttribute('data-id'));
+        }
+    });
+}
+
+const adminCardsContainer = document.getElementById('admin-cards-container');
+if (adminCardsContainer) {
+    adminCardsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-card-btn')) {
+            deleteCard(e.target.getAttribute('data-id'));
+        } else if (e.target.classList.contains('save-heading-btn')) {
+            updateCardHeading(e.target.getAttribute('data-id'));
+        } else if (e.target.classList.contains('delete-img-btn')) {
+            deleteImageFromCard(e.target.getAttribute('data-card-id'), e.target.getAttribute('data-img-index'));
+        }
+    });
+
+    adminCardsContainer.addEventListener('submit', (e) => {
+        if (e.target.classList.contains('upload-image-form')) {
+            e.preventDefault();
+            uploadImageToCard(e.target.getAttribute('data-id'));
+        }
+    });
+}
+
+// ==========================================
+// INVENTORY MANAGEMENT
+// ==========================================
+
+async function fetchManageProducts() {
+    try {
+        const response = await fetch('http://localhost:5000/api/admin/products', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        const tbody = document.getElementById('manage-table-body');
+        
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (data.products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products in inventory.</td></tr>';
+            return;
+        }
+
+        data.products.forEach(prod => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="http://localhost:5000${prod.imageUrl}" width="50" style="object-fit:cover;"></td>
+                    <td>${prod.name}</td>
+                    <td>${prod.category}</td>
+                    <td>৳${prod.price}</td>
+                    <td>${prod.stockQuantity} Left</td> 
+                    <td>${prod.isAvailable ? '<span style="color:green">Available</span>' : '<span style="color:red">Unavailable</span>'}</td>
+                    <td>
+                        <button data-id="${prod._id}" class="btn toggle-btn" style="background:#333; font-size:12px; width:100%; margin-bottom:5px; padding: 5px;">Hide/Show</button>
+                        <button data-id="${prod._id}" class="btn delete-btn" style="background:red; font-size:12px; width:100%; padding: 5px;">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch(err) {
+        console.error("Error fetching products:", err);
+    }
+}
+
+async function toggleAvailability(id) {
+    try {
+        await fetch(`http://localhost:5000/api/admin/products/${id}/toggle`, { 
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+        fetchManageProducts();
+    } catch(err) {
+        console.error("Error toggling availability:", err);
+    }
+}
+
+async function deleteProduct(id) {
+    if(confirm("Are you sure you want to delete this product?")) {
+        try {
+            await fetch(`http://localhost:5000/api/admin/products/${id}`, { 
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            fetchManageProducts();
+        } catch(err) {
+            console.error("Error deleting product:", err);
+        }
+    }
+}
+
+async function handleAddProduct(e) {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', document.getElementById('prod-name').value); 
+    formData.append('price', document.getElementById('prod-price').value); 
+    formData.append('category', document.getElementById('prod-category').value);
+    formData.append('stock', document.getElementById('prod-stock').value);
+    formData.append('image', document.getElementById('prod-image').files[0]);
+
+    try {
+        const response = await fetch('http://localhost:5000/api/products', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Product added successfully!');
+            document.getElementById('add-product-form').reset();
+            fetchManageProducts(); // Refresh the list instantly
+        } else {
+            alert('Failed to save product.');
+        }
+    } catch (err) {
+        console.error("Error saving product:", err);
+        alert("An error occurred connecting to the server.");
+    }
+}
+
+// ==========================================
+// ORDER MANAGEMENT
+// ==========================================
+
+async function fetchOrders() {
+    try {
+        const response = await fetch('http://localhost:5000/api/admin/orders', {
+            headers: getAuthHeaders()
+        });
+        
+        const tbody = document.getElementById('orders-table-body');
+        if (!tbody) return;
+        
+        if (response.status === 401 || response.status === 403) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Unauthorized: Please log out and log back in.</td></tr>';
+            return;
+        }
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!data.orders || data.orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders found.</td></tr>';
+            return;
+        }
+
+        data.orders.forEach(order => {
+            const date = new Date(order.orderDate).toLocaleString();
+            const itemsList = order.cartItems.map(item => `${item.name} (x${item.quantity})`).join(', ');
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${order.customerName}</strong></td>
+                    <td>${order.phone}<br>${order.email}</td>
+                    <td>${order.address}</td>
+                    <td><strong>${order.transactionId || 'N/A'}</strong></td>
+                    <td style="color:#e60050; font-weight:bold;">৳${order.totalAmount}</td>
+                    <td class="items-list">${itemsList}</td>
+                </tr>
+            `;
+        });
+    } catch(err) {
+        console.error("Error fetching orders:", err);
+        const tbody = document.getElementById('orders-table-body');
+        if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Failed to load orders. Make sure the server is running.</td></tr>';
+    }
+}
+
+// ==========================================
+// 🌟 MULTIPLE BANNER CARDS LOGIC 🌟
+// ==========================================
+
+async function loadAdminBanners() {
+    const container = document.getElementById('admin-cards-container');
+    if(!container) return; 
+
+    try {
+        const response = await fetch('http://localhost:5000/api/banner-cards', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        container.innerHTML = ''; 
+        
+        if(!data.cards || data.cards.length === 0) {
+            container.innerHTML = '<p style="text-align:center;">No slider cards yet. Click "+ Add New Carousel Card" above!</p>';
+            return;
+        }
+
+        data.cards.forEach((card, index) => {
+            let imagesHtml = '';
+            card.images.forEach((imgUrl, imgIndex) => {
+                imagesHtml += `
+                    <div style="position: relative; width: 150px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
+                        <img src="http://localhost:5000${imgUrl}" style="width: 100%; height: 100px; object-fit: cover; display: block;">
+                        <button data-card-id="${card._id}" data-img-index="${imgIndex}" class="delete-img-btn" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px;">X</button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML += `
+                <div style="background: #fdfdfd; border: 2px dashed #ccc; padding: 20px; border-radius: 8px; position: relative; margin-bottom: 20px;">
+                    <h3 style="margin-top:0;">Slider Card #${index + 1}</h3>
+                    <button data-id="${card._id}" class="delete-card-btn" style="position: absolute; top: 20px; right: 20px; background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Delete Entire Card</button>
+                    
+                    <div style="margin: 15px 0; background: #f1f1f1; padding: 10px; border-radius: 5px;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Card Heading Title:</label>
+                        <input type="text" id="heading-${card._id}" value="${card.heading || ''}" placeholder="e.g. Winter Collection" style="padding: 5px; width: 60%; border: 1px solid #ccc;">
+                        <button data-id="${card._id}" class="btn save-heading-btn" style="padding: 5px 15px; margin-top: 0; width: auto; background: #17a2b8;">Save Title</button>
+                    </div>
+
+                    <form data-id="${card._id}" class="upload-image-form" style="margin: 15px 0; display: flex; gap: 10px;">
+                        <input type="file" id="file-${card._id}" accept="image/*" required style="padding: 5px; border: 1px solid #ccc;">
+                        <button type="submit" class="btn" style="margin-top: 0; width: auto; padding: 5px 15px;">Add Image to this Slider</button>
+                    </form>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${imagesHtml || '<p style="color:#777; font-size:14px;">No images in this slider yet.</p>'}
+                    </div>
+                </div>
+            `;
+        });
+    } catch (err) {
+        console.error("Error loading banners:", err);
+    }
+}
+
+async function updateCardHeading(cardId) {
+    const headingValue = document.getElementById(`heading-${cardId}`).value;
+    try {
+        const response = await fetch(`http://localhost:5000/api/banner-cards/${cardId}/heading`, {
+            method: 'PATCH',
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ heading: headingValue })
+        });
+        const data = await response.json();
+        if(data.success) {
+            alert('Heading saved successfully!');
+        }
+    } catch (err) {
+        console.error("Error saving heading:", err);
+        alert('Error saving heading');
+    }
+}
+
+async function createNewCard() {
+    try {
+        await fetch('http://localhost:5000/api/banner-cards', { 
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders() 
+            }
+        });
+        loadAdminBanners();
+    } catch (err) { 
+        console.error("Error creating card:", err);
+        alert('Error creating card'); 
+    }
+}
+
+async function deleteCard(cardId) {
+    if(!confirm("Delete this ENTIRE slider card and all its images?")) return;
+    try {
+        await fetch(`http://localhost:5000/api/banner-cards/${cardId}`, { 
+            method: 'DELETE',
+            headers: getAuthHeaders() 
+        });
+        loadAdminBanners();
+    } catch (err) { 
+        console.error("Error deleting card:", err);
+        alert('Error deleting card'); 
+    }
+}
+
+async function uploadImageToCard(cardId) {
+    const fileInput = document.getElementById(`file-${cardId}`);
+    if (!fileInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('image', fileInput.files[0]);
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/banner-cards/${cardId}/images`, {
+            method: 'POST',
+            headers: getAuthHeaders(), // FormData automatically sets the correct Content-Type with boundaries
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            loadAdminBanners(); 
+        }
+    } catch (err) { 
+        console.error("Error uploading image:", err);
+        alert('Error uploading image'); 
+    }
+}
+
+async function deleteImageFromCard(cardId, imageIndex) {
+    if(!confirm("Remove this image?")) return;
+    try {
+        await fetch(`http://localhost:5000/api/banner-cards/${cardId}/images/${imageIndex}`, { 
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        loadAdminBanners();
+    } catch (err) { 
+        console.error("Error deleting image:", err);
+        alert('Error deleting image'); 
+    }
+}
