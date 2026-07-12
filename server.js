@@ -28,6 +28,7 @@ const Order = require('./models/Order');         // E-commerce Order Model
 const Product = require('./models/Product');     // E-commerce Product Model
 const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
 const Category = require('./models/Category');   // Dynamic Categories Model
+const PromoCode = require('./models/PromoCode'); // Promo Codes Model
 
 const app = express();
 
@@ -384,6 +385,86 @@ app.delete('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Delete Category Error:", error);
         res.status(500).json({ success: false, message: "Failed to delete category" });
+    }
+});
+
+// ==========================================
+// 🎟️ PROMO CODE ROUTES
+// ==========================================
+
+// Validate Promo Code (Public)
+app.post('/api/promocodes/validate', async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ success: false, message: "Promo code is required" });
+
+        // Case-insensitive match
+        const promo = await PromoCode.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') }, isActive: true });
+        if (!promo) {
+            return res.status(404).json({ success: false, message: "Invalid or inactive promo code" });
+        }
+
+        res.json({
+            success: true,
+            code: promo.code,
+            discountType: promo.discountType,
+            discountValue: promo.discountValue
+        });
+    } catch (error) {
+        console.error("Validate Promo Code Error:", error);
+        res.status(500).json({ success: false, message: "Validation failed" });
+    }
+});
+
+// List Promo Codes (Admin)
+app.get('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
+    try {
+        const promos = await PromoCode.find();
+        res.json({ success: true, promos });
+    } catch (error) {
+        console.error("Get Promo Codes Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch promo codes" });
+    }
+});
+
+// Create Promo Code (Admin)
+app.post('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
+    try {
+        const { code, discountType, discountValue } = req.body;
+        if (!code || !discountType || !discountValue) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const upperCode = code.toUpperCase().replace(/\s+/g, '');
+        
+        let existing = await PromoCode.findOne({ code: upperCode });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "Promo code already exists" });
+        }
+
+        const promo = new PromoCode({
+            code: upperCode,
+            discountType,
+            discountValue: Number(discountValue),
+            isActive: true
+        });
+
+        await promo.save();
+        res.status(201).json({ success: true, promo });
+    } catch (error) {
+        console.error("Create Promo Code Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create promo code" });
+    }
+});
+
+// Delete Promo Code (Admin)
+app.delete('/api/admin/promocodes/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await PromoCode.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Promo Code Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete promo code" });
     }
 });
 

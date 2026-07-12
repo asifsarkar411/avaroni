@@ -200,6 +200,7 @@
             <button class="tab-btn" data-target="manage-products">Manage Inventory</button>
             <button class="tab-btn" data-target="add-product">Add New Product</button>
             <button class="tab-btn" data-target="manage-categories">Manage Categories</button>
+            <button class="tab-btn" data-target="manage-promocodes">Manage Promocodes</button>
             <button class="tab-btn" data-target="manage-banners">Manage Homepage Slider</button>
         </div>
 
@@ -288,6 +289,48 @@
             
             <div id="categories-list-container" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
                 <!-- Dynamically loaded categories and subcategories list -->
+            </div>
+        </div>
+
+        <div id="manage-promocodes-tab" class="tab-content">
+            <h2>Manage Promocodes & Discounts</h2>
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 25px; color: #333;">
+                <h3 style="margin-top: 0; color: #e60050; margin-bottom: 15px;">Create New Promo Code</h3>
+                <form id="add-promo-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-promo-code">Promo Code</label>
+                        <input type="text" id="new-promo-code" placeholder="e.g. SAVE20" required style="width:100%;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-promo-type">Discount Type</label>
+                        <select id="new-promo-type" required style="width:100%;">
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (৳)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-promo-value">Discount Value</label>
+                        <input type="number" id="new-promo-value" placeholder="e.g. 10" min="1" required style="width:100%;">
+                    </div>
+                    <button type="submit" class="btn" style="margin-top: 0; height: 46px;">Create Code</button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Promo Code</th>
+                            <th>Discount Type</th>
+                            <th>Discount Value</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promos-table-body">
+                        <!-- Dynamic promo codes -->
+                    </tbody>
+                </table>
             </div>
         </div>
 

@@ -45,6 +45,12 @@ document.addEventListener("DOMContentLoaded", () => {
             populateSubcategories(e.target.value);
         });
     }
+
+    // 7. Add Promo Code Form Submit
+    const addPromoForm = document.getElementById('add-promo-form');
+    if (addPromoForm) {
+        addPromoForm.addEventListener('submit', handleAddPromoCode);
+    }
 });
 
 // Helper to convert file to Base64
@@ -101,6 +107,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-products') fetchManageProducts();
     if (tabName === 'add-product') populateAddProductCategories();
     if (tabName === 'manage-categories') renderCategoriesTab();
+    if (tabName === 'manage-promocodes') fetchPromoCodes();
     if (tabName === 'manage-banners') loadAdminBanners();
 }
 
@@ -707,3 +714,106 @@ async function deleteCategory(catId) {
 window.deleteCategory = deleteCategory;
 window.deleteSubcategory = deleteSubcategory;
 window.handleAddSubcategory = handleAddSubcategory;
+
+// ==========================================
+// 🎟️ PROMO CODE MANAGEMENT
+// ==========================================
+async function fetchPromoCodes() {
+    try {
+        const response = await fetch('/api/admin/promocodes', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        const tbody = document.getElementById('promos-table-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!data.success || !data.promos || data.promos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No promo codes created yet.</td></tr>';
+            return;
+        }
+
+        data.promos.forEach(promo => {
+            const statusLabel = promo.isActive 
+                ? '<span style="color:green; font-weight:bold;">Active</span>' 
+                : '<span style="color:red; font-weight:bold;">Inactive</span>';
+            const valueDisplay = promo.discountType === 'percentage' 
+                ? `${promo.discountValue}%` 
+                : `৳${promo.discountValue}`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${promo.code}</strong></td>
+                    <td style="text-transform: capitalize;">${promo.discountType}</td>
+                    <td>${valueDisplay}</td>
+                    <td>${statusLabel}</td>
+                    <td>
+                        <button onclick="deletePromoCode('${promo._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error loading promo codes:", err);
+    }
+}
+
+async function handleAddPromoCode(e) {
+    e.preventDefault();
+    
+    const code = document.getElementById('new-promo-code').value.trim();
+    const discountType = document.getElementById('new-promo-type').value;
+    const discountValue = Number(document.getElementById('new-promo-value').value);
+
+    if (!code || isNaN(discountValue) || discountValue <= 0) {
+        alert("Please enter valid promo code information.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/promocodes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ code, discountType, discountValue })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            alert('Promo Code created successfully!');
+            document.getElementById('add-promo-form').reset();
+            fetchPromoCodes();
+        } else {
+            alert('Failed to create promo code: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error saving promo code:", err);
+        alert("An error occurred connecting to the server.");
+    }
+}
+
+async function deletePromoCode(promoId) {
+    if (!confirm("Are you sure you want to delete this Promo Code?")) return;
+    try {
+        const response = await fetch(`/api/admin/promocodes/${promoId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (data.success) {
+            fetchPromoCodes();
+        } else {
+            alert('Failed to delete promo code: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error deleting promo code:", err);
+        alert('An error occurred connecting to the server.');
+    }
+}
+
+// Expose actions to global context
+window.deletePromoCode = deletePromoCode;

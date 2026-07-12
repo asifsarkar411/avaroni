@@ -39,11 +39,36 @@
     <div class="cart-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <form id="checkout-form" class="payment-form">
             
-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
+            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff; color: #333;">
                 <h3>Order Summary</h3>
                 <div id="cart-items" style="margin-top: 10px; color: #333;"></div>
-                <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold; border-top: 1px solid #eee; padding-top: 10px; color: #333;">
-                    Total: ৳<span id="cart-total">0</span>
+                
+                <div id="promo-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Have a Promo Code?</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="promo-input" placeholder="Enter Promo Code" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; text-transform: uppercase;">
+                        <button type="button" id="apply-promo-btn" class="btn" style="margin-top: 0; width: auto; padding: 8px 15px; font-size: 13px;">Apply</button>
+                    </div>
+                    <div id="promo-message" style="margin-top: 5px; font-size: 13px; font-weight: 600; display: none;"></div>
+                </div>
+
+                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; color: #555;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Subtotal:</span>
+                        <span>৳<span id="cart-subtotal">0</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Delivery Charge:</span>
+                        <span>৳<span id="shipping-charge">0</span></span>
+                    </div>
+                    <div id="discount-row" style="display: none; justify-content: space-between; color: green; font-weight: 600;">
+                        <span>Promo Discount:</span>
+                        <span>-৳<span id="promo-discount">0</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 8px; font-size: 18px; font-weight: bold; color: #333;">
+                        <span>Final Total:</span>
+                        <span>৳<span id="cart-total">0</span></span>
+                    </div>
                 </div>
             </div>
 
