@@ -69,9 +69,13 @@ const transporter = nodemailer.createTransport({
 // ==========================================
 // MULTER CONFIGURATION (Image Uploads)
 // ==========================================
+const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'public/uploads/';
+const fs = require('fs');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/uploads/'); 
+        cb(null, uploadDir); 
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname)); 
@@ -529,3 +533,6 @@ app.delete('/api/banner-cards/:cardId/images/:imageIndex', verifyAdminToken, asy
 // ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`E-commerce Secured Backend running on http://localhost:${PORT}`));
+
+// Export for Vercel serverless deployment
+module.exports = app;
