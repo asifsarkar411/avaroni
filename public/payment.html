@@ -16,12 +16,12 @@
             <a href="ornament.html">Ornament</a>
             <a href="kids.html">Kids Zone</a>
             <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
-            <i id="sidebar-menu-icon" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
         </div>
     </nav>
 
     <div id="sidebar" class="sidebar">
-        <a href="javascript:void(0)" id="sidebar-close-btn" class="close-btn">&times;</a>
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
         <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
         <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
         <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
@@ -35,10 +35,10 @@
             
             <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
                 <h3>Step 1: Shipping Details</h3>
-                <input type="text" id="name" placeholder="Full Name" required style="width: 100%; margin-top: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <input type="email" id="email" placeholder="Email Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <input type="tel" id="phone" placeholder="Phone Number" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <textarea id="address" rows="4" placeholder="Proper Delivery Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+                <input type="text" id="name" placeholder="Full Name" required style="width: 100%; margin-top: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <input type="email" id="email" placeholder="Email Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <input type="tel" id="phone" placeholder="Phone Number" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <textarea id="address" rows="4" placeholder="Proper Delivery Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box;"></textarea>
             </div>
 
             <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
@@ -67,18 +67,18 @@
                     <p>Please send your total bill via bKash to:</p>
                     <h2 style="color: #e2136e; margin: 10px 0;">01743648510</h2>
                     <p>After sending the money, enter the Transaction ID below.</p>
-                    <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; margin-top: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 4px;">
+                    <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; margin-top: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 4px; box-sizing: border-box;">
                 </div>
             </div>
 
-            <button type="submit" class="btn" id="submit-btn" style="width: 100%; padding: 15px; font-size: 16px; cursor: pointer;">Confirm & Place Order</button>
+            <button type="submit" class="btn" id="submit-btn" style="width: 100%; padding: 15px; font-size: 16px; cursor: pointer; background-color: #e60050; color: white; border: none; border-radius: 4px;">Confirm & Place Order</button>
         </form>
 
         <div id="success-message" style="display: none; text-align: center; color: #28a745; margin-top: 30px; background: #e6ffe6; padding: 30px; border: 1px solid green; border-radius: 8px;">
             <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
-            <p style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
+            <p id="success-details" style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
             <br>
-            <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px;">Return to Home</a>
+            <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
         </div>
     </div>
 

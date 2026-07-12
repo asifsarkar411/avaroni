@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return Product - আভরণী</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .header { background-color: #ba217b; padding: 20px; color: white; text-align: center; }
+        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #ba217b; margin-top: 0; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #ba217b; text-decoration: none; font-weight: bold; }
+        .back-link:hover { text-decoration: underline; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: #ba217b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn:hover { background: #961861; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Gআভরণী</h1>
+    </div>
+    <div class="container">
+        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Store</a>
+        <h2><i class="fas fa-undo"></i> Return a Product</h2>
+        <p>If you're not satisfied with your purchase, let us help you with a return.</p>
+        
+        <form id="returnForm">
+            <div class="form-group">
+                <label for="order-id">Order ID</label>
+                <input type="text" id="order-id" placeholder="e.g. ORD-12345" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Your account email" required>
+            </div>
+            <div class="form-group">
+                <label for="reason">Reason for Return</label>
+                <select id="reason" required>
+                    <option value="" disabled selected>Select a reason...</option>
+                    <option value="defective">Product is defective/damaged</option>
+                    <option value="wrong_item">Received the wrong item</option>
+                    <option value="size_issue">Size does not fit</option>
+                    <option value="not_needed">No longer needed</option>
+                    <option value="not_needed">Others</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="details">Additional Details</label>
+                <textarea id="details" rows="4" placeholder="Please provide any other details..."></textarea>
+            </div>
+            <button type="submit" class="btn">Submit Return Request</button>
+        </form>
+    </div>
+</body>
+</html>

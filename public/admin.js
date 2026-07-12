@@ -118,7 +118,7 @@ if (adminCardsContainer) {
 
 async function fetchManageProducts() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/products', {
+        const response = await fetch('/api/admin/products', {
             headers: getAuthHeaders()
         });
         const data = await response.json();
@@ -135,7 +135,7 @@ async function fetchManageProducts() {
         data.products.forEach(prod => {
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="http://localhost:5000${prod.imageUrl}" width="50" style="object-fit:cover;"></td>
+                    <td><img src="${prod.imageUrl}" width="50" style="object-fit:cover;"></td>
                     <td>${prod.name}</td>
                     <td>${prod.category}</td>
                     <td>৳${prod.price}</td>
@@ -155,7 +155,7 @@ async function fetchManageProducts() {
 
 async function toggleAvailability(id) {
     try {
-        await fetch(`http://localhost:5000/api/admin/products/${id}/toggle`, { 
+        await fetch(`/api/admin/products/${id}/toggle`, { 
             method: 'PATCH',
             headers: getAuthHeaders()
         });
@@ -168,7 +168,7 @@ async function toggleAvailability(id) {
 async function deleteProduct(id) {
     if(confirm("Are you sure you want to delete this product?")) {
         try {
-            await fetch(`http://localhost:5000/api/admin/products/${id}`, { 
+            await fetch(`/api/admin/products/${id}`, { 
                 method: 'DELETE',
                 headers: getAuthHeaders()
             });
@@ -189,7 +189,7 @@ async function handleAddProduct(e) {
     formData.append('image', document.getElementById('prod-image').files[0]);
 
     try {
-        const response = await fetch('http://localhost:5000/api/products', {
+        const response = await fetch('/api/products', {
             method: 'POST',
             headers: getAuthHeaders(),
             body: formData
@@ -215,7 +215,7 @@ async function handleAddProduct(e) {
 
 async function fetchOrders() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/orders', {
+        const response = await fetch('/api/admin/orders', {
             headers: getAuthHeaders()
         });
         
@@ -239,9 +239,14 @@ async function fetchOrders() {
             const date = new Date(order.orderDate).toLocaleString();
             const itemsList = order.cartItems.map(item => `${item.name} (x${item.quantity})`).join(', ');
             
+            // Fallback to "N/A" if orderNumber wasn't generated for older orders
+            const displayOrderNum = order.orderNumber || 'N/A'; 
+            
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
+                    <td style="color: #007bff; font-weight: bold;">${displayOrderNum}</td> 
+                    
                     <td><strong>${order.customerName}</strong></td>
                     <td>${order.phone}<br>${order.email}</td>
                     <td>${order.address}</td>
@@ -251,10 +256,8 @@ async function fetchOrders() {
                 </tr>
             `;
         });
-    } catch(err) {
-        console.error("Error fetching orders:", err);
-        const tbody = document.getElementById('orders-table-body');
-        if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Failed to load orders. Make sure the server is running.</td></tr>';
+    } catch (error) { // <-- ADDED: Catch block and closing braces were missing here
+        console.error("Error fetching orders:", error);
     }
 }
 
@@ -267,7 +270,7 @@ async function loadAdminBanners() {
     if(!container) return; 
 
     try {
-        const response = await fetch('http://localhost:5000/api/banner-cards', {
+        const response = await fetch('/api/banner-cards', {
             headers: getAuthHeaders()
         });
         const data = await response.json();
@@ -284,7 +287,7 @@ async function loadAdminBanners() {
             card.images.forEach((imgUrl, imgIndex) => {
                 imagesHtml += `
                     <div style="position: relative; width: 150px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
-                        <img src="http://localhost:5000${imgUrl}" style="width: 100%; height: 100px; object-fit: cover; display: block;">
+                        <img src="${imgUrl}" style="width: 100%; height: 100px; object-fit: cover; display: block;">
                         <button data-card-id="${card._id}" data-img-index="${imgIndex}" class="delete-img-btn" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px;">X</button>
                     </div>
                 `;
@@ -320,7 +323,7 @@ async function loadAdminBanners() {
 async function updateCardHeading(cardId) {
     const headingValue = document.getElementById(`heading-${cardId}`).value;
     try {
-        const response = await fetch(`http://localhost:5000/api/banner-cards/${cardId}/heading`, {
+        const response = await fetch(`/api/banner-cards/${cardId}/heading`, {
             method: 'PATCH',
             headers: { 
                 'Content-Type': 'application/json',
@@ -340,7 +343,7 @@ async function updateCardHeading(cardId) {
 
 async function createNewCard() {
     try {
-        await fetch('http://localhost:5000/api/banner-cards', { 
+        await fetch('/api/banner-cards', { 
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -357,7 +360,7 @@ async function createNewCard() {
 async function deleteCard(cardId) {
     if(!confirm("Delete this ENTIRE slider card and all its images?")) return;
     try {
-        await fetch(`http://localhost:5000/api/banner-cards/${cardId}`, { 
+        await fetch(`/api/banner-cards/${cardId}`, { 
             method: 'DELETE',
             headers: getAuthHeaders() 
         });
@@ -376,7 +379,7 @@ async function uploadImageToCard(cardId) {
     formData.append('image', fileInput.files[0]);
 
     try {
-        const response = await fetch(`http://localhost:5000/api/banner-cards/${cardId}/images`, {
+        const response = await fetch(`/api/banner-cards/${cardId}/images`, {
             method: 'POST',
             headers: getAuthHeaders(), // FormData automatically sets the correct Content-Type with boundaries
             body: formData
@@ -394,7 +397,7 @@ async function uploadImageToCard(cardId) {
 async function deleteImageFromCard(cardId, imageIndex) {
     if(!confirm("Remove this image?")) return;
     try {
-        await fetch(`http://localhost:5000/api/banner-cards/${cardId}/images/${imageIndex}`, { 
+        await fetch(`/api/banner-cards/${cardId}/images/${imageIndex}`, { 
             method: 'DELETE',
             headers: getAuthHeaders()
         });
@@ -404,3 +407,40 @@ async function deleteImageFromCard(cardId, imageIndex) {
         alert('Error deleting image'); 
     }
 }
+
+// ==========================================
+// SECURITY: AUTO-LOGOUT ON INACTIVITY
+// ==========================================
+function setupIdleTimeout() {
+    let idleTimer;
+    const idleTimeLimit = 2 * 60 * 1000; // 2 minutes in milliseconds (120,000 ms)
+
+    // The function that runs when the user is idle too long
+    function logoutUser() {
+        // Clear the admin token to ensure they are actually logged out
+        localStorage.removeItem('adminToken'); 
+        
+        // Optional: show a quick alert before redirecting
+        alert("You have been logged out due to 2 minutes of inactivity.");
+        
+        // Redirect to the login page
+        window.location.href = 'admin-login.html';
+    }
+
+    // The function that resets the timer every time the user does something
+    function resetTimer() {
+        clearTimeout(idleTimer); // Stop the current countdown
+        idleTimer = setTimeout(logoutUser, idleTimeLimit); // Start a fresh 2-minute countdown
+    }
+
+    // Listen for all types of user activity to reset the timer
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;   // Mouse movement
+    document.onkeypress = resetTimer;    // Typing
+    document.onclick = resetTimer;       // Clicking
+    document.onscroll = resetTimer;      // Scrolling
+    document.ontouchstart = resetTimer;  // Tapping on touch screens
+}
+
+// Start the tracker immediately
+setupIdleTimeout();

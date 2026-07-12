@@ -8,20 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-   <nav class="navbar">
+    <nav class="navbar">
         <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
         <a href="index.html" class="logo">আভরণী</a>
         <div class="nav-links">
-            <a href="women.html">Women Dress</a>
-            <a href="ornament.html">Ornament</a>
-            <a href="kids.html">Kids Zone</a>
+            <a href="women.html"> <B>WOMEN DRESS</B></a>
+            <a href="ornament.html"><B>ORNAMENT</B></a>
+            <a href="kids.html"><B>KIDS ZONE</B></a>
             <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
-            <i class="fas fa-bars menu-icon" onclick="toggleSidebar()" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
         </div>
     </nav>
 
     <div id="sidebar" class="sidebar">
-        <a href="javascript:void(0)" class="close-btn" onclick="toggleSidebar()">&times;</a>
+        <a href="#" id="close-sidebar-btn" class="close-btn">&times;</a>
         <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
         <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
         <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>

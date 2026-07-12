@@ -10,7 +10,7 @@ async function loadProducts(category) {
     if (!productContainer) return; 
 
     try {
-        const response = await fetch(`http://localhost:5000/api/products?category=${category}`);
+        const response = await fetch(`/api/products?category=${category}`);
         const data = await response.json();
 
         if (data.success) {
@@ -22,7 +22,7 @@ async function loadProducts(category) {
             }
 
             data.products.forEach(product => {
-                const fullImageUrl = `http://localhost:5000${product.imageUrl}`;
+                const fullImageUrl = product.imageUrl;
                 const stockText = product.stockQuantity > 0 ? `<p style="color:green;">In Stock: ${product.stockQuantity}</p>` : `<p style="color:red;">Out of Stock</p>`;
                 const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
 
@@ -115,7 +115,6 @@ function renderCart() {
         subtotal += itemTotal;
         
         if (cartContainer) {
-            // FIX: Removed inline onclicks, replaced with class names and data attributes
             cartContainer.innerHTML += `
                 <div class="cart-item" style="display:flex; align-items:center; margin-bottom:15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
                     <img src="${item.image}" alt="${item.name}" style="width:50px; height:50px; object-fit:cover; border-radius: 4px;">
@@ -187,19 +186,20 @@ if (paymentForm) {
         let subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
         let shippingFee = selectedMethod === 'cod' ? 150 : 0;
 
+        // 🌟 FIXED: Variable names now match EXACTLY what server.js expects!
         const customerData = {
-            customerName: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value,
+            name: document.getElementById('name') ? document.getElementById('name').value : 'Unknown',
+            email: document.getElementById('email') ? document.getElementById('email').value : 'no-email@test.com',
+            phone: document.getElementById('phone') ? document.getElementById('phone').value : 'N/A',
+            address: document.getElementById('address') ? document.getElementById('address').value : 'N/A',
             paymentMethod: selectedMethod,
-            transactionId: selectedMethod === 'bkash' ? trxIdInput : 'Cash On Delivery', 
+            trxId: selectedMethod === 'bkash' ? trxIdInput : 'Cash On Delivery', 
             cartItems: cart, 
             totalAmount: subtotal + shippingFee
         };
 
         try {
-            const response = await fetch('http://localhost:5000/api/orders', {
+            const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(customerData)
@@ -211,7 +211,11 @@ if (paymentForm) {
                 document.getElementById('checkout-form').style.display = 'none'; 
                 
                 const successDiv = document.getElementById('success-message');
-                if (successDiv) successDiv.style.display = 'block'; 
+                if (successDiv) {
+                    successDiv.style.display = 'block'; 
+                    // Optional: Show the order number to the customer
+                    successDiv.innerHTML = `<h2>Order Placed!</h2><p>Your order number is: <strong>${data.orderNumber}</strong></p><p>A confirmation email has been sent to you.</p>`;
+                }
                 
                 localStorage.removeItem('cart');
                 cart = [];
@@ -238,23 +242,21 @@ function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    // Supports both width styling and right positioning
-    if (sidebar.style.width === "250px" || sidebar.style.right === "0px") {
-        sidebar.style.width = "0"; 
-        sidebar.style.right = "-280px";
+    // We ONLY change the 'right' property because your CSS perfectly handles the width (280px).
+    if (sidebar.style.right === "0px") {
+        sidebar.style.right = "-280px"; // Slide it completely off-screen to close
     } else {
-        sidebar.style.width = "250px"; 
-        sidebar.style.right = "0px";
+        sidebar.style.right = "0px";    // Slide it to the edge of the screen to open
     }
 }
 
-// Function to load and display homepage banners
+// Function to load and display homepage banners as carousels
 async function loadHomepageSliders() {
     const container = document.getElementById('slider-container');
     if (!container) return;
 
     try {
-        const response = await fetch('http://localhost:5000/api/banner-cards');
+        const response = await fetch('/api/banner-cards');
         const data = await response.json();
 
         container.innerHTML = '';
@@ -265,20 +267,33 @@ async function loadHomepageSliders() {
         }
 
         data.cards.forEach(card => {
-            let imagesHtml = '';
+            // Build the slides HTML for THIS specific card
+            let slidesHtml = '';
             card.images.forEach(imgUrl => {
-                imagesHtml += `<img src="http://localhost:5000${imgUrl}" style="max-width: 100%; height: auto; margin: 10px; border-radius: 8px;">`;
+                slidesHtml += `
+                    <div class="slide">
+                        <img src="${imgUrl}" alt="Card Image">
+                    </div>
+                `;
             });
 
+            // Output the proper HTML structure that matches your CSS and animation logic
             container.innerHTML += `
-                <div class="homepage-slider-card" style="margin-bottom: 40px;">
-                    ${card.heading ? `<h2 style="color: #e60050;">${card.heading}</h2>` : ''}
-                    <div style="display: flex; justify-content: center; flex-wrap: wrap;">
-                        ${imagesHtml}
+                <div class="slider-card-wrapper" style="margin: 30px auto; max-width: 800px; padding: 0 15px;">
+                    ${card.heading ? `<h2 style="color: #c93f8b; margin-bottom: 15px;">${card.heading}</h2>` : ''}
+                    
+                    <div class="hero-slider">
+                        <div class="slides">
+                            ${slidesHtml}
+                        </div>
                     </div>
+                    
                 </div>
             `;
         });
+
+        // IMPORTANT FIX: Start animations AFTER the sliders are fully loaded into the page!
+        startSliderAnimations();
 
     } catch (error) {
         console.error("Error loading homepage sliders:", error);
@@ -312,10 +327,10 @@ function startSliderAnimations() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Only load the sliders here. The animation will start automatically when they finish loading.
     loadHomepageSliders(); 
-    startSliderAnimations();
 
-    // Securely attach sidebar toggle events (using the IDs from index.html)
+    // Securely attach sidebar toggle events
     const menuIcon = document.getElementById('menu-icon-btn');
     const closeBtn = document.getElementById('close-sidebar-btn');
     if (menuIcon) menuIcon.addEventListener('click', toggleSidebar);

@@ -6,8 +6,8 @@
 }
 
 body {
-    background-color: #fcf9f9;
-    color: #333;
+    background-color: #FAF8F5; /* Warm ivory/cream */
+    color: #c93333; 
 }
 
 /* Navigation Bar */
@@ -58,6 +58,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+
 
 /* Product Grid & Cards */
 .page-title {
