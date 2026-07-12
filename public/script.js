@@ -994,6 +994,23 @@ async function openProductModal(productId) {
             stockEl.innerHTML = `<span style="color:red;">✗ Out of Stock</span>`;
         }
 
+        // Render Size, Colour, and Brand details in modal
+        const detailsEl = document.getElementById('modal-product-details');
+        if (detailsEl) {
+            let detailsHtml = '';
+            if (product.brand) detailsHtml += `<p style="margin: 5px 0;"><strong>Brand:</strong> ${product.brand}</p>`;
+            if (product.size) detailsHtml += `<p style="margin: 5px 0;"><strong>Size:</strong> ${product.size}</p>`;
+            if (product.colour) detailsHtml += `<p style="margin: 5px 0;"><strong>Colour:</strong> ${product.colour}</p>`;
+            
+            if (detailsHtml) {
+                detailsEl.style.display = 'block';
+                detailsEl.innerHTML = detailsHtml;
+            } else {
+                detailsEl.style.display = 'none';
+                detailsEl.innerHTML = '';
+            }
+        }
+
         // Setup Add to Cart button
         const cartBtn = document.getElementById('modal-add-to-cart-btn');
         if (product.stockQuantity > 0) {

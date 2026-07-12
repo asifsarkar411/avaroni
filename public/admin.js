@@ -162,7 +162,7 @@ async function fetchManageProducts() {
         tbody.innerHTML = '';
 
         if (data.products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products in inventory.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products in inventory.</td></tr>';
             return;
         }
 
@@ -172,6 +172,9 @@ async function fetchManageProducts() {
                     <td><img src="${prod.imageUrl}" width="50" style="object-fit:cover;"></td>
                     <td>${prod.name}</td>
                     <td>${prod.category}</td>
+                    <td>${prod.size || '-'}</td>
+                    <td>${prod.colour || '-'}</td>
+                    <td>${prod.brand || '-'}</td>
                     <td>৳${prod.price}</td>
                     <td>${prod.stockQuantity} Left</td> 
                     <td>${prod.isAvailable ? '<span style="color:green">Available</span>' : '<span style="color:red">Unavailable</span>'}</td>
@@ -245,6 +248,9 @@ async function handleAddProduct(e) {
         price: document.getElementById('prod-price').value,
         category: document.getElementById('prod-category').value,
         subcategory: document.getElementById('prod-subcategory').value,
+        size: document.getElementById('prod-size') ? document.getElementById('prod-size').value : '',
+        colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
+        brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
         stock: document.getElementById('prod-stock').value,
         image: imageBase64
     };

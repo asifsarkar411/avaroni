@@ -671,6 +671,9 @@ app.post('/api/products', verifyAdminToken, async (req, res) => {
             price: Number(bodyData.price), 
             category: bodyData.category,
             subcategory: bodyData.subcategory || "",
+            size: bodyData.size || "",
+            colour: bodyData.colour || "",
+            brand: bodyData.brand || "",
             stockQuantity: Number(bodyData.stock) || 1, 
             imageUrl: imageUrl 
         };
