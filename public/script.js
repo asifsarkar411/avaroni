@@ -712,15 +712,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Secure Global Event Delegation for dynamically created buttons
     document.body.addEventListener('click', (e) => {
         
-        // 1. Add to Cart Button Logic
-        if (e.target.classList.contains('add-to-cart-btn')) {
+        // 1. Add to Cart Button Logic (Using closest to catch icon/span clicks; ignore modal's cart button)
+        const addToCartBtn = e.target.closest('.add-to-cart-btn');
+        if (addToCartBtn && addToCartBtn.id !== 'modal-add-to-cart-btn') {
             e.stopPropagation(); // Prevent product card click from firing
-            const btn = e.target;
-            const id = btn.getAttribute('data-id');
-            const name = btn.getAttribute('data-name');
-            const price = Number(btn.getAttribute('data-price'));
-            const image = btn.getAttribute('data-image');
-            const maxStock = Number(btn.getAttribute('data-stock'));
+            const id = addToCartBtn.getAttribute('data-id');
+            const name = addToCartBtn.getAttribute('data-name');
+            const price = Number(addToCartBtn.getAttribute('data-price'));
+            const image = addToCartBtn.getAttribute('data-image');
+            const maxStock = Number(addToCartBtn.getAttribute('data-stock'));
             
             addToCart(id, name, price, image, maxStock);
         }
@@ -737,18 +737,22 @@ document.addEventListener('DOMContentLoaded', () => {
             changeQty(id, 1);
         }
 
-        // 4. Product Card Click -> Open product detail modal
+        // 4. Product Card Click -> Open product detail modal (Only if NOT clicking the Add to Cart button)
         const productCard = e.target.closest('.product-card');
-        if (productCard && !e.target.classList.contains('add-to-cart-btn')) {
+        if (productCard && !e.target.closest('.add-to-cart-btn')) {
             const productId = productCard.getAttribute('data-product-id');
-            if (productId) openProductModal(productId);
+            if (productId && productId !== 'null' && productId !== 'undefined') {
+                openProductModal(productId);
+            }
         }
 
         // 5. Related product card click
         const relatedCard = e.target.closest('.related-product-card');
         if (relatedCard) {
             const productId = relatedCard.getAttribute('data-product-id');
-            if (productId) openProductModal(productId);
+            if (productId && productId !== 'null' && productId !== 'undefined') {
+                openProductModal(productId);
+            }
         }
     });
 });

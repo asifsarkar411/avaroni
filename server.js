@@ -409,6 +409,11 @@ app.get('/api/products', async (req, res) => {
 // Get Single Product by ID
 app.get('/api/products/:id', async (req, res) => {
     try {
+        // Validate MongoDB ObjectId to prevent CastError 500 when invalid IDs are passed
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).json({ success: false, message: "Invalid product ID format" });
+        }
+
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ success: false, message: "Product not found" });
         
