@@ -181,15 +181,22 @@ function renderCart() {
 
     const cartContainer = document.getElementById('cart-items');
     const totalElement = document.getElementById('cart-total');
-    
-    if (!cartContainer && !totalElement) return; 
+    const subtotalElement = document.getElementById('cart-subtotal');
+    const shippingElement = document.getElementById('shipping-charge');
+    const discountRow = document.getElementById('discount-row');
+    const promoDiscountElement = document.getElementById('promo-discount');
 
-    if (cartContainer) cartContainer.innerHTML = '';
+    if (!cartContainer && !totalElement) return;
+
+    cartContainer.innerHTML = '';
     let subtotal = 0;
 
     if (cart.length === 0) {
-        if (cartContainer) cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+        cartContainer.innerHTML = '<p>Your cart is empty.</p>';
         if (totalElement) totalElement.innerText = '0';
+        if (subtotalElement) subtotalElement.innerText = '0';
+        if (shippingElement) shippingElement.innerText = '0';
+        if (discountRow) discountRow.style.display = 'none';
         updateCartBadge();
         return;
     }
@@ -197,37 +204,50 @@ function renderCart() {
     cart.forEach(item => {
         let itemTotal = Number(item.price) * Number(item.quantity);
         subtotal += itemTotal;
-        
         if (cartContainer) {
             cartContainer.innerHTML += `
                 <div class="cart-item">
                     <img src="${item.image}" alt="${item.name}">
                     <span>${item.name}</span>
-                    <span class="cart-item-price">৳${item.price}</span> 
+                    <span class="cart-item-price">৳${item.price}</span>
                     <div class="cart-item-qty">
                         <button class="qty-btn qty-decrease" data-id="${item.id}" style="padding: 2px 8px; cursor: pointer;">-</button>
                         <span style="margin: 0 10px; font-weight: bold;">${item.quantity}</span>
                         <button class="qty-btn qty-increase" data-id="${item.id}" style="padding: 2px 8px; cursor: pointer;">+</button>
                     </div>
-                    <strong class="cart-item-total">৳${itemTotal}</strong> 
+                    <strong class="cart-item-total">৳${itemTotal}</strong>
                 </div>
             `;
         }
     });
-    
+
+    // Shipping fee based on delivery location
+    const deliveryRadio = document.querySelector('input[name="deliveryLocation"]:checked');
     let shippingFee = 0;
-    const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
-    if (paymentRadios.length > 0) {
-        const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
-        if (selectedMethod === 'cod') {
-            shippingFee = 150; 
+    if (deliveryRadio) {
+        shippingFee = deliveryRadio.value === 'inside' ? 80 : 150;
+    }
+
+    // Promo discount handling
+    let discount = 0;
+    if (window.appliedPromoCode) {
+        if (window.appliedPromoCode === 'SAVE10') {
+            discount = subtotal * 0.1;
+        } else if (window.appliedPromoCode === 'FREEDEL') {
+            discount = shippingFee;
         }
     }
 
-    if (totalElement) {
-        totalElement.innerText = (subtotal + shippingFee).toFixed(2).replace(/\.00$/, ''); 
+    // Update UI displays
+    if (subtotalElement) subtotalElement.innerText = subtotal.toFixed(2).replace(/\\.00$/, '');
+    if (shippingElement) shippingElement.innerText = shippingFee.toFixed(2).replace(/\\.00$/, '');
+    if (discountRow) {
+        discountRow.style.display = 'flex';
+        if (promoDiscountElement) promoDiscountElement.innerText = discount.toFixed(2).replace(/\.00$/, '');
     }
-    
+    const total = subtotal + shippingFee - discount;
+    if (totalElement) totalElement.innerText = total.toFixed(2).replace(/\.00$/, '');
+
     updateCartBadge();
 }
 
@@ -433,7 +453,22 @@ if (paymentForm) {
         submitBtn.innerText = 'Processing Order...';
 
         let subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
-        let shippingFee = selectedMethod === 'cod' ? 150 : 0;
+        // Shipping fee is based on selected delivery location, not payment method
+        const deliveryRadio = document.querySelector('input[name="deliveryLocation"]:checked');
+        let shippingFee = 0;
+        if (deliveryRadio) {
+            shippingFee = deliveryRadio.value === 'inside' ? 80 : 150;
+        }
+        // Apply promo discount if any
+        let discount = 0;
+        if (window.appliedPromoCode) {
+            if (window.appliedPromoCode === 'SAVE10') {
+                discount = subtotal * 0.1;
+            } else if (window.appliedPromoCode === 'FREEDEL') {
+                discount = shippingFee;
+            }
+        }
+        const finalAmount = subtotal + shippingFee - discount;
 
         // 🌟 FIXED: Variable names now match EXACTLY what server.js expects!
         const customerData = {
@@ -444,7 +479,7 @@ if (paymentForm) {
             paymentMethod: selectedMethod,
             trxId: selectedMethod === 'bkash' ? trxIdInput : 'Cash On Delivery', 
             cartItems: cart, 
-            totalAmount: subtotal + shippingFee
+            totalAmount: finalAmount
         };
 
         try {
