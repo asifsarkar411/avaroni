@@ -102,7 +102,7 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
         const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
 
         container.innerHTML += `
-            <div class="product-card">
+            <div class="product-card" data-product-id="${product._id}">
                 <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
                 <h3>${product.name}</h3>
                 <p class="price">৳${product.price}</p>
@@ -576,6 +576,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only load the sliders here. The animation will start automatically when they finish loading.
     loadHomepageSliders(); 
 
+    // Load new arrivals on homepage
+    loadNewArrivals();
+
+    // Initialize search functionality
+    initSearch();
+
     // If on cart page, prevent checkout if cart is empty
     const confirmOrderBtn = document.querySelector('a[href="payment.html"]');
     if (confirmOrderBtn) {
@@ -602,11 +608,31 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', togglePaymentDetails);
     });
 
+    // Modal close button
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeProductModal);
+    }
+
+    // Close modal on overlay click
+    const modalOverlay = document.getElementById('product-detail-modal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeProductModal();
+        });
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeProductModal();
+    });
+
     // Secure Global Event Delegation for dynamically created buttons
     document.body.addEventListener('click', (e) => {
         
         // 1. Add to Cart Button Logic
         if (e.target.classList.contains('add-to-cart-btn')) {
+            e.stopPropagation(); // Prevent product card click from firing
             const btn = e.target;
             const id = btn.getAttribute('data-id');
             const name = btn.getAttribute('data-name');
@@ -628,7 +654,250 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = e.target.getAttribute('data-id');
             changeQty(id, 1);
         }
+
+        // 4. Product Card Click -> Open product detail modal
+        const productCard = e.target.closest('.product-card');
+        if (productCard && !e.target.classList.contains('add-to-cart-btn')) {
+            const productId = productCard.getAttribute('data-product-id');
+            if (productId) openProductModal(productId);
+        }
+
+        // 5. Related product card click
+        const relatedCard = e.target.closest('.related-product-card');
+        if (relatedCard) {
+            const productId = relatedCard.getAttribute('data-product-id');
+            if (productId) openProductModal(productId);
+        }
     });
 });
 
 window.addEventListener('load', renderCart);
+
+// ==========================================
+// NEW ARRIVALS (Homepage - All categories)
+// ==========================================
+async function loadNewArrivals() {
+    const grid = document.getElementById('new-arrivals-grid');
+    if (!grid) return;
+
+    try {
+        const response = await fetch('/api/products');
+        const data = await response.json();
+
+        if (!data.success || !data.products || data.products.length === 0) {
+            grid.innerHTML = '<p style="text-align:center; width:100%; color:#888;">No products available yet.</p>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        // Show latest products (already sorted newest first by the API)
+        const latestProducts = data.products.slice(0, 20);
+
+        latestProducts.forEach(product => {
+            const fullImageUrl = product.imageUrl;
+            const stockText = product.stockQuantity > 0 
+                ? `<p style="color:green;">In Stock: ${product.stockQuantity}</p>` 
+                : `<p style="color:red;">Out of Stock</p>`;
+            const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
+
+            grid.innerHTML += `
+                <div class="product-card" data-product-id="${product._id}">
+                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                    <h3>${product.name}</h3>
+                    <p class="price">৳${product.price}</p>
+                    ${stockText}
+                    <button class="btn add-to-cart-btn" ${btnStatus} 
+                        data-id="${product._id}" 
+                        data-name="${product.name.replace(/"/g, '&quot;')}" 
+                        data-price="${product.price}" 
+                        data-image="${fullImageUrl}" 
+                        data-stock="${product.stockQuantity}">Add to Cart</button>
+                </div>
+            `;
+        });
+    } catch (error) {
+        console.error("Error loading new arrivals:", error);
+        grid.innerHTML = '<p style="text-align:center; color:red;">Failed to load products.</p>';
+    }
+}
+
+// ==========================================
+// GLOBAL SEARCH FUNCTIONALITY
+// ==========================================
+let searchTimeout = null;
+
+function initSearch() {
+    const searchInput = document.getElementById('global-search-input');
+    const clearBtn = document.getElementById('search-clear-btn');
+    const dropdown = document.getElementById('search-results-dropdown');
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        
+        // Show/hide clear button
+        if (clearBtn) clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+        // Debounce search
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        if (query.length < 2) {
+            if (dropdown) dropdown.classList.remove('active');
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            if (dropdown) dropdown.classList.remove('active');
+            searchInput.focus();
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (dropdown && !e.target.closest('.search-bar-container')) {
+            dropdown.classList.remove('active');
+        }
+    });
+}
+
+async function performSearch(query) {
+    const dropdown = document.getElementById('search-results-dropdown');
+    if (!dropdown) return;
+
+    try {
+        const response = await fetch(`/api/products?search=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (!data.success || !data.products || data.products.length === 0) {
+            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-search" style="margin-right:8px;"></i>No products found for "${query}"</div>`;
+            dropdown.classList.add('active');
+            return;
+        }
+
+        dropdown.innerHTML = '';
+        data.products.slice(0, 8).forEach(product => {
+            const item = document.createElement('div');
+            item.className = 'search-result-item';
+            item.setAttribute('data-product-id', product._id);
+            item.innerHTML = `
+                <img src="${product.imageUrl}" alt="${product.name}">
+                <div class="search-result-info">
+                    <h4>${product.name}</h4>
+                    <span>${product.category}${product.subcategory ? ' • ' + product.subcategory : ''}</span>
+                </div>
+                <span class="search-result-price">৳${product.price}</span>
+            `;
+            item.addEventListener('click', () => {
+                openProductModal(product._id);
+                dropdown.classList.remove('active');
+                document.getElementById('global-search-input').value = '';
+                document.getElementById('search-clear-btn').style.display = 'none';
+            });
+            dropdown.appendChild(item);
+        });
+
+        if (data.products.length > 8) {
+            dropdown.innerHTML += `<div class="search-no-results" style="color: #e60050; font-weight:600;">+ ${data.products.length - 8} more results</div>`;
+        }
+
+        dropdown.classList.add('active');
+    } catch (error) {
+        console.error("Search error:", error);
+    }
+}
+
+// ==========================================
+// PRODUCT DETAIL MODAL + RELATED PRODUCTS
+// ==========================================
+async function openProductModal(productId) {
+    const modal = document.getElementById('product-detail-modal');
+    if (!modal) return;
+
+    // Show modal with loading state
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    try {
+        const response = await fetch(`/api/products/${productId}`);
+        const data = await response.json();
+
+        if (!data.success || !data.product) {
+            alert("Product not found.");
+            closeProductModal();
+            return;
+        }
+
+        const product = data.product;
+
+        // Fill modal content
+        document.getElementById('modal-product-image').src = product.imageUrl;
+        document.getElementById('modal-product-image').alt = product.name;
+        document.getElementById('modal-product-name').innerText = product.name;
+        document.getElementById('modal-product-price').innerText = `৳${product.price}`;
+        
+        const categoryLabel = product.category + (product.subcategory ? ' / ' + product.subcategory : '');
+        document.getElementById('modal-product-category').innerText = categoryLabel;
+
+        const stockEl = document.getElementById('modal-product-stock');
+        if (product.stockQuantity > 0) {
+            stockEl.innerHTML = `<span style="color:green;">✓ In Stock (${product.stockQuantity} available)</span>`;
+        } else {
+            stockEl.innerHTML = `<span style="color:red;">✗ Out of Stock</span>`;
+        }
+
+        // Setup Add to Cart button
+        const cartBtn = document.getElementById('modal-add-to-cart-btn');
+        if (product.stockQuantity > 0) {
+            cartBtn.disabled = false;
+            cartBtn.style.background = '';
+            cartBtn.onclick = () => {
+                addToCart(product._id, product.name, product.price, product.imageUrl, product.stockQuantity);
+            };
+        } else {
+            cartBtn.disabled = true;
+            cartBtn.style.background = 'grey';
+            cartBtn.onclick = null;
+        }
+
+        // Fill related products
+        const relatedGrid = document.getElementById('related-products-grid');
+        if (relatedGrid) {
+            if (data.relatedProducts && data.relatedProducts.length > 0) {
+                relatedGrid.innerHTML = '';
+                data.relatedProducts.forEach(rp => {
+                    relatedGrid.innerHTML += `
+                        <div class="related-product-card" data-product-id="${rp._id}">
+                            <img src="${rp.imageUrl}" alt="${rp.name}">
+                            <h4>${rp.name}</h4>
+                            <span class="related-price">৳${rp.price}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                relatedGrid.innerHTML = '<p style="color:#888; text-align:center; width:100%; font-size:13px;">No related products found.</p>';
+            }
+        }
+
+    } catch (error) {
+        console.error("Error loading product details:", error);
+        alert("Failed to load product details.");
+        closeProductModal();
+    }
+}
+
+function closeProductModal() {
+    const modal = document.getElementById('product-detail-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}

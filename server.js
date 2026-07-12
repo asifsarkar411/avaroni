@@ -387,15 +387,45 @@ app.delete('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
     }
 });
 
-// Get Products
+// Get Products (supports ?category=, ?search=, no params = all products)
 app.get('/api/products', async (req, res) => {
     try {
         let filter = { isAvailable: true }; 
         if (req.query.category) filter.category = req.query.category;
-        const products = await Product.find(filter);
+        
+        // Search by name (case-insensitive partial match)
+        if (req.query.search) {
+            filter.name = { $regex: req.query.search, $options: 'i' };
+        }
+
+        const products = await Product.find(filter).sort({ _id: -1 }); // Newest first
         res.json({ success: true, products });
     } catch (error) { 
         console.error("Get Products Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// Get Single Product by ID
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+        
+        // Get related products (same category or subcategory, excluding this one)
+        let relatedFilter = { 
+            _id: { $ne: product._id }, 
+            isAvailable: true,
+            $or: [
+                { category: product.category },
+                { subcategory: product.subcategory && product.subcategory.trim() ? product.subcategory : '__none__' }
+            ]
+        };
+        const relatedProducts = await Product.find(relatedFilter).limit(8).sort({ _id: -1 });
+        
+        res.json({ success: true, product, relatedProducts });
+    } catch (error) { 
+        console.error("Get Product By ID Error:", error);
         res.status(500).json({ success: false }); 
     }
 });
