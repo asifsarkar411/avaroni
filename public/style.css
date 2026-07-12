@@ -483,3 +483,43 @@ body {
 .cart-item-total {
     color: #e60050;
 }
+
+/* =========================================
+   Navbar Category Dropdown Hover Menus
+========================================= */
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.nav-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    min-width: 170px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 2px;
+    border: 1px solid #ffb6d8;
+    left: 15px; /* Offset to align under nav link */
+}
+.nav-dropdown-content a {
+    color: #333333 !important;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 !important;
+    text-align: left;
+    transition: all 0.2s;
+    border-bottom: 1px solid #fff3f8;
+}
+.nav-dropdown-content a:hover {
+    background-color: #ffb6d8;
+    color: #ffffff !important;
+}
+.nav-dropdown:hover .nav-dropdown-content {
+    display: block;
+}

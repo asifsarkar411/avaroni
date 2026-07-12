@@ -41,6 +41,7 @@
             <button class="tab-btn active" data-target="orders">View Orders</button>
             <button class="tab-btn" data-target="manage-products">Manage Inventory</button>
             <button class="tab-btn" data-target="add-product">Add New Product</button>
+            <button class="tab-btn" data-target="manage-categories">Manage Categories</button>
             <button class="tab-btn" data-target="manage-banners">Manage Homepage Slider</button>
         </div>
 
@@ -101,14 +102,13 @@
                 </div>
                 <div class="form-group">
                     <select id="prod-category" required>
-                        <option value="" disabled selected>Select Category</option>
-                        <option value="women">Women</option>
-                        <option value="ornament">Ornaments</option>
-                        <option value="kids">Kids Zone</option>
+                        <option value="" disabled selected>Loading Categories...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <input type="text" id="prod-subcategory" placeholder="Subcategory (e.g., Saree, Necklace, Toy)">
+                    <select id="prod-subcategory" required>
+                        <option value="" disabled selected>Select Subcategory</option>
+                    </select>
                 </div>
                 <div class="form-group">
                    <label for="prod-image">Upload Product Photo (.jpg, .png, .jpeg):</label>
@@ -116,6 +116,21 @@
                 </div>
                 <button type="submit" class="btn" id="save-product-btn">Save Product to Database</button>
             </form>
+        </div>
+
+        <div id="manage-categories-tab" class="tab-content">
+            <h2>Manage Categories & Subcategories</h2>
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; color: #333;">
+                <h3 style="margin-top: 0; color: #e60050;">Add New Category</h3>
+                <form id="add-category-form" style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="new-cat-name" placeholder="Category Name (e.g. Winter Collection)" required style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    <button type="submit" class="btn" style="margin-top: 0; width: auto; padding: 10px 20px; background: #e60050; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Category</button>
+                </form>
+            </div>
+            
+            <div id="categories-list-container" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+                <!-- Dynamically loaded categories and subcategories list -->
+            </div>
         </div>
 
         <div id="manage-banners-tab" class="tab-content">

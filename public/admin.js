@@ -31,6 +31,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addProductForm) {
         addProductForm.addEventListener('submit', handleAddProduct);
     }
+
+    // 5. Add Category Form Submit
+    const addCategoryForm = document.getElementById('add-category-form');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', handleAddCategory);
+    }
+
+    // 6. Dynamic Category -> Subcategory selection binding
+    const prodCategorySelect = document.getElementById('prod-category');
+    if (prodCategorySelect) {
+        prodCategorySelect.addEventListener('change', (e) => {
+            populateSubcategories(e.target.value);
+        });
+    }
 });
 
 // Helper to convert file to Base64
@@ -69,6 +83,7 @@ function showDashboard() {
     // Load default data on startup
     fetchOrders();
     loadAdminBanners(); 
+    loadCategories();
 }
 
 function switchTab(tabName) {
@@ -84,6 +99,8 @@ function switchTab(tabName) {
     // Fetch data dynamically based on the active tab
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'manage-products') fetchManageProducts();
+    if (tabName === 'add-product') populateAddProductCategories();
+    if (tabName === 'manage-categories') renderCategoriesTab();
     if (tabName === 'manage-banners') loadAdminBanners();
 }
 
@@ -199,16 +216,21 @@ async function handleAddProduct(e) {
     const imageFile = document.getElementById('prod-image').files[0];
     let imageBase64 = "";
     
-    if (imageFile) {
-        try {
-            imageBase64 = await fileToBase64(imageFile);
-        } catch (err) {
-            console.error("Error reading image:", err);
-            alert("Failed to read image file.");
-            saveBtn.disabled = false;
-            saveBtn.innerText = 'Save Product to Database';
-            return;
-        }
+    if (!imageFile) {
+        alert("Please select a product photo before saving.");
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Product to Database';
+        return;
+    }
+
+    try {
+        imageBase64 = await fileToBase64(imageFile);
+    } catch (err) {
+        console.error("Error reading image:", err);
+        alert("Failed to read image file. Please try a different photo.");
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Product to Database';
+        return;
     }
 
     const payload = {
@@ -486,3 +508,202 @@ function setupIdleTimeout() {
 
 // Start the tracker immediately
 setupIdleTimeout();
+
+// ==========================================
+// 🏷️ CATEGORY MANAGEMENT HELPERS
+// ==========================================
+let localCategories = [];
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        if (data.success) {
+            localCategories = data.categories;
+            populateAddProductCategories();
+        }
+    } catch (err) {
+        console.error("Error loading categories:", err);
+    }
+}
+
+function populateAddProductCategories() {
+    const catSelect = document.getElementById('prod-category');
+    if (!catSelect) return;
+
+    catSelect.innerHTML = `<option value="" disabled selected>Select Category</option>`;
+    localCategories.forEach(cat => {
+        catSelect.innerHTML += `<option value="${cat.slug}">${cat.displayName}</option>`;
+    });
+
+    const subSelect = document.getElementById('prod-subcategory');
+    if (subSelect) {
+        subSelect.innerHTML = `<option value="" disabled selected>Select Subcategory</option>`;
+    }
+}
+
+function populateSubcategories(categorySlug) {
+    const subSelect = document.getElementById('prod-subcategory');
+    if (!subSelect) return;
+
+    const category = localCategories.find(c => c.slug === categorySlug);
+    if (!category || !category.subcategories || category.subcategories.length === 0) {
+        subSelect.innerHTML = `<option value="" disabled selected>No subcategories found. Add them in Manage Categories tab.</option>`;
+        return;
+    }
+
+    subSelect.innerHTML = `<option value="" disabled selected>Select Subcategory</option>`;
+    category.subcategories.forEach(sub => {
+        subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    });
+}
+
+async function renderCategoriesTab() {
+    const container = document.getElementById('categories-list-container');
+    if (!container) return;
+
+    await loadCategories(); // Refresh categories list
+
+    container.innerHTML = '';
+    
+    if (localCategories.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#666;">No categories found. Add one above.</p>`;
+        return;
+    }
+
+    localCategories.forEach(cat => {
+        let subListHtml = '';
+        if (cat.subcategories && cat.subcategories.length > 0) {
+            cat.subcategories.forEach(sub => {
+                subListHtml += `
+                    <span style="display: inline-flex; align-items: center; background: #ffe6eb; border: 1px solid #e60050; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #e60050;">
+                        ${sub}
+                        <i class="fas fa-times" onclick="deleteSubcategory('${cat._id}', '${sub}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
+                    </span>
+                `;
+            });
+        } else {
+            subListHtml = `<p style="margin: 0; color: #888; font-size: 13px; font-style: italic;">No subcategories added yet.</p>`;
+        }
+
+        container.innerHTML += `
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #e60050; color: #333;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: #333;">${cat.displayName} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 10px;">(Slug: ${cat.slug})</span></h3>
+                    <button class="btn" onclick="deleteCategory('${cat._id}')" style="margin-top:0; width:auto; padding: 5px 10px; font-size: 12px; background: #333; color: #fff;">Delete Category</button>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #555;">Subcategories:</h4>
+                    <div style="display: flex; flex-wrap: wrap; align-items: center;">
+                        ${subListHtml}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <input type="text" id="new-sub-${cat._id}" placeholder="New Subcategory name" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    <button class="btn" onclick="handleAddSubcategory('${cat._id}')" style="margin-top:0; width:auto; padding: 8px 15px; font-size: 13px; background: #e60050; color: #fff;">Add Subcategory</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+async function handleAddCategory(e) {
+    e.preventDefault();
+    const input = document.getElementById('new-cat-name');
+    const name = input.value.trim();
+    if (!name) return;
+
+    try {
+        const response = await fetch('/api/admin/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ displayName: name })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('Category added successfully!');
+            input.value = '';
+            renderCategoriesTab();
+        } else {
+            alert('Failed to add category: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error adding category:", err);
+        alert('An error occurred connecting to the server.');
+    }
+}
+
+async function handleAddSubcategory(catId) {
+    const input = document.getElementById(`new-sub-${catId}`);
+    const name = input.value.trim();
+    if (!name) return;
+
+    try {
+        const response = await fetch(`/api/admin/categories/${catId}/subcategories`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ subcategory: name })
+        });
+        const data = await response.json();
+        if (data.success) {
+            input.value = '';
+            renderCategoriesTab();
+        } else {
+            alert('Failed to add subcategory: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error adding subcategory:", err);
+        alert('An error occurred connecting to the server.');
+    }
+}
+
+async function deleteSubcategory(catId, subName) {
+    if (!confirm(`Remove subcategory "${subName}"?`)) return;
+    try {
+        const response = await fetch(`/api/admin/categories/${catId}/subcategories/${encodeURIComponent(subName)}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (data.success) {
+            renderCategoriesTab();
+        } else {
+            alert('Failed to remove subcategory: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error deleting subcategory:", err);
+        alert('An error occurred connecting to the server.');
+    }
+}
+
+async function deleteCategory(catId) {
+    if (!confirm("Are you sure you want to delete this Category? All its subcategories will be removed.")) return;
+    try {
+        const response = await fetch(`/api/admin/categories/${catId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (data.success) {
+            renderCategoriesTab();
+        } else {
+            alert('Failed to delete category: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error deleting category:", err);
+        alert('An error occurred connecting to the server.');
+    }
+}
+
+// Attach actions to global context
+window.deleteCategory = deleteCategory;
+window.deleteSubcategory = deleteSubcategory;
+window.handleAddSubcategory = handleAddSubcategory;

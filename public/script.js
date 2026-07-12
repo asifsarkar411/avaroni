@@ -19,6 +19,11 @@ async function loadProducts(category) {
                 return;
             }
 
+            // Check for ?sub= URL parameter to auto-filter
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlSub = urlParams.get('sub');
+            let initialFilter = 'all';
+
             // Extract unique subcategories from these products (case-insensitive deduplication)
             const subcategories = [];
             allProducts.forEach(p => {
@@ -40,10 +45,19 @@ async function loadProducts(category) {
                     productContainer.parentNode.insertBefore(filterContainer, productContainer);
                 }
 
+                // If URL has ?sub= parameter, set the initial filter
+                if (urlSub) {
+                    const matchedSub = subcategories.find(s => s.toLowerCase() === urlSub.toLowerCase());
+                    if (matchedSub) {
+                        initialFilter = matchedSub.toLowerCase();
+                    }
+                }
+
                 // Render filter buttons
-                filterContainer.innerHTML = `<button class="filter-btn active" data-sub="all">All</button>`;
+                filterContainer.innerHTML = `<button class="filter-btn ${initialFilter === 'all' ? 'active' : ''}" data-sub="all">All</button>`;
                 subcategories.forEach(sub => {
-                    filterContainer.innerHTML += `<button class="filter-btn" data-sub="${sub.toLowerCase()}">${sub}</button>`;
+                    const isActive = sub.toLowerCase() === initialFilter ? 'active' : '';
+                    filterContainer.innerHTML += `<button class="filter-btn ${isActive}" data-sub="${sub.toLowerCase()}">${sub}</button>`;
                 });
 
                 // Attach click handlers to the filter buttons
@@ -60,8 +74,8 @@ async function loadProducts(category) {
                 filterContainer.remove(); // Clean up if no subcategories exist
             }
 
-            // Initially render all products
-            renderFilteredProducts(allProducts, 'all', productContainer);
+            // Initially render products (filtered if ?sub= param exists)
+            renderFilteredProducts(allProducts, initialFilter, productContainer);
         }
     } catch (error) {
         console.error("Error loading products:", error);
@@ -244,6 +258,139 @@ function updateCartBadge() {
     });
 }
 
+// ==========================================
+// DYNAMIC CATEGORY NAVBAR BUILDER
+// ==========================================
+// Maps category slugs to their page files
+const categoryPageMap = {
+    'women': 'women.html',
+    'womendress': 'women.html',
+    'ornament': 'ornament.html',
+    'kids': 'kids.html',
+    'kidszone': 'kids.html'
+};
+
+async function loadNavCategories() {
+    const navLinksContainer = document.querySelector('.nav-links');
+    if (!navLinksContainer) return;
+
+    try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        if (!data.success || !data.categories) return;
+
+        // Preserve the cart icon and menu icon from the nav-links
+        const cartIcon = navLinksContainer.querySelector('.cart-icon');
+        const menuIcon = navLinksContainer.querySelector('.menu-icon');
+
+        // Clear existing category links (keep cart/menu)
+        navLinksContainer.innerHTML = '';
+
+        data.categories.forEach(cat => {
+            const pageFile = categoryPageMap[cat.slug] || categoryPageMap[cat.name] || `${cat.slug}.html`;
+
+            if (cat.subcategories && cat.subcategories.length > 0) {
+                // Create dropdown wrapper
+                const dropdown = document.createElement('div');
+                dropdown.className = 'nav-dropdown';
+
+                const mainLink = document.createElement('a');
+                mainLink.href = pageFile;
+                mainLink.innerHTML = `<b>${cat.displayName.toUpperCase()}</b>`;
+                dropdown.appendChild(mainLink);
+
+                const dropContent = document.createElement('div');
+                dropContent.className = 'nav-dropdown-content';
+
+                // "All" option
+                const allLink = document.createElement('a');
+                allLink.href = pageFile;
+                allLink.textContent = `All ${cat.displayName}`;
+                dropContent.appendChild(allLink);
+
+                cat.subcategories.forEach(sub => {
+                    const subLink = document.createElement('a');
+                    subLink.href = `${pageFile}?sub=${encodeURIComponent(sub)}`;
+                    subLink.textContent = sub;
+                    dropContent.appendChild(subLink);
+                });
+
+                dropdown.appendChild(dropContent);
+                navLinksContainer.appendChild(dropdown);
+            } else {
+                const link = document.createElement('a');
+                link.href = pageFile;
+                link.innerHTML = `<b>${cat.displayName.toUpperCase()}</b>`;
+                navLinksContainer.appendChild(link);
+            }
+        });
+
+        // Re-append cart icon and menu icon
+        if (cartIcon) navLinksContainer.appendChild(cartIcon);
+        if (menuIcon) navLinksContainer.appendChild(menuIcon);
+
+        // Also update sidebar with categories
+        loadSidebarCategories(data.categories);
+    } catch (err) {
+        console.error("Error loading nav categories:", err);
+    }
+}
+
+function loadSidebarCategories(categories) {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    // Preserve close button and footer links
+    const closeBtn = sidebar.querySelector('.close-btn');
+    const footerLinks = [];
+
+    // Save footer links (return, policy, about, contact)
+    sidebar.querySelectorAll('a').forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.includes('return') || href.includes('about') || href.includes('contact') || href.includes('policy')) {
+            footerLinks.push(a.cloneNode(true));
+        }
+    });
+
+    sidebar.innerHTML = '';
+    if (closeBtn) sidebar.appendChild(closeBtn.cloneNode(true));
+
+    // Re-attach close button event
+    const newCloseBtn = sidebar.querySelector('.close-btn');
+    if (newCloseBtn) {
+        newCloseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleSidebar();
+        });
+    }
+
+    const iconMap = {
+        'women': 'fas fa-female',
+        'womendress': 'fas fa-female',
+        'ornament': 'fas fa-gem',
+        'kids': 'fas fa-child',
+        'kidszone': 'fas fa-child'
+    };
+
+    categories.forEach(cat => {
+        const pageFile = categoryPageMap[cat.slug] || categoryPageMap[cat.name] || `${cat.slug}.html`;
+        const iconClass = iconMap[cat.slug] || iconMap[cat.name] || 'fas fa-tag';
+
+        const link = document.createElement('a');
+        link.href = pageFile;
+        link.innerHTML = `<i class="${iconClass}"></i> ${cat.displayName}`;
+        sidebar.appendChild(link);
+    });
+
+    // Add divider
+    const hr = document.createElement('hr');
+    hr.style.cssText = 'border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;';
+    sidebar.appendChild(hr);
+
+    // Re-add footer links
+    footerLinks.forEach(link => sidebar.appendChild(link));
+}
+
 // Payment Checkout Logic
 const paymentForm = document.getElementById('checkout-form');
 if (paymentForm) {
@@ -423,6 +570,9 @@ function startSliderAnimations() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Load dynamic category navigation from database
+    loadNavCategories();
+
     // Only load the sliders here. The animation will start automatically when they finish loading.
     loadHomepageSliders(); 
 

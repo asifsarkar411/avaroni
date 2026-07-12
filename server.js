@@ -27,6 +27,7 @@ const User = require('./models/User');           // Secure Login User Model
 const Order = require('./models/Order');         // E-commerce Order Model
 const Product = require('./models/Product');     // E-commerce Product Model
 const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
+const Category = require('./models/Category');   // Dynamic Categories Model
 
 const app = express();
 
@@ -37,7 +38,8 @@ const app = express();
 app.use(helmet({
     contentSecurityPolicy: false, 
 })); 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors()); // Allow frontend to communicate with backend
 app.use(express.static(path.join(__dirname, 'public'))); // Serves your HTML/CSS/JS
 
@@ -52,6 +54,25 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_sto
   .catch(err => {
     console.error('MongoDB Connection Error:', err);
   });
+
+// Seed Categories Function
+async function seedCategories() {
+  try {
+    const count = await Category.countDocuments();
+    if (count === 0) {
+      const initialCats = [
+        { name: "women", displayName: "Women Dress", slug: "women", subcategories: ["Saree", "Three Piece", "Kurti"] },
+        { name: "ornament", displayName: "Ornament", slug: "ornament", subcategories: ["Necklace", "Ring", "Bracelet"] },
+        { name: "kids", displayName: "Kids Zone", slug: "kids", subcategories: ["Toys", "Clothing", "Shoes"] }
+      ];
+      await Category.insertMany(initialCats);
+      console.log('Categories seeded successfully');
+    }
+  } catch (err) {
+    console.error('Error seeding categories:', err);
+  }
+}
+seedCategories();
 
 // ==========================================
 // NODEMAILER SETUP (For 2FA, Password Reset, & Order Receipts)
@@ -274,6 +295,98 @@ function verifyAdminToken(req, res, next) {
 // 🛍️ PUBLIC ROUTES (Customers can access these)
 // ==========================================
 
+// ==========================================
+// 🏷️ CATEGORY ROUTES
+// ==========================================
+
+// Get Categories (Public)
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find();
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error("Get Categories Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load categories" });
+    }
+});
+
+// Add Category (Admin)
+app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
+    try {
+        const { displayName, subcategories } = req.body;
+        const name = displayName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const slug = name;
+
+        // Check if category already exists
+        let category = await Category.findOne({ name });
+        if (category) {
+            return res.status(400).json({ success: false, message: "Category already exists" });
+        }
+
+        category = new Category({
+            name,
+            displayName,
+            slug,
+            subcategories: subcategories || []
+        });
+
+        await category.save();
+        res.status(201).json({ success: true, category });
+    } catch (error) {
+        console.error("Add Category Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create category" });
+    }
+});
+
+// Add Subcategory (Admin)
+app.post('/api/admin/categories/:id/subcategories', verifyAdminToken, async (req, res) => {
+    try {
+        const { subcategory } = req.body;
+        if (!subcategory) return res.status(400).json({ success: false, message: "Subcategory name is required" });
+
+        const category = await Category.findById(req.params.id);
+        if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+        // Add subcategory if it doesn't already exist
+        if (!category.subcategories.includes(subcategory)) {
+            category.subcategories.push(subcategory);
+            await category.save();
+        }
+
+        res.json({ success: true, category });
+    } catch (error) {
+        console.error("Add Subcategory Error:", error);
+        res.status(500).json({ success: false, message: "Failed to add subcategory" });
+    }
+});
+
+// Delete Subcategory (Admin)
+app.delete('/api/admin/categories/:id/subcategories/:subName', verifyAdminToken, async (req, res) => {
+    try {
+        const category = await Category.findById(req.params.id);
+        if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+        category.subcategories = category.subcategories.filter(sub => sub.toLowerCase() !== req.params.subName.toLowerCase());
+        await category.save();
+
+        res.json({ success: true, category });
+    } catch (error) {
+        console.error("Delete Subcategory Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete subcategory" });
+    }
+});
+
+// Delete Category (Admin)
+app.delete('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Category.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Category Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete category" });
+    }
+});
+
 // Get Products
 app.get('/api/products', async (req, res) => {
     try {
@@ -401,25 +514,42 @@ app.get('/api/admin/products', verifyAdminToken, async (req, res) => {
 });
 
 // Add Product
-app.post('/api/products', verifyAdminToken, upload.single('image'), async (req, res) => {
+// Product creation - JSON body with Base64 image
+app.post('/api/products', verifyAdminToken, async (req, res) => {
     try {
-        let imageUrl = "";
+        // Check Content-Type to decide parsing strategy
+        const contentType = req.headers['content-type'] || '';
         
-        // Support both Base64 JSON and Multer file upload
-        if (req.body.image) {
-            imageUrl = req.body.image; 
-        } else if (req.file) {
-            imageUrl = `/uploads/${req.file.filename}`;
+        let imageUrl = "";
+        let bodyData = req.body;
+
+        // If multipart, use multer manually
+        if (contentType.includes('multipart/form-data')) {
+            await new Promise((resolve, reject) => {
+                upload.single('image')(req, res, (err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+            bodyData = req.body;
+            if (req.file) {
+                imageUrl = `/uploads/${req.file.filename}`;
+            }
         } else {
+            // JSON body with Base64 image
+            imageUrl = bodyData.image || "";
+        }
+
+        if (!imageUrl) {
             return res.status(400).json({ success: false, message: "Product image is required" });
         }
 
         const productData = {
-            name: req.body.name, 
-            price: Number(req.body.price), 
-            category: req.body.category,
-            subcategory: req.body.subcategory || "",
-            stockQuantity: Number(req.body.stock) || 1, 
+            name: bodyData.name, 
+            price: Number(bodyData.price), 
+            category: bodyData.category,
+            subcategory: bodyData.subcategory || "",
+            stockQuantity: Number(bodyData.stock) || 1, 
             imageUrl: imageUrl 
         };
         const newProduct = new Product(productData);
