@@ -118,7 +118,18 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
     });
 }
 
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+// Unique cart session ID generation per tab/session to avoid different tabs/customers sharing the same cart
+function getSessionCartKey() {
+    let sessionId = sessionStorage.getItem('cart_session_id');
+    if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
+        sessionStorage.setItem('cart_session_id', sessionId);
+    }
+    return `cart_${sessionId}`;
+}
+
+const cartKey = getSessionCartKey();
+let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
 
 function addToCart(id, name, price, image, maxStock) {
     let existingItem = cart.find(item => item.id === id);
@@ -138,7 +149,7 @@ function addToCart(id, name, price, image, maxStock) {
         alert(`${name} added to cart successfully!`);
     }
     
-    localStorage.setItem('cart', JSON.stringify(cart));
+    localStorage.setItem(cartKey, JSON.stringify(cart));
     renderCart(); 
     updateCartBadge();
 }
@@ -234,7 +245,7 @@ function changeQty(id, change) {
         if (item.quantity <= 0) {
             cart = cart.filter(i => i.id !== id); 
         }
-        localStorage.setItem('cart', JSON.stringify(cart));
+        localStorage.setItem(cartKey, JSON.stringify(cart));
         renderCart(); 
         updateCartBadge();
     }
@@ -460,7 +471,7 @@ if (paymentForm) {
                     `;
                 }
                 
-                localStorage.removeItem('cart');
+                localStorage.removeItem(cartKey);
                 cart = [];
                 renderCart(); 
             } else {
