@@ -167,8 +167,19 @@ function changeQty(id, change) {
 // Payment Checkout Logic
 const paymentForm = document.getElementById('checkout-form');
 if (paymentForm) {
+    if (cart.length === 0) {
+        alert("Your cart is empty. Please select products first.");
+        window.location.href = "index.html";
+    }
+
     paymentForm.addEventListener('submit', async function(e) {
         e.preventDefault(); 
+        
+        if (cart.length === 0) {
+            alert("Your cart is empty. Please select products first.");
+            window.location.href = "index.html";
+            return;
+        }
         
         const submitBtn = document.getElementById('submit-btn');
         const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
@@ -213,8 +224,13 @@ if (paymentForm) {
                 const successDiv = document.getElementById('success-message');
                 if (successDiv) {
                     successDiv.style.display = 'block'; 
-                    // Optional: Show the order number to the customer
-                    successDiv.innerHTML = `<h2>Order Placed!</h2><p>Your order number is: <strong>${data.orderNumber}</strong></p><p>A confirmation email has been sent to you.</p>`;
+                    successDiv.innerHTML = `
+                        <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
+                        <p style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
+                        <p>Your order number is: <strong>${data.orderNumber || 'N/A'}</strong></p>
+                        <br>
+                        <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
+                    `;
                 }
                 
                 localStorage.removeItem('cart');
@@ -329,6 +345,17 @@ function startSliderAnimations() {
 document.addEventListener('DOMContentLoaded', () => {
     // Only load the sliders here. The animation will start automatically when they finish loading.
     loadHomepageSliders(); 
+
+    // If on cart page, prevent checkout if cart is empty
+    const confirmOrderBtn = document.querySelector('a[href="payment.html"]');
+    if (confirmOrderBtn) {
+        confirmOrderBtn.addEventListener('click', (e) => {
+            if (cart.length === 0) {
+                e.preventDefault();
+                alert("Your cart is empty. Please select products first.");
+            }
+        });
+    }
 
     // Securely attach sidebar toggle events
     const menuIcon = document.getElementById('menu-icon-btn');

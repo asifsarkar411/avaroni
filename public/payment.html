@@ -9,8 +9,10 @@
 </head>
 <body>
    <nav class="navbar">
-        <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
-        <a href="index.html" class="logo">আভরণী</a>
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
         <div class="nav-links">
             <a href="women.html">Women Dress</a>
             <a href="ornament.html">Ornament</a>
@@ -33,6 +35,14 @@
     <div class="cart-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <form id="checkout-form" class="payment-form">
             
+            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
+                <h3>Order Summary</h3>
+                <div id="cart-items" style="margin-top: 10px; color: #333;"></div>
+                <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold; border-top: 1px solid #eee; padding-top: 10px; color: #333;">
+                    Total: ৳<span id="cart-total">0</span>
+                </div>
+            </div>
+
             <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
                 <h3>Step 1: Shipping Details</h3>
                 <input type="text" id="name" placeholder="Full Name" required style="width: 100%; margin-top: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
