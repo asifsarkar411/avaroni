@@ -577,12 +577,83 @@ function startSliderAnimations() {
 }
 
 // ==========================================
+// FOOTER & QUICK CONTACT FLOATING WIDGETS
+// ==========================================
+function initFooterAndWidgets() {
+    // 1. Create and append floating contact buttons if not already present
+    if (!document.getElementById('floating-contact-widgets')) {
+        const floatingContainer = document.createElement('div');
+        floatingContainer.id = 'floating-contact-widgets';
+        floatingContainer.className = 'floating-contact-container';
+        floatingContainer.innerHTML = `
+            <a href="https://wa.me/8801743648510" target="_blank" class="floating-btn floating-whatsapp" title="WhatsApp Us">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <a href="tel:+8801743648510" class="floating-btn floating-phone" title="Call Us">
+                <i class="fas fa-phone-alt"></i>
+            </a>
+        `;
+        document.body.appendChild(floatingContainer);
+    }
+
+    // 2. Create and append the dynamic footer if not already present
+    if (!document.querySelector('.site-footer')) {
+        const footer = document.createElement('footer');
+        footer.className = 'site-footer';
+        footer.innerHTML = `
+            <div class="footer-container">
+                <div class="footer-section">
+                    <h3>আভরণী</h3>
+                    <p>Your premium boutique store for high-quality ladies' dresses, hand-crafted jewelry, ornaments, and kids wear.</p>
+                    <p><i class="fas fa-map-marker-alt" style="color: #ffb6d8; margin-right: 8px;"></i> Dhaka, Bangladesh</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Categories</h3>
+                    <ul>
+                        <li><a href="women.html">Women Dress</a></li>
+                        <li><a href="ornament.html">Ornament</a></li>
+                        <li><a href="kids.html">Kids Zone</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="return-policy.html">Return Policy</a></li>
+                        <li><a href="return-product.html">Return Product</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-phone" style="color: #ffb6d8; margin-right: 8px;"></i> 01743648510</p>
+                    <p><i class="fab fa-whatsapp" style="color: #ffb6d8; margin-right: 8px;"></i> 01743648510</p>
+                    <div class="social-icons">
+                        <a href="https://wa.me/8801743648510" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                        <a href="tel:+8801743648510"><i class="fas fa-phone-alt"></i></a>
+                        <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 আভরণী. All Rights Reserved.</p>
+                <p>Crafted for elegance & beauty</p>
+            </div>
+        `;
+        document.body.appendChild(footer);
+    }
+}
+
+// ==========================================
 // INITIALIZATION & EVENT LISTENERS
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
     // Load dynamic category navigation from database
     loadNavCategories();
+
+    // Initialize Footer and floating widgets dynamically on all pages
+    initFooterAndWidgets();
 
     // Only load the sliders here. The animation will start automatically when they finish loading.
     loadHomepageSliders(); 
