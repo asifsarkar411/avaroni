@@ -192,23 +192,24 @@ body {
    MOBILE RESPONSIVE DESIGN (Media Queries)
    ========================================= */
 @media (max-width: 768px) {
-    /* Stack the navbar vertically */
+    /* Keep navbar horizontal for clean mobile layout */
     .navbar {
-        flex-direction: column;
-        padding: 15px 10px;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 12px 20px;
     }
 
+    /* Hide text links on mobile as they are now inside the sidebar */
+    .nav-links a:not(.cart-icon) {
+        display: none;
+    }
+
+    /* Align cart icon and menu button nicely on the right */
     .nav-links {
-        margin-top: 15px;
+        margin-top: 0;
         display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
+        align-items: center;
         gap: 15px;
-    }
-
-    .nav-links a {
-        margin: 0;
-        font-size: 14px;
     }
 
     /* Reduce padding on the product grid for smaller screens */
@@ -293,14 +294,16 @@ body {
 /* Control the size of your logo image */
 .nav-logo {
     height: 40px;       /* Adjust this height to fit your navbar */
-    width: auto;        /* Keeps the image proportions correct */
-    border-radius: 30px; /* Optional: adds rounded corners to your logo */
+    width: 40px;        /* Fixed width to prevent any sizing bugs */
+    object-fit: cover;  /* Keeps the image aspect ratio correct */
+    border-radius: 50%; /* Perfect circle */
 }
 
 /* 📱 Mobile adjustment */
 @media (max-width: 600px) {
     .nav-logo {
-        height: 30px;   /* Slightly smaller for mobile phones */
+        height: 35px;
+        width: 35px;
     }
 }
 
