@@ -51,7 +51,6 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_sto
   .then(() => console.log('MongoDB Connected successfully'))
   .catch(err => {
     console.error('MongoDB Connection Error:', err);
-    process.exit(1);
   });
 
 // ==========================================
