@@ -55,6 +55,15 @@
                     </div>
                 </div>
 
+                <div id="promo-code-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Promo Code</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="promo-code-input" placeholder="Enter promo code" style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
+                        <button type="button" id="apply-promo-btn" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Apply</button>
+                    </div>
+                    <p id="promo-message" style="margin: 5px 0 0; font-size: 12px; color: #888;"></p>
+                </div>
+
                 <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; color: #555;">
                     <div style="display: flex; justify-content: space-between;">
                         <span>Subtotal:</span>
@@ -89,7 +98,7 @@
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
                     <label style="cursor: pointer;">
                         <input type="radio" name="paymentMethod" value="cod" checked> 
-                        <strong>Cash on Delivery</strong> (+৳150 Delivery Charge)
+                        <strong>Cash on Delivery</strong>
                     </label>
                     <label style="cursor: pointer;">
                         <input type="radio" name="paymentMethod" value="bkash"> 
@@ -102,7 +111,7 @@
                 </div>
 
                 <div id="cod-details" style="display: block; background: #e6f7ff; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #0096ff;">
-                    <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address. A delivery charge of <strong>৳150</strong> will be added to your total.</p>
+                    <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address.</p>
                 </div>
 
                 <div id="bkash-details" style="display: none; background: #ffe6eb; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #e2136e; text-align: center;">
@@ -125,5 +134,73 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // Wire up delivery location radio buttons to recalculate totals
+        document.querySelectorAll('input[name="deliveryLocation"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (typeof renderCart === 'function') renderCart();
+            });
+        });
+
+        // Wire up Apply Promo Code button
+        document.getElementById('apply-promo-btn').addEventListener('click', async () => {
+            const input = document.getElementById('promo-code-input');
+            const msg = document.getElementById('promo-message');
+            const code = input.value.trim();
+
+            if (!code) {
+                msg.style.color = '#e60050';
+                msg.textContent = 'Please enter a promo code.';
+                return;
+            }
+
+            msg.style.color = '#888';
+            msg.textContent = 'Validating...';
+
+            try {
+                const res = await fetch('/api/promocodes/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    // Store the validated promo details globally
+                    window.appliedPromoCode = data.code;
+                    window.appliedPromoType = data.discountType;   // 'percentage' or 'fixed'
+                    window.appliedPromoValue = data.discountValue;  // e.g. 10 or 150
+
+                    msg.style.color = '#28a745';
+                    if (data.discountType === 'percentage') {
+                        msg.textContent = `✓ Code "${data.code}" applied! ${data.discountValue}% off.`;
+                    } else {
+                        msg.textContent = `✓ Code "${data.code}" applied! ৳${data.discountValue} off.`;
+                    }
+
+                    input.disabled = true;
+                    document.getElementById('apply-promo-btn').textContent = 'Applied ✓';
+                    document.getElementById('apply-promo-btn').disabled = true;
+                    document.getElementById('apply-promo-btn').style.background = '#888';
+
+                    // Recalculate totals
+                    if (typeof renderCart === 'function') renderCart();
+                } else {
+                    window.appliedPromoCode = null;
+                    window.appliedPromoType = null;
+                    window.appliedPromoValue = null;
+                    msg.style.color = '#e60050';
+                    msg.textContent = data.message || 'Invalid promo code.';
+                    if (typeof renderCart === 'function') renderCart();
+                }
+            } catch (err) {
+                msg.style.color = '#e60050';
+                msg.textContent = 'Could not validate. Try again.';
+            }
+        });
+
+        // Run initial calculation immediately on page load
+        if (typeof renderCart === 'function') renderCart();
+    </script>
 </body>
-</html>
+</html>

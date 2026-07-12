@@ -1,0 +1,404 @@
+﻿diff --git a/public/payment.html b/public/payment.html
+index ab096ac..d592a4e 100644
+--- a/public/payment.html
++++ b/public/payment.html
+@@ -1,129 +1,203 @@
+-<!DOCTYPE html>
+-<html lang="en">
+-<head>
+-    <meta charset="UTF-8">
+-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>ÓªåÓª¡Óª░ÓªúÓºÇ - Finalize Payment</title>
+-    <link rel="stylesheet" href="style.css">
+-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+-</head>
+-<body>
+-   <nav class="navbar">
+-        <a href="index.html" class="logo">
+-            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+-            <B>ÓªåÓª¡Óª░ÓªúÓºÇ</B>
+-        </a>
+-        <div class="nav-links">
+-            <a href="women.html">Women Dress</a>
+-            <a href="ornament.html">Ornament</a>
+-            <a href="kids.html">Kids Zone</a>
+-            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+-            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+-        </div>
+-    </nav>
+-
+-    <div id="sidebar" class="sidebar">
+-        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+-        <a href="women.html"><i class="fas fa-female"></i> Women Dress</a>
+-        <a href="ornament.html"><i class="fas fa-gem"></i> Ornament</a>
+-        <a href="kids.html"><i class="fas fa-child"></i> Kids Zone</a>
+-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+-        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+-        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+-        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+-        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+-    </div>
+-
+-    <h2 class="page-title" style="text-align: center; margin-top: 20px;">Finalize Payment</h2>
+-
+-    <div class="cart-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+-        <form id="checkout-form" class="payment-form">
+-            
+-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff; color: #333;">
+-                <h3>Order Summary</h3>
+-                <div id="cart-items" style="margin-top: 10px; color: #333;"></div>
+-                
+-                <div id="delivery-location" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+-                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Delivery Location</label>
+-                    <div style="display: flex; gap: 15px; align-items: center;">
+-                        <label style="cursor: pointer; font-size: 13px; color: #333;">
+-                            <input type="radio" name="deliveryLocation" value="inside" checked style="margin-right: 5px;"> Inside Dhaka (Óº│80)
+-                        </label>
+-                        <label style="cursor: pointer; font-size: 13px; color: #333;">
+-                            <input type="radio" name="deliveryLocation" value="outside" style="margin-right: 5px;"> Outside Dhaka (Óº│150)
+-                        </label>
+-                    </div>
+-                </div>
+-
+-                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; color: #555;">
+-                    <div style="display: flex; justify-content: space-between;">
+-                        <span>Subtotal:</span>
+-                        <span>Óº│<span id="cart-subtotal">0</span></span>
+-                    </div>
+-                    <div style="display: flex; justify-content: space-between;">
+-                        <span>Delivery Charge:</span>
+-                        <span>Óº│<span id="shipping-charge">0</span></span>
+-                    </div>
+-                    <div id="discount-row" style="display: none; justify-content: space-between; color: green; font-weight: 600;">
+-                        <span>Promo Discount:</span>
+-                        <span>-Óº│<span id="promo-discount">0</span></span>
+-                    </div>
+-                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 8px; font-size: 18px; font-weight: bold; color: #333;">
+-                        <span>Final Total:</span>
+-                        <span>Óº│<span id="cart-total">0</span></span>
+-                    </div>
+-                </div>
+-            </div>
+-
+-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
+-                <h3>Step 1: Shipping Details</h3>
+-                <input type="text" id="name" placeholder="Full Name" required style="width: 100%; margin-top: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+-                <input type="email" id="email" placeholder="Email Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+-                <input type="tel" id="phone" placeholder="Phone Number" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+-                <textarea id="address" rows="4" placeholder="Proper Delivery Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box;"></textarea>
+-            </div>
+-
+-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
+-                <h3>Step 2: Select Payment Method</h3>
+-                
+-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+-                    <label style="cursor: pointer;">
+-                        <input type="radio" name="paymentMethod" value="cod" checked> 
+-                        <strong>Cash on Delivery</strong> (+Óº│150 Delivery Charge)
+-                    </label>
+-                    <label style="cursor: pointer;">
+-                        <input type="radio" name="paymentMethod" value="bkash"> 
+-                        <strong>bKash</strong>
+-                    </label>
+-                    <label style="color: gray; cursor: not-allowed;">
+-                        <input type="radio" name="paymentMethod" value="card" disabled> 
+-                        <strong>Visa/Debit Card</strong> (Unavailable right now)
+-                    </label>
+-                </div>
+-
+-                <div id="cod-details" style="display: block; background: #e6f7ff; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #0096ff;">
+-                    <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address. A delivery charge of <strong>Óº│150</strong> will be added to your total.</p>
+-                </div>
+-
+-                <div id="bkash-details" style="display: none; background: #ffe6eb; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #e2136e; text-align: center;">
+-                    <p>Please send your total bill via bKash to:</p>
+-                    <h2 style="color: #e2136e; margin: 10px 0;">01743648510</h2>
+-                    <p>After sending the money, enter the Transaction ID below.</p>
+-                    <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; margin-top: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 4px; box-sizing: border-box;">
+-                </div>
+-            </div>
+-
+-            <button type="submit" class="btn" id="submit-btn" style="width: 100%; padding: 15px; font-size: 16px; cursor: pointer; background-color: #e60050; color: white; border: none; border-radius: 4px;">Confirm & Place Order</button>
+-        </form>
+-
+-        <div id="success-message" style="display: none; text-align: center; color: #28a745; margin-top: 30px; background: #e6ffe6; padding: 30px; border: 1px solid green; border-radius: 8px;">
+-            <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
+-            <p id="success-details" style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
+-            <br>
+-            <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
+-        </div>
+-    </div>
+-
+-    <script src="script.js"></script>
+-</body>
+-</html>
+\ No newline at end of file
++<!DOCTYPE html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>ÓªåÓª¡Óª░ÓªúÓºÇ - Finalize Payment</title>
++    <link rel="stylesheet" href="style.css">
++    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
++</head>
++<body>
++   <nav class="navbar">
++        <a href="index.html" class="logo">
++            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
++            <B>ÓªåÓª¡Óª░ÓªúÓºÇ</B>
++        </a>
++        <div class="nav-links">
++            <a href="women.html">Women Dress</a>
++            <a href="ornament.html">Ornament</a>
++            <a href="kids.html">Kids Zone</a>
++            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
++            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
++        </div>
++    </nav>
++
++    <div id="sidebar" class="sidebar">
++        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
++        <a href="women.html"><i class="fas fa-female"></i> Women Dress</a>
++        <a href="ornament.html"><i class="fas fa-gem"></i> Ornament</a>
++        <a href="kids.html"><i class="fas fa-child"></i> Kids Zone</a>
++        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
++        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
++        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
++        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
++        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
++    </div>
++
++    <h2 class="page-title" style="text-align: center; margin-top: 20px;">Finalize Payment</h2>
++
++    <div class="cart-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
++        <form id="checkout-form" class="payment-form">
++            
++            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff; color: #333;">
++                <h3>Order Summary</h3>
++                <div id="cart-items" style="margin-top: 10px; color: #333;"></div>
++                
++                <div id="delivery-location" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
++                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Delivery Location</label>
++                    <div style="display: flex; gap: 15px; align-items: center;">
++                        <label style="cursor: pointer; font-size: 13px; color: #333;">
++                            <input type="radio" name="deliveryLocation" value="inside" checked style="margin-right: 5px;"> Inside Dhaka (Óº│80)
++                        </label>
++                        <label style="cursor: pointer; font-size: 13px; color: #333;">
++                            <input type="radio" name="deliveryLocation" value="outside" style="margin-right: 5px;"> Outside Dhaka (Óº│150)
++                        </label>
++                    </div>
++                </div>
++
++                <div id="promo-code-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
++                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Promo Code</label>
++                    <div style="display: flex; gap: 8px; align-items: center;">
++                        <input type="text" id="promo-code-input" placeholder="Enter promo code" style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
++                        <button type="button" id="apply-promo-btn" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Apply</button>
++                    </div>
++                    <p id="promo-message" style="margin: 5px 0 0; font-size: 12px; color: #888;"></p>
++                </div>
++
++                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; color: #555;">
++                    <div style="display: flex; justify-content: space-between;">
++                        <span>Subtotal:</span>
++                        <span>Óº│<span id="cart-subtotal">0</span></span>
++                    </div>
++                    <div style="display: flex; justify-content: space-between;">
++                        <span>Delivery Charge:</span>
++                        <span>Óº│<span id="shipping-charge">0</span></span>
++                    </div>
++                    <div id="discount-row" style="display: none; justify-content: space-between; color: green; font-weight: 600;">
++                        <span>Promo Discount:</span>
++                        <span>-Óº│<span id="promo-discount">0</span></span>
++                    </div>
++                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 8px; font-size: 18px; font-weight: bold; color: #333;">
++                        <span>Final Total:</span>
++                        <span>Óº│<span id="cart-total">0</span></span>
++                    </div>
++                </div>
++            </div>
++
++            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
++                <h3>Step 1: Shipping Details</h3>
++                <input type="text" id="name" placeholder="Full Name" required style="width: 100%; margin-top: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
++                <input type="email" id="email" placeholder="Email Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
++                <input type="tel" id="phone" placeholder="Phone Number" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
++                <textarea id="address" rows="4" placeholder="Proper Delivery Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box;"></textarea>
++            </div>
++
++            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
++                <h3>Step 2: Select Payment Method</h3>
++                
++                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
++                    <label style="cursor: pointer;">
++                        <input type="radio" name="paymentMethod" value="cod" checked> 
++                        <strong>Cash on Delivery</strong>
++                    </label>
++                    <label style="cursor: pointer;">
++                        <input type="radio" name="paymentMethod" value="bkash"> 
++                        <strong>bKash</strong>
++                    </label>
++                    <label style="color: gray; cursor: not-allowed;">
++                        <input type="radio" name="paymentMethod" value="card" disabled> 
++                        <strong>Visa/Debit Card</strong> (Unavailable right now)
++                    </label>
++                </div>
++
++                <div id="cod-details" style="display: block; background: #e6f7ff; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #0096ff;">
++                    <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address.</p>
++                </div>
++
++                <div id="bkash-details" style="display: none; background: #ffe6eb; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #e2136e; text-align: center;">
++                    <p>Please send your total bill via bKash to:</p>
++                    <h2 style="color: #e2136e; margin: 10px 0;">01743648510</h2>
++                    <p>After sending the money, enter the Transaction ID below.</p>
++                    <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; margin-top: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 4px; box-sizing: border-box;">
++                </div>
++            </div>
++
++            <button type="submit" class="btn" id="submit-btn" style="width: 100%; padding: 15px; font-size: 16px; cursor: pointer; background-color: #e60050; color: white; border: none; border-radius: 4px;">Confirm & Place Order</button>
++        </form>
++
++        <div id="success-message" style="display: none; text-align: center; color: #28a745; margin-top: 30px; background: #e6ffe6; padding: 30px; border: 1px solid green; border-radius: 8px;">
++            <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
++            <p id="success-details" style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
++            <br>
++            <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
++        </div>
++    </div>
++
++    <script src="script.js"></script>
++    <script>
++        // Wire up delivery location radio buttons to recalculate totals
++        document.querySelectorAll('input[name="deliveryLocation"]').forEach(radio => {
++            radio.addEventListener('change', () => {
++                if (typeof renderCart === 'function') renderCart();
++            });
++        });
++
++        // Wire up Apply Promo Code button
++        document.getElementById('apply-promo-btn').addEventListener('click', async () => {
++            const input = document.getElementById('promo-code-input');
++            const msg = document.getElementById('promo-message');
++            const code = input.value.trim();
++
++            if (!code) {
++                msg.style.color = '#e60050';
++                msg.textContent = 'Please enter a promo code.';
++                return;
++            }
++
++            msg.style.color = '#888';
++            msg.textContent = 'Validating...';
++
++            try {
++                const res = await fetch('/api/promocodes/validate', {
++                    method: 'POST',
++                    headers: { 'Content-Type': 'application/json' },
++                    body: JSON.stringify({ code })
++                });
++                const data = await res.json();
++
++                if (res.ok && data.success) {
++                    // Store the validated promo details globally
++                    window.appliedPromoCode = data.code;
++                    window.appliedPromoType = data.discountType;   // 'percentage' or 'fixed'
++                    window.appliedPromoValue = data.discountValue;  // e.g. 10 or 150
++
++                    msg.style.color = '#28a745';
++                    if (data.discountType === 'percentage') {
++                        msg.textContent = `Ô£ô Code "${data.code}" applied! ${data.discountValue}% off.`;
++                    } else {
++                        msg.textContent = `Ô£ô Code "${data.code}" applied! Óº│${data.discountValue} off.`;
++                    }
++
++                    input.disabled = true;
++                    document.getElementById('apply-promo-btn').textContent = 'Applied Ô£ô';
++                    document.getElementById('apply-promo-btn').disabled = true;
++                    document.getElementById('apply-promo-btn').style.background = '#888';
++
++                    // Recalculate totals
++                    if (typeof renderCart === 'function') renderCart();
++                } else {
++                    window.appliedPromoCode = null;
++                    window.appliedPromoType = null;
++                    window.appliedPromoValue = null;
++                    msg.style.color = '#e60050';
++                    msg.textContent = data.message || 'Invalid promo code.';
++                    if (typeof renderCart === 'function') renderCart();
++                }
++            } catch (err) {
++                msg.style.color = '#e60050';
++                msg.textContent = 'Could not validate. Try again.';
++            }
++        });
++    </script>
++</body>
++</html>
+\ No newline at end of file
+diff --git a/public/script.js b/public/script.js
+index 2744d60..520dc11 100644
+--- a/public/script.js
++++ b/public/script.js
+@@ -228,22 +228,30 @@ function renderCart() {
+         shippingFee = deliveryRadio.value === 'inside' ? 80 : 150;
+     }
+ 
+-    // Promo discount handling
++    // Promo discount handling (uses API-validated values)
+     let discount = 0;
+-    if (window.appliedPromoCode) {
+-        if (window.appliedPromoCode === 'SAVE10') {
+-            discount = subtotal * 0.1;
+-        } else if (window.appliedPromoCode === 'FREEDEL') {
+-            discount = shippingFee;
++    if (window.appliedPromoCode && window.appliedPromoType && window.appliedPromoValue) {
++        if (window.appliedPromoType === 'percentage') {
++            discount = subtotal * (window.appliedPromoValue / 100);
++        } else if (window.appliedPromoType === 'fixed') {
++            discount = window.appliedPromoValue;
++        }
++        // Don't let discount exceed subtotal + shipping
++        if (discount > subtotal + shippingFee) {
++            discount = subtotal + shippingFee;
+         }
+     }
+ 
+     // Update UI displays
+-    if (subtotalElement) subtotalElement.innerText = subtotal.toFixed(2).replace(/\\.00$/, '');
+-    if (shippingElement) shippingElement.innerText = shippingFee.toFixed(2).replace(/\\.00$/, '');
++    if (subtotalElement) subtotalElement.innerText = subtotal.toFixed(2).replace(/\.00$/, '');
++    if (shippingElement) shippingElement.innerText = shippingFee.toFixed(2).replace(/\.00$/, '');
+     if (discountRow) {
+-        discountRow.style.display = 'flex';
+-        if (promoDiscountElement) promoDiscountElement.innerText = discount.toFixed(2).replace(/\.00$/, '');
++        if (discount > 0) {
++            discountRow.style.display = 'flex';
++            if (promoDiscountElement) promoDiscountElement.innerText = discount.toFixed(2).replace(/\.00$/, '');
++        } else {
++            discountRow.style.display = 'none';
++        }
+     }
+     const total = subtotal + shippingFee - discount;
+     if (totalElement) totalElement.innerText = total.toFixed(2).replace(/\.00$/, '');
+@@ -461,11 +469,14 @@ if (paymentForm) {
+         }
+         // Apply promo discount if any
+         let discount = 0;
+-        if (window.appliedPromoCode) {
+-            if (window.appliedPromoCode === 'SAVE10') {
+-                discount = subtotal * 0.1;
+-            } else if (window.appliedPromoCode === 'FREEDEL') {
+-                discount = shippingFee;
++        if (window.appliedPromoCode && window.appliedPromoType && window.appliedPromoValue) {
++            if (window.appliedPromoType === 'percentage') {
++                discount = subtotal * (window.appliedPromoValue / 100);
++            } else if (window.appliedPromoType === 'fixed') {
++                discount = window.appliedPromoValue;
++            }
++            if (discount > subtotal + shippingFee) {
++                discount = subtotal + shippingFee;
+             }
+         }
+         const finalAmount = subtotal + shippingFee - discount;

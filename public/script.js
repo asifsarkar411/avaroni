@@ -228,22 +228,30 @@ function renderCart() {
         shippingFee = deliveryRadio.value === 'inside' ? 80 : 150;
     }
 
-    // Promo discount handling
+    // Promo discount handling (uses API-validated values)
     let discount = 0;
-    if (window.appliedPromoCode) {
-        if (window.appliedPromoCode === 'SAVE10') {
-            discount = subtotal * 0.1;
-        } else if (window.appliedPromoCode === 'FREEDEL') {
-            discount = shippingFee;
+    if (window.appliedPromoCode && window.appliedPromoType && window.appliedPromoValue) {
+        if (window.appliedPromoType === 'percentage') {
+            discount = subtotal * (window.appliedPromoValue / 100);
+        } else if (window.appliedPromoType === 'fixed') {
+            discount = window.appliedPromoValue;
+        }
+        // Don't let discount exceed subtotal + shipping
+        if (discount > subtotal + shippingFee) {
+            discount = subtotal + shippingFee;
         }
     }
 
     // Update UI displays
-    if (subtotalElement) subtotalElement.innerText = subtotal.toFixed(2).replace(/\\.00$/, '');
-    if (shippingElement) shippingElement.innerText = shippingFee.toFixed(2).replace(/\\.00$/, '');
+    if (subtotalElement) subtotalElement.innerText = subtotal.toFixed(2).replace(/\.00$/, '');
+    if (shippingElement) shippingElement.innerText = shippingFee.toFixed(2).replace(/\.00$/, '');
     if (discountRow) {
-        discountRow.style.display = 'flex';
-        if (promoDiscountElement) promoDiscountElement.innerText = discount.toFixed(2).replace(/\.00$/, '');
+        if (discount > 0) {
+            discountRow.style.display = 'flex';
+            if (promoDiscountElement) promoDiscountElement.innerText = discount.toFixed(2).replace(/\.00$/, '');
+        } else {
+            discountRow.style.display = 'none';
+        }
     }
     const total = subtotal + shippingFee - discount;
     if (totalElement) totalElement.innerText = total.toFixed(2).replace(/\.00$/, '');
@@ -461,11 +469,14 @@ if (paymentForm) {
         }
         // Apply promo discount if any
         let discount = 0;
-        if (window.appliedPromoCode) {
-            if (window.appliedPromoCode === 'SAVE10') {
-                discount = subtotal * 0.1;
-            } else if (window.appliedPromoCode === 'FREEDEL') {
-                discount = shippingFee;
+        if (window.appliedPromoCode && window.appliedPromoType && window.appliedPromoValue) {
+            if (window.appliedPromoType === 'percentage') {
+                discount = subtotal * (window.appliedPromoValue / 100);
+            } else if (window.appliedPromoType === 'fixed') {
+                discount = window.appliedPromoValue;
+            }
+            if (discount > subtotal + shippingFee) {
+                discount = subtotal + shippingFee;
             }
         }
         const finalAmount = subtotal + shippingFee - discount;
@@ -790,9 +801,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Run initial cart render as soon as the DOM is interactive
+    renderCart();
 });
 
-window.addEventListener('load', renderCart);
+// Robust fallback execution for page load event
+if (document.readyState === 'complete') {
+    renderCart();
+} else {
+    window.addEventListener('load', renderCart);
+}
 
 // ==========================================
 // NEW ARRIVALS (Homepage - All categories)

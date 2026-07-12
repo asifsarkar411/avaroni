@@ -42,7 +42,13 @@ app.use(helmet({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors()); // Allow frontend to communicate with backend
-app.use(express.static(path.join(__dirname, 'public'))); // Serves your HTML/CSS/JS
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: function (res, filePath) {
+        if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        }
+    }
+})); // Serves your HTML/CSS/JS
 
 // ==========================================
 // DATABASE CONNECTION
