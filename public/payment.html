@@ -43,13 +43,16 @@
                 <h3>Order Summary</h3>
                 <div id="cart-items" style="margin-top: 10px; color: #333;"></div>
                 
-                <div id="promo-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
-                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Have a Promo Code?</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="promo-input" placeholder="Enter Promo Code" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; text-transform: uppercase;">
-                        <button type="button" id="apply-promo-btn" class="btn" style="margin-top: 0; width: auto; padding: 8px 15px; font-size: 13px;">Apply</button>
+                <div id="delivery-location" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Delivery Location</label>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <label style="cursor: pointer; font-size: 13px; color: #333;">
+                            <input type="radio" name="deliveryLocation" value="inside" checked style="margin-right: 5px;"> Inside Dhaka (৳80)
+                        </label>
+                        <label style="cursor: pointer; font-size: 13px; color: #333;">
+                            <input type="radio" name="deliveryLocation" value="outside" style="margin-right: 5px;"> Outside Dhaka (৳150)
+                        </label>
                     </div>
-                    <div id="promo-message" style="margin-top: 5px; font-size: 13px; font-weight: 600; display: none;"></div>
                 </div>
 
                 <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; color: #555;">
