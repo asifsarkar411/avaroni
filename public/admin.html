@@ -5,37 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - AVARONI</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h1, h2 { color: #e60050; text-align: center; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #faf8f5; 
+            margin: 0; 
+            padding: 20px 10px; 
+            color: #333;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: auto; 
+            background: white; 
+            padding: 30px 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            border-top: 5px solid #e60050;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #fff3f8;
+            padding-bottom: 15px;
+        }
+        h1 { 
+            color: #e60050; 
+            margin: 0; 
+            font-size: 28px;
+            font-weight: 700;
+        }
+        h2 { 
+            color: #333; 
+            text-align: center; 
+            margin-bottom: 25px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        #logout-btn {
+            background: #333; 
+            color: white; 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        #logout-btn:hover {
+            background: #e60050;
+            transform: translateY(-1px);
+        }
         
-        /* Login Screen */
-        #login-section { max-width: 400px; margin: 50px auto; }
+        /* Form inputs */
         .form-group { margin-bottom: 15px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .btn { width: 100%; padding: 10px; background: #e60050; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #666;
+        }
+        .form-group input, .form-group select { 
+            width: 100%; 
+            padding: 12px; 
+            box-sizing: border-box; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #e60050;
+            outline: none;
+        }
+        .btn { 
+            width: 100%; 
+            padding: 12px; 
+            background: #e60050; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            margin-top: 10px; 
+            transition: background 0.2s;
+        }
         .btn:hover { background: #c50044; }
 
-        /* Dashboard */
-        #dashboard-section { display: none; /* Hidden by default until login is verified */ }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .tab-btn { padding: 10px 20px; border: none; cursor: pointer; background: #ddd; border-radius: 4px; font-weight: bold; }
-        .tab-btn.active { background: #e60050; color: white; }
+        /* Tabs Navigation */
+        .nav-tabs { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 25px; 
+            justify-content: flex-start; 
+            overflow-x: auto; 
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            -webkit-overflow-scrolling: touch;
+        }
+        .nav-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .nav-tabs::-webkit-scrollbar-thumb {
+            background: #ffe0ec;
+            border-radius: 4px;
+        }
+        .tab-btn { 
+            padding: 10px 18px; 
+            border: none; 
+            cursor: pointer; 
+            background: #f0f0f0; 
+            border-radius: 6px; 
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            color: #555;
+        }
+        .tab-btn:hover {
+            background: #e6efea;
+            color: #e60050;
+        }
+        .tab-btn.active { 
+            background: #e60050; 
+            color: white; 
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Orders Table */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #e60050; color: white; }
+        /* Responsive Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            -webkit-overflow-scrolling: touch;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 800px;
+        }
+        th, td { 
+            padding: 14px 16px; 
+            border-bottom: 1px solid #eee; 
+            text-align: left; 
+            font-size: 14px;
+        }
+        th { 
+            background-color: #ffe6ef; 
+            color: #e60050; 
+            font-weight: 700;
+        }
+        tr:hover {
+            background-color: #fafafa;
+        }
         .items-list { font-size: 13px; color: #555; }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 5px;
+            }
+            .container {
+                padding: 20px 12px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .nav-tabs {
+                justify-content: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div id="dashboard-section" class="container">
-        <h1>Admin Dashboard</h1>
-        <button id="logout-btn" style="float: right; background: #333; color: white; padding: 5px 10px; border:none; border-radius: 4px; cursor:pointer;">Logout</button>
+        <div class="header-bar">
+            <h1>Admin Dashboard</h1>
+            <button id="logout-btn">Logout</button>
+        </div>
         
         <div class="nav-tabs">
             <button class="tab-btn active" data-target="orders">View Orders</button>
@@ -47,7 +205,7 @@
 
         <div id="orders-tab" class="tab-content active">
             <h2>Customer Orders</h2>
-            <div style="overflow-x:auto;">
+            <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
@@ -69,7 +227,7 @@
 
         <div id="manage-products-tab" class="tab-content">
             <h2>Manage Inventory</h2>
-            <div style="overflow-x:auto;">
+            <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
