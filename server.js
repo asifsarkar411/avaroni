@@ -72,6 +72,9 @@ const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'public/uploads/';
 const fs = require('fs');
 try { if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true }); } catch(e) { console.warn('Upload dir creation skipped:', e.message); }
 
+app.use('/uploads', express.static(uploadDir));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir); 

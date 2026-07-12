@@ -16,10 +16,6 @@ yarn-error.log*
 logs/
 *.log
 
-# Uploaded files / media assets
-public/uploads/*
-!public/uploads/.gitkeep
-
 # OS generated files
 .DS_Store
 Thumbs.db
