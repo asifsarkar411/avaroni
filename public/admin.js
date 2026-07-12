@@ -33,6 +33,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Helper to convert file to Base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
 // Helper function to get auth headers securely
 function getAuthHeaders() {
     const token = localStorage.getItem('adminToken');
@@ -181,18 +191,43 @@ async function deleteProduct(id) {
 
 async function handleAddProduct(e) {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append('name', document.getElementById('prod-name').value); 
-    formData.append('price', document.getElementById('prod-price').value); 
-    formData.append('category', document.getElementById('prod-category').value);
-    formData.append('stock', document.getElementById('prod-stock').value);
-    formData.append('image', document.getElementById('prod-image').files[0]);
+    
+    const saveBtn = document.getElementById('save-product-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Saving...';
+    
+    const imageFile = document.getElementById('prod-image').files[0];
+    let imageBase64 = "";
+    
+    if (imageFile) {
+        try {
+            imageBase64 = await fileToBase64(imageFile);
+        } catch (err) {
+            console.error("Error reading image:", err);
+            alert("Failed to read image file.");
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Product to Database';
+            return;
+        }
+    }
+
+    const payload = {
+        name: document.getElementById('prod-name').value,
+        price: document.getElementById('prod-price').value,
+        category: document.getElementById('prod-category').value,
+        subcategory: document.getElementById('prod-subcategory').value,
+        stock: document.getElementById('prod-stock').value,
+        image: imageBase64
+    };
 
     try {
         const response = await fetch('/api/products', {
             method: 'POST',
-            headers: getAuthHeaders(),
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify(payload)
         });
         const data = await response.json();
         
@@ -201,11 +236,14 @@ async function handleAddProduct(e) {
             document.getElementById('add-product-form').reset();
             fetchManageProducts(); // Refresh the list instantly
         } else {
-            alert('Failed to save product.');
+            alert('Failed to save product: ' + (data.message || 'Unknown error'));
         }
     } catch (err) {
         console.error("Error saving product:", err);
         alert("An error occurred connecting to the server.");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Product to Database';
     }
 }
 
@@ -373,20 +411,24 @@ async function deleteCard(cardId) {
 
 async function uploadImageToCard(cardId) {
     const fileInput = document.getElementById(`file-${cardId}`);
-    if (!fileInput.files[0]) return;
-
-    const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
+    const file = fileInput.files[0];
+    if (!file) return;
 
     try {
+        const base64 = await fileToBase64(file);
         const response = await fetch(`/api/banner-cards/${cardId}/images`, {
             method: 'POST',
-            headers: getAuthHeaders(), // FormData automatically sets the correct Content-Type with boundaries
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ image: base64 })
         });
         const data = await response.json();
         if (data.success) {
             loadAdminBanners(); 
+        } else {
+            alert('Failed to upload banner: ' + (data.message || 'Unknown error'));
         }
     } catch (err) { 
         console.error("Error uploading image:", err);

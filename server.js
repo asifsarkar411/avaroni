@@ -403,17 +403,24 @@ app.get('/api/admin/products', verifyAdminToken, async (req, res) => {
 // Add Product
 app.post('/api/products', verifyAdminToken, upload.single('image'), async (req, res) => {
     try {
-        // 🌟 FIX: Prevent server crash if admin submits form without an image
-        if (!req.file) {
+        let imageUrl = "";
+        
+        // Support both Base64 JSON and Multer file upload
+        if (req.body.image) {
+            imageUrl = req.body.image; 
+        } else if (req.file) {
+            imageUrl = `/uploads/${req.file.filename}`;
+        } else {
             return res.status(400).json({ success: false, message: "Product image is required" });
         }
 
         const productData = {
             name: req.body.name, 
-            price: req.body.price, 
+            price: Number(req.body.price), 
             category: req.body.category,
-            stockQuantity: Number(req.body.stock), 
-            imageUrl: `/uploads/${req.file.filename}` 
+            subcategory: req.body.subcategory || "",
+            stockQuantity: Number(req.body.stock) || 1, 
+            imageUrl: imageUrl 
         };
         const newProduct = new Product(productData);
         await newProduct.save();
@@ -499,15 +506,21 @@ app.delete('/api/banner-cards/:cardId', verifyAdminToken, async (req, res) => {
 
 app.post('/api/banner-cards/:cardId/images', verifyAdminToken, upload.single('image'), async (req, res) => {
     try {
-        // 🌟 FIX: Prevent server crash if admin submits form without an image
-        if (!req.file) {
+        let imageUrl = "";
+        
+        // Support both Base64 JSON and Multer file upload
+        if (req.body.image) {
+            imageUrl = req.body.image;
+        } else if (req.file) {
+            imageUrl = `/uploads/${req.file.filename}`;
+        } else {
             return res.status(400).json({ success: false, message: "Image is required" });
         }
 
         const card = await BannerCard.findById(req.params.cardId);
         if (!card) return res.status(404).json({ success: false, message: "Card not found" });
 
-        card.images.push(`/uploads/${req.file.filename}`);
+        card.images.push(imageUrl);
         await card.save();
         res.json({ success: true });
     } catch (error) { 

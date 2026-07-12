@@ -4,9 +4,7 @@
 
 // Function to load products dynamically from the database
 async function loadProducts(category) {
-    // Looks for either ID so it works on all your pages!
     const productContainer = document.getElementById('product-list') || document.getElementById('products-container');
-    
     if (!productContainer) return; 
 
     try {
@@ -14,39 +12,96 @@ async function loadProducts(category) {
         const data = await response.json();
 
         if (data.success) {
-            productContainer.innerHTML = ''; 
+            const allProducts = data.products;
             
-            if(data.products.length === 0) {
+            if(allProducts.length === 0) {
                 productContainer.innerHTML = `<p style="text-align:center; width:100%;">No products found in this category yet. Check back soon!</p>`;
                 return;
             }
 
-            data.products.forEach(product => {
-                const fullImageUrl = product.imageUrl;
-                const stockText = product.stockQuantity > 0 ? `<p style="color:green;">In Stock: ${product.stockQuantity}</p>` : `<p style="color:red;">Out of Stock</p>`;
-                const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
-
-                // Securely rendering products without onclick
-                productContainer.innerHTML += `
-                    <div class="product-card">
-                        <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
-                        <h3>${product.name}</h3>
-                        <p class="price">৳${product.price}</p>
-                        ${stockText}
-                        <button class="btn add-to-cart-btn" ${btnStatus} 
-                            data-id="${product._id}" 
-                            data-name="${product.name.replace(/"/g, '&quot;')}" 
-                            data-price="${product.price}" 
-                            data-image="${fullImageUrl}" 
-                            data-stock="${product.stockQuantity}">Add to Cart</button>
-                    </div>
-                `;
+            // Extract unique subcategories from these products (case-insensitive deduplication)
+            const subcategories = [];
+            allProducts.forEach(p => {
+                if (p.subcategory && p.subcategory.trim()) {
+                    const subClean = p.subcategory.trim();
+                    if (!subcategories.some(s => s.toLowerCase() === subClean.toLowerCase())) {
+                        subcategories.push(subClean);
+                    }
+                }
             });
+
+            // Create or update Subcategory filter container
+            let filterContainer = document.getElementById('subcategory-filters');
+            if (subcategories.length > 0) {
+                if (!filterContainer) {
+                    filterContainer = document.createElement('div');
+                    filterContainer.id = 'subcategory-filters';
+                    filterContainer.className = 'filter-container';
+                    productContainer.parentNode.insertBefore(filterContainer, productContainer);
+                }
+
+                // Render filter buttons
+                filterContainer.innerHTML = `<button class="filter-btn active" data-sub="all">All</button>`;
+                subcategories.forEach(sub => {
+                    filterContainer.innerHTML += `<button class="filter-btn" data-sub="${sub.toLowerCase()}">${sub}</button>`;
+                });
+
+                // Attach click handlers to the filter buttons
+                filterContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        filterContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const selectedSub = e.target.getAttribute('data-sub');
+                        
+                        renderFilteredProducts(allProducts, selectedSub, productContainer);
+                    });
+                });
+            } else if (filterContainer) {
+                filterContainer.remove(); // Clean up if no subcategories exist
+            }
+
+            // Initially render all products
+            renderFilteredProducts(allProducts, 'all', productContainer);
         }
     } catch (error) {
         console.error("Error loading products:", error);
         productContainer.innerHTML = `<p style="text-align:center; color:red;">Failed to load products. Is the server running?</p>`;
     }
+}
+
+// Helper function to render a list of products
+function renderFilteredProducts(products, subcategoryFilter, container) {
+    container.innerHTML = '';
+    
+    const filtered = subcategoryFilter === 'all' 
+        ? products 
+        : products.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === subcategoryFilter);
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="text-align:center; width:100%; color: #666; margin-top: 20px;">No products found in this subcategory.</p>`;
+        return;
+    }
+
+    filtered.forEach(product => {
+        const fullImageUrl = product.imageUrl;
+        const stockText = product.stockQuantity > 0 ? `<p style="color:green;">In Stock: ${product.stockQuantity}</p>` : `<p style="color:red;">Out of Stock</p>`;
+        const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
+
+        container.innerHTML += `
+            <div class="product-card">
+                <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                <h3>${product.name}</h3>
+                <p class="price">৳${product.price}</p>
+                ${stockText}
+                <button class="btn add-to-cart-btn" ${btnStatus} 
+                    data-id="${product._id}" 
+                    data-name="${product.name.replace(/"/g, '&quot;')}" 
+                    data-price="${product.price}" 
+                    data-image="${fullImageUrl}" 
+                    data-stock="${product.stockQuantity}">Add to Cart</button>
+            </div>
+        `;
+    });
 }
 
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -71,6 +126,7 @@ function addToCart(id, name, price, image, maxStock) {
     
     localStorage.setItem('cart', JSON.stringify(cart));
     renderCart(); 
+    updateCartBadge();
 }
 
 function togglePaymentDetails() {
@@ -96,6 +152,8 @@ function togglePaymentDetails() {
 }
 
 function renderCart() {
+    updateCartBadge();
+
     const cartContainer = document.getElementById('cart-items');
     const totalElement = document.getElementById('cart-total');
     
@@ -107,6 +165,7 @@ function renderCart() {
     if (cart.length === 0) {
         if (cartContainer) cartContainer.innerHTML = '<p>Your cart is empty.</p>';
         if (totalElement) totalElement.innerText = '0';
+        updateCartBadge();
         return;
     }
 
@@ -116,16 +175,16 @@ function renderCart() {
         
         if (cartContainer) {
             cartContainer.innerHTML += `
-                <div class="cart-item" style="display:flex; align-items:center; margin-bottom:15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-                    <img src="${item.image}" alt="${item.name}" style="width:50px; height:50px; object-fit:cover; border-radius: 4px;">
-                    <span style="flex:1; margin-left:15px; font-weight: 500;">${item.name}</span>
-                    <span style="color: #666;">৳${item.price}</span> 
-                    <div style="margin: 0 20px; display: flex; align-items: center;">
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <span>${item.name}</span>
+                    <span class="cart-item-price">৳${item.price}</span> 
+                    <div class="cart-item-qty">
                         <button class="qty-btn qty-decrease" data-id="${item.id}" style="padding: 2px 8px; cursor: pointer;">-</button>
                         <span style="margin: 0 10px; font-weight: bold;">${item.quantity}</span>
                         <button class="qty-btn qty-increase" data-id="${item.id}" style="padding: 2px 8px; cursor: pointer;">+</button>
                     </div>
-                    <strong style="color: #e60050;">৳${itemTotal}</strong> 
+                    <strong class="cart-item-total">৳${itemTotal}</strong> 
                 </div>
             `;
         }
@@ -143,6 +202,8 @@ function renderCart() {
     if (totalElement) {
         totalElement.innerText = (subtotal + shippingFee).toFixed(2).replace(/\.00$/, ''); 
     }
+    
+    updateCartBadge();
 }
 
 function changeQty(id, change) {
@@ -161,7 +222,26 @@ function changeQty(id, change) {
         }
         localStorage.setItem('cart', JSON.stringify(cart));
         renderCart(); 
+        updateCartBadge();
     }
+}
+
+// Function to update cart badge indicators dynamically
+function updateCartBadge() {
+    const cartIcons = document.querySelectorAll('.cart-icon');
+    let totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    cartIcons.forEach(icon => {
+        const existingBadge = icon.querySelector('.cart-badge');
+        if (existingBadge) existingBadge.remove();
+
+        if (totalItems > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'cart-badge';
+            badge.innerText = totalItems;
+            icon.appendChild(badge);
+        }
+    });
 }
 
 // Payment Checkout Logic
