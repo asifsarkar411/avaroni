@@ -1,7 +1,7 @@
 require('dotenv').config();
 
-// Fallback to public DNS to resolve MongoDB SRV records on networks with restricted/buggy DNS servers
-if (process.env.MONGO_URI && process.env.MONGO_URI.startsWith('mongodb+srv://')) {
+// Fallback to public DNS to resolve MongoDB SRV records (only needed on local networks with buggy DNS)
+if (!process.env.VERCEL && process.env.MONGO_URI && process.env.MONGO_URI.startsWith('mongodb+srv://')) {
   try {
     const dns = require('dns');
     dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -71,7 +71,7 @@ const transporter = nodemailer.createTransport({
 // ==========================================
 const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'public/uploads/';
 const fs = require('fs');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+try { if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true }); } catch(e) { console.warn('Upload dir creation skipped:', e.message); }
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -531,8 +531,11 @@ app.delete('/api/banner-cards/:cardId/images/:imageIndex', verifyAdminToken, asy
 // ==========================================
 // START SERVER
 // ==========================================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`E-commerce Secured Backend running on http://localhost:${PORT}`));
+// Only listen locally — Vercel handles this automatically in serverless mode
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`E-commerce Secured Backend running on http://localhost:${PORT}`));
+}
 
 // Export for Vercel serverless deployment
 module.exports = app;
