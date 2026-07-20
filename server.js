@@ -29,6 +29,7 @@ const Product = require('./models/Product');     // E-commerce Product Model
 const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
 const Category = require('./models/Category');   // Dynamic Categories Model
 const PromoCode = require('./models/PromoCode'); // Promo Codes Model
+const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 
 const app = express();
 
@@ -807,6 +808,50 @@ app.delete('/api/banner-cards/:cardId/images/:imageIndex', verifyAdminToken, asy
     } catch (error) { 
         console.error("Delete Banner Image Error:", error);
         res.status(500).json({ success: false }); 
+    }
+});
+// ==========================================
+// 🎯 NAVBAR PROMO SLIDER ROUTES
+// ==========================================
+
+// Get all nav slider images (Public)
+app.get('/api/nav-sliders', async (req, res) => {
+    try {
+        const sliders = await NavSlider.find().sort({ order: 1, createdAt: -1 });
+        res.json({ success: true, sliders });
+    } catch (error) {
+        console.error("Get Nav Sliders Error:", error);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Add a nav slider image (Admin)
+app.post('/api/nav-sliders', verifyAdminToken, async (req, res) => {
+    try {
+        const { imageData, link, order } = req.body;
+        if (!imageData) return res.status(400).json({ success: false, message: "Image is required" });
+
+        const newSlider = new NavSlider({
+            imageUrl: imageData,
+            link: link || '',
+            order: order || 0
+        });
+        await newSlider.save();
+        res.json({ success: true, slider: newSlider });
+    } catch (error) {
+        console.error("Add Nav Slider Error:", error);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Delete a nav slider image (Admin)
+app.delete('/api/nav-sliders/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await NavSlider.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Nav Slider Error:", error);
+        res.status(500).json({ success: false });
     }
 });
 

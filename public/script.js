@@ -727,6 +727,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Footer and floating widgets dynamically on all pages
     initFooterAndWidgets();
 
+    // Load navbar promotional slider
+    loadNavbarSliders();
+
     // Only load the sliders here. The animation will start automatically when they finish loading.
     loadHomepageSliders(); 
 
@@ -1108,5 +1111,54 @@ function closeProductModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = '';
+    }
+}
+
+// ==========================================
+// NAVBAR PROMOTIONAL PHOTO SLIDER
+// ==========================================
+async function loadNavbarSliders() {
+    const container = document.getElementById('nav-promo-slider');
+    if (!container) return;
+
+    try {
+        const response = await fetch('/api/nav-sliders');
+        const data = await response.json();
+
+        if (!data.success || !data.sliders || data.sliders.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.innerHTML = '';
+        data.sliders.forEach((slider, idx) => {
+            const img = document.createElement('img');
+            img.src = slider.imageUrl;
+            img.alt = `Offer ${idx + 1}`;
+            if (idx === 0) img.classList.add('active');
+            
+            if (slider.link) {
+                const linkWrap = document.createElement('a');
+                linkWrap.href = slider.link;
+                linkWrap.style.display = 'contents';
+                linkWrap.appendChild(img);
+                container.appendChild(linkWrap);
+            } else {
+                container.appendChild(img);
+            }
+        });
+
+        if (data.sliders.length > 1) {
+            let activeIdx = 0;
+            const images = container.querySelectorAll('img');
+            setInterval(() => {
+                images[activeIdx].classList.remove('active');
+                activeIdx = (activeIdx + 1) % images.length;
+                images[activeIdx].classList.add('active');
+            }, 4000);
+        }
+    } catch (err) {
+        console.error("Error loading navbar sliders:", err);
+        container.style.display = 'none';
     }
 }

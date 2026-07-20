@@ -51,6 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addPromoForm) {
         addPromoForm.addEventListener('submit', handleAddPromoCode);
     }
+
+    // 8. Add Navbar Promo Slider Form Submit
+    const addNavSliderForm = document.getElementById('add-nav-slider-form');
+    if (addNavSliderForm) {
+        addNavSliderForm.addEventListener('submit', handleAddNavSlider);
+    }
 });
 
 // Helper to convert file to Base64
@@ -90,6 +96,7 @@ function showDashboard() {
     fetchOrders();
     loadAdminBanners(); 
     loadCategories();
+    loadAdminNavSliders();
 }
 
 function switchTab(tabName) {
@@ -109,6 +116,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-categories') renderCategoriesTab();
     if (tabName === 'manage-promocodes') fetchPromoCodes();
     if (tabName === 'manage-banners') loadAdminBanners();
+    if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
 }
 
 // ==========================================
@@ -826,3 +834,112 @@ async function deletePromoCode(promoId) {
 
 // Expose actions to global context
 window.deletePromoCode = deletePromoCode;
+
+// ==========================================
+// NAVBAR PROMO SLIDER MANAGEMENT
+// ==========================================
+
+async function loadAdminNavSliders() {
+    const tbody = document.getElementById('nav-sliders-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch('/api/nav-sliders');
+        const data = await response.json();
+
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.sliders || data.sliders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No navbar slider images configured yet.</td></tr>';
+            return;
+        }
+
+        data.sliders.forEach(slider => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${slider.imageUrl}" style="max-height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;"></td>
+                    <td>${slider.link || '<span style="color:#aaa; font-style:italic;">None</span>'}</td>
+                    <td><strong>${slider.order}</strong></td>
+                    <td>
+                        <button class="btn" style="background:#e60050; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching navbar sliders:", err);
+    }
+}
+
+async function handleAddNavSlider(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('nav-slider-image-file');
+    const linkInput = document.getElementById('nav-slider-link');
+    const orderInput = document.getElementById('nav-slider-order');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Please select a promo image file.");
+        return;
+    }
+
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Uploading...";
+
+        const base64Image = await fileToBase64(fileInput.files[0]);
+        const payload = {
+            imageData: base64Image,
+            link: linkInput.value.trim(),
+            order: parseInt(orderInput.value) || 0
+        };
+
+        const response = await fetch('/api/nav-sliders', {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert("Navbar promo image uploaded successfully!");
+            e.target.reset();
+            loadAdminNavSliders();
+        } else {
+            alert("Failed to upload promo image: " + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error uploading nav slider image:", err);
+        alert("An error occurred during upload.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Upload & Add to Navbar";
+    }
+}
+
+async function deleteNavSlider(id) {
+    if (!confirm("Are you sure you want to delete this navbar promotional slider image?")) return;
+
+    try {
+        const response = await fetch(`/api/nav-sliders/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            loadAdminNavSliders();
+        } else {
+            alert("Failed to delete nav slider: " + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error deleting nav slider:", err);
+        alert("An error occurred connecting to the server.");
+    }
+}
+
+// Expose actions to global context
+window.deleteNavSlider = deleteNavSlider;
