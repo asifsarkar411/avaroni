@@ -1318,7 +1318,7 @@ body {
     overflow: hidden;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    background: rgba(255, 255, 255, 0.5);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1330,7 +1330,7 @@ body {
     width: 100%;
     height: 100%;
     object-fit: contain; /* Keeps promo details/text perfectly sharp and legible */
-    background: #ffecf5; /* Light soft pink backdrop matching ladies clothing theme */
+    background: #ffb6d8; /* Light soft pink backdrop matching ladies clothing theme */
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
