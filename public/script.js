@@ -239,13 +239,6 @@ function renderCart() {
         }
     });
 
-    // Add event listeners for new buttons
-    if (cartContainer) {
-        cartContainer.querySelectorAll('.qty-increase').forEach(btn => btn.onclick = () => changeQty(btn.dataset.id, 1));
-        cartContainer.querySelectorAll('.qty-decrease').forEach(btn => btn.onclick = () => changeQty(btn.dataset.id, -1));
-        cartContainer.querySelectorAll('.remove-btn').forEach(btn => btn.onclick = () => removeFromCart(btn.dataset.id));
-    }
-
     // Shipping fee based on delivery location
     const deliveryRadio = document.querySelector('input[name="deliveryLocation"]:checked');
     let shippingFee = 0;
@@ -832,6 +825,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (productId && productId !== 'null' && productId !== 'undefined') {
                 openProductModal(productId);
             }
+        }
+
+        // 6. Cart item remove button click
+        const removeBtn = e.target.closest('.remove-btn');
+        if (removeBtn) {
+            const id = removeBtn.getAttribute('data-id');
+            if (id) removeFromCart(id);
         }
     });
 
