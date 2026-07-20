@@ -55,5 +55,43 @@
             <button type="submit" class="btn">Submit Return Request</button>
         </form>
     </div>
+
+    <script>
+        document.getElementById('returnForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const orderId = document.getElementById('order-id').value;
+            const email = document.getElementById('email').value;
+            const reason = document.getElementById('reason').value;
+            const details = document.getElementById('details').value;
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Submitting Request...";
+
+            try {
+                const response = await fetch('/api/returns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, email, reason, details })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert("Your return request has been submitted successfully. A confirmation updates email will be sent once processed.");
+                    this.reset();
+                } else {
+                    alert(data.message || "Failed to submit return request.");
+                }
+            } catch (err) {
+                console.error("Return submission error:", err);
+                alert("An error occurred. Please check your internet connection.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Submit Return Request";
+            }
+        });
+    </script>
 </body>
 </html>

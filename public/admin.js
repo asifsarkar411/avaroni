@@ -105,12 +105,14 @@ async function fetchDashboardStats() {
             const countProducts = document.getElementById('count-products');
             const countBanners = document.getElementById('count-banners');
             const countSliders = document.getElementById('count-sliders');
+            const countReturns = document.getElementById('count-returns');
             const totalRevenue = document.getElementById('total-revenue');
 
             if (countOrders) countOrders.innerText = data.stats.ordersCount || 0;
             if (countProducts) countProducts.innerText = data.stats.productsCount || 0;
             if (countBanners) countBanners.innerText = data.stats.bannersCount || 0;
             if (countSliders) countSliders.innerText = data.stats.slidersCount || 0;
+            if (countReturns) countReturns.innerText = data.stats.returnsCount || 0;
             if (totalRevenue) totalRevenue.innerText = Number(data.stats.totalRevenue || 0).toLocaleString();
         }
     } catch (err) {
@@ -139,6 +141,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
         if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
         if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
+        if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         titleElement.innerText = cleanTitle;
     }
 
@@ -151,6 +154,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-promocodes') fetchPromoCodes();
     if (tabName === 'manage-banners') loadAdminBanners();
     if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
+    if (tabName === 'manage-returns') fetchReturnRequests();
 }
 
 // ==========================================
@@ -951,3 +955,93 @@ async function deleteNavSlider(id) {
 
 // Expose actions to global context
 window.deleteNavSlider = deleteNavSlider;
+
+// ==========================================
+// CUSTOMER RETURN REQUESTS MANAGEMENT
+// ==========================================
+
+async function fetchReturnRequests() {
+    const tbody = document.getElementById('returns-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch('/api/admin/returns', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.returns || data.returns.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No return requests submitted yet.</td></tr>';
+            return;
+        }
+
+        data.returns.forEach(ret => {
+            const date = new Date(ret.createdAt).toLocaleString();
+            
+            // Format status label with color badge
+            let statusBadge = '';
+            if (ret.status === 'pending') {
+                statusBadge = '<span style="color:#ffc107; font-weight:bold; background:#fff9e6; padding:4px 8px; border-radius:4px;">Pending</span>';
+            } else if (ret.status === 'approved') {
+                statusBadge = '<span style="color:#28a745; font-weight:bold; background:#e6f9ed; padding:4px 8px; border-radius:4px;">Approved</span>';
+            } else if (ret.status === 'rejected') {
+                statusBadge = '<span style="color:#dc3545; font-weight:bold; background:#ffe8e8; padding:4px 8px; border-radius:4px;">Rejected</span>';
+            }
+
+            // Display buttons only if status is pending
+            const actionButtons = ret.status === 'pending'
+                ? `
+                    <button class="btn" style="background:#28a745; padding:6px 12px; font-size:12px; margin:0 5px 0 0; width:auto; display:inline-block;" onclick="updateReturnStatus('${ret._id}', 'approved')"><i class="fas fa-check"></i> Approve</button>
+                    <button class="btn" style="background:#dc3545; padding:6px 12px; font-size:12px; margin:0; width:auto; display:inline-block;" onclick="updateReturnStatus('${ret._id}', 'rejected')"><i class="fas fa-times"></i> Reject</button>
+                  `
+                : `<span style="color:#aaa; font-style:italic;">No Actions Available</span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td style="color:#007bff; font-weight:bold;">${ret.orderNumber}</td>
+                    <td>${ret.email}</td>
+                    <td><strong>${ret.reason}</strong></td>
+                    <td style="font-size:13px; color:#555; max-width:250px; word-wrap:break-word;">${ret.details || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionButtons}</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching return requests:", err);
+    }
+}
+
+async function updateReturnStatus(requestId, status) {
+    const statusText = status === 'approved' ? 'approve' : 'reject';
+    if (!confirm(`Are you sure you want to ${statusText} this return request?`)) return;
+
+    try {
+        const response = await fetch(`/api/admin/returns/${requestId}/status`, {
+            method: 'PATCH',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert(`Return request was ${status} successfully! Customer has been notified by email.`);
+            fetchReturnRequests(); // Refresh the list
+        } else {
+            alert("Failed to update status: " + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error updating return request status:", err);
+        alert("An error occurred connecting to the server.");
+    }
+}
+
+// Expose actions to global context
+window.fetchReturnRequests = fetchReturnRequests;
+window.updateReturnStatus = updateReturnStatus;

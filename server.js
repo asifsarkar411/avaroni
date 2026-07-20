@@ -31,6 +31,7 @@ const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
 const Category = require('./models/Category');   // Dynamic Categories Model
 const PromoCode = require('./models/PromoCode'); // Promo Codes Model
 const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
+const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
 
 const app = express();
 
@@ -734,6 +735,7 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
         const productsCount = await Product.countDocuments();
         const bannersCount = await BannerCard.countDocuments();
         const slidersCount = await NavSlider.countDocuments();
+        const returnsCount = await ReturnRequest.countDocuments();
 
         const revenueData = await Order.aggregate([
             { $group: { _id: null, total: { $sum: "$totalAmount" } } }
@@ -747,6 +749,7 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
                 productsCount,
                 bannersCount,
                 slidersCount,
+                returnsCount,
                 totalRevenue
             }
         });
@@ -895,6 +898,128 @@ app.delete('/api/nav-sliders/:id', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Delete Nav Slider Error:", error);
         res.status(500).json({ success: false });
+    }
+});
+
+// ==========================================
+// ↩️ PRODUCT RETURN REQUESTS ROUTES
+// ==========================================
+
+// Submit a Return Request (Public)
+app.post('/api/returns', async (req, res) => {
+    try {
+        const { orderId, email, reason, details } = req.body;
+        if (!orderId || !email || !reason) {
+            return res.status(400).json({ success: false, message: "Missing required fields." });
+        }
+
+        // Validate that order exists and matches email
+        const order = await Order.findOne({ orderNumber: orderId.trim() });
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order ID not found." });
+        }
+
+        if (order.email.toLowerCase() !== email.trim().toLowerCase()) {
+            return res.status(400).json({ success: false, message: "Email does not match the record for this order ID." });
+        }
+
+        // Check if a request already exists for this order
+        const existingRequest = await ReturnRequest.findOne({ orderNumber: orderId.trim() });
+        if (existingRequest) {
+            return res.status(400).json({ success: false, message: "A return request has already been submitted for this order ID." });
+        }
+
+        const newRequest = new ReturnRequest({
+            orderNumber: orderId.trim(),
+            email: email.trim().toLowerCase(),
+            reason,
+            details: details || ''
+        });
+        await newRequest.save();
+
+        res.json({ success: true, message: "Return request submitted successfully." });
+    } catch (error) {
+        console.error("Submit Return Request Error:", error);
+        res.status(500).json({ success: false, message: "Server error. Please try again later." });
+    }
+});
+
+// Get all Return Requests (Admin)
+app.get('/api/admin/returns', verifyAdminToken, async (req, res) => {
+    try {
+        const returns = await ReturnRequest.find().sort({ createdAt: -1 });
+        res.json({ success: true, returns });
+    } catch (error) {
+        console.error("Get Return Requests Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// Approve or Reject a Return Request (Admin)
+app.patch('/api/admin/returns/:id/status', verifyAdminToken, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status update." });
+        }
+
+        const request = await ReturnRequest.findById(req.params.id);
+        if (!request) {
+            return res.status(404).json({ success: false, message: "Return request not found." });
+        }
+
+        request.status = status;
+        await request.save();
+
+        // Retrieve customer order details for customer name
+        const order = await Order.findOne({ orderNumber: request.orderNumber });
+        const customerName = order ? order.customerName : 'Customer';
+
+        // Send Email notification to Customer
+        const isApproved = status === 'approved';
+        const emailSubject = isApproved 
+            ? `Your Return Request has been Approved | আভরণী`
+            : `Update on Your Return Request | আভরণী`;
+            
+        const emailBody = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: ${isApproved ? '#28a745' : '#dc3545'}; text-align: center;">
+                    Return Request ${isApproved ? 'Approved' : 'Rejected'}
+                </h2>
+                <p>Dear ${customerName},</p>
+                <p>We are writing to update you on your return request for Order ID: <strong>${request.orderNumber}</strong>.</p>
+                
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid ${isApproved ? '#28a745' : '#dc3545'};">
+                    <p style="margin: 0;"><strong>Status:</strong> <span style="font-size: 16px; color: ${isApproved ? '#28a745' : '#dc3545'}; text-transform: uppercase; font-weight: bold;">${status}</span></p>
+                    <p style="margin: 5px 0 0 0;"><strong>Reason for Return:</strong> ${request.reason}</p>
+                </div>
+
+                ${isApproved 
+                    ? `<p>Our support team will contact you shortly via phone or email to coordinate the product pickup or drop-off process and complete your refund/exchange.</p>`
+                    : `<p>Unfortunately, your return request could not be approved at this time. If you have questions or believe this is in error, please reply to this email or contact customer service.</p>`
+                }
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="text-align: center; color: #888; font-size: 12px;">Thank you for choosing আভরণী.</p>
+            </div>
+        `;
+
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: request.email,
+                subject: emailSubject,
+                html: emailBody
+            });
+            console.log(`Return request status email sent successfully to ${request.email}`);
+        } catch (mailErr) {
+            console.error("Failed to send return status email:", mailErr);
+        }
+
+        res.json({ success: true, message: `Return request ${status} successfully.` });
+    } catch (error) {
+        console.error("Update Return Request Status Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
     }
 });
 

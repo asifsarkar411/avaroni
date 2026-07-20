@@ -451,6 +451,7 @@
                 <button class="tab-btn" data-target="manage-promocodes"><i class="fas fa-ticket-alt"></i> <span>Promocodes</span></button>
                 <button class="tab-btn" data-target="manage-banners"><i class="fas fa-images"></i> <span>Homepage Slider</span></button>
                 <button class="tab-btn" data-target="manage-nav-sliders"><i class="fas fa-sliders-h"></i> <span>Navbar Slider</span></button>
+                <button class="tab-btn" data-target="manage-returns"><i class="fas fa-undo"></i> <span>Return Requests</span></button>
             </nav>
             <div class="sidebar-footer">
                 <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></button>
@@ -506,6 +507,15 @@
                             </div>
                             <div class="stat-icon icon-purple">
                                 <i class="fas fa-sliders-h"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3>Return Requests</h3>
+                                <div class="stat-value" id="count-returns">0</div>
+                            </div>
+                            <div class="stat-icon" style="background-color: #ffe8e8; color: #dc3545;">
+                                <i class="fas fa-undo"></i>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -750,6 +760,30 @@
                                     </tr>
                                 </thead>
                                 <tbody id="nav-sliders-table-body">
+                                </tbody>
+                            </table>
+                </div>
+
+                <!-- 9. MANAGE RETURNS TAB -->
+                <div id="manage-returns-tab" class="tab-content">
+                    <div class="panel-box">
+                        <div class="panel-header">
+                            <h2>Customer Return Requests</h2>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Order ID</th>
+                                        <th>Customer Email</th>
+                                        <th>Reason for Return</th>
+                                        <th>Additional Details</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="returns-table-body">
                                 </tbody>
                             </table>
                         </div>
