@@ -21,8 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(button => {
         button.addEventListener('click', (event) => {
-            const targetTab = event.target.getAttribute('data-target');
-            switchTab(targetTab);
+            const btn = event.target.closest('.tab-btn');
+            if (!btn) return;
+            const targetTab = btn.getAttribute('data-target');
+            if (targetTab) switchTab(targetTab);
         });
     });
 
@@ -87,11 +89,6 @@ function logout() {
 }
 
 function showDashboard() {
-    const dashboardSection = document.getElementById('dashboard-section');
-    if (dashboardSection) {
-        dashboardSection.style.display = 'block'; 
-    }
-    
     // Load dashboard stats on startup
     fetchDashboardStats();
 }
