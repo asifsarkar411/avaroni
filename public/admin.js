@@ -537,42 +537,7 @@ async function deleteImageFromCard(cardId, imageIndex) {
     }
 }
 
-// ==========================================
-// SECURITY: AUTO-LOGOUT ON INACTIVITY
-// ==========================================
-function setupIdleTimeout() {
-    let idleTimer;
-    const idleTimeLimit = 2 * 60 * 1000; // 2 minutes in milliseconds (120,000 ms)
 
-    // The function that runs when the user is idle too long
-    function logoutUser() {
-        // Clear the admin token to ensure they are actually logged out
-        localStorage.removeItem('adminToken'); 
-        
-        // Optional: show a quick alert before redirecting
-        alert("You have been logged out due to 2 minutes of inactivity.");
-        
-        // Redirect to the login page
-        window.location.href = 'admin-login.html';
-    }
-
-    // The function that resets the timer every time the user does something
-    function resetTimer() {
-        clearTimeout(idleTimer); // Stop the current countdown
-        idleTimer = setTimeout(logoutUser, idleTimeLimit); // Start a fresh 2-minute countdown
-    }
-
-    // Listen for all types of user activity to reset the timer
-    window.onload = resetTimer;
-    document.onmousemove = resetTimer;   // Mouse movement
-    document.onkeypress = resetTimer;    // Typing
-    document.onclick = resetTimer;       // Clicking
-    document.onscroll = resetTimer;      // Scrolling
-    document.ontouchstart = resetTimer;  // Tapping on touch screens
-}
-
-// Start the tracker immediately
-setupIdleTimeout();
 
 // ==========================================
 // 🏷️ CATEGORY MANAGEMENT HELPERS
