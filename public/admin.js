@@ -92,12 +92,8 @@ function showDashboard() {
         dashboardSection.style.display = 'block'; 
     }
     
-    // Load default data on startup
+    // Load dashboard stats on startup
     fetchDashboardStats();
-    fetchOrders();
-    loadAdminBanners(); 
-    loadCategories();
-    loadAdminNavSliders();
 }
 
 async function fetchDashboardStats() {
@@ -209,6 +205,11 @@ async function fetchManageProducts() {
         
         if (!tbody) return;
         tbody.innerHTML = '';
+
+        if (!data.success || !data.products) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:red;">Failed to load products.</td></tr>';
+            return;
+        }
 
         if (data.products.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products in inventory.</td></tr>';
@@ -557,9 +558,13 @@ async function loadCategories() {
     }
 }
 
-function populateAddProductCategories() {
+async function populateAddProductCategories() {
     const catSelect = document.getElementById('prod-category');
     if (!catSelect) return;
+
+    if (localCategories.length === 0) {
+        await loadCategories();
+    }
 
     catSelect.innerHTML = `<option value="" disabled selected>Select Category</option>`;
     localCategories.forEach(cat => {
