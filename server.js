@@ -32,6 +32,7 @@ const Category = require('./models/Category');   // Dynamic Categories Model
 const PromoCode = require('./models/PromoCode'); // Promo Codes Model
 const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
+const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
 
 const app = express();
 
@@ -736,6 +737,7 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
         const bannersCount = await BannerCard.countDocuments();
         const slidersCount = await NavSlider.countDocuments();
         const returnsCount = await ReturnRequest.countDocuments();
+        const messagesCount = await ContactMessage.countDocuments({ status: 'unread' });
 
         const revenueData = await Order.aggregate([
             { $group: { _id: null, total: { $sum: "$totalAmount" } } }
@@ -750,6 +752,7 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
                 bannersCount,
                 slidersCount,
                 returnsCount,
+                messagesCount,
                 totalRevenue
             }
         });
@@ -1019,6 +1022,75 @@ app.patch('/api/admin/returns/:id/status', verifyAdminToken, async (req, res) =>
         res.json({ success: true, message: `Return request ${status} successfully.` });
     } catch (error) {
         console.error("Update Return Request Status Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// ==========================================
+// 📬 CUSTOMER CONTACT MESSAGES ROUTES
+// ==========================================
+
+// Submit a Contact Message (Public)
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, message } = req.body;
+        if (!name || !email || !message) {
+            return res.status(400).json({ success: false, message: "Missing required fields." });
+        }
+
+        const newMessage = new ContactMessage({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            message: message.trim()
+        });
+        await newMessage.save();
+
+        res.json({ success: true, message: "Message sent successfully." });
+    } catch (error) {
+        console.error("Submit Contact Message Error:", error);
+        res.status(500).json({ success: false, message: "Server error. Please try again later." });
+    }
+});
+
+// Get all Contact Messages (Admin)
+app.get('/api/admin/messages', verifyAdminToken, async (req, res) => {
+    try {
+        const messages = await ContactMessage.find().sort({ createdAt: -1 });
+        res.json({ success: true, messages });
+    } catch (error) {
+        console.error("Get Contact Messages Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// Mark Contact Message as Read (Admin)
+app.patch('/api/admin/messages/:id/read', verifyAdminToken, async (req, res) => {
+    try {
+        const message = await ContactMessage.findById(req.params.id);
+        if (!message) {
+            return res.status(404).json({ success: false, message: "Message not found." });
+        }
+
+        message.status = 'read';
+        await message.save();
+
+        res.json({ success: true, message: "Message marked as read." });
+    } catch (error) {
+        console.error("Mark Message Read Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// Delete a Contact Message (Admin)
+app.delete('/api/admin/messages/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const result = await ContactMessage.findByIdAndDelete(req.params.id);
+        if (!result) {
+            return res.status(404).json({ success: false, message: "Message not found." });
+        }
+        res.json({ success: true, message: "Message deleted successfully." });
+    } catch (error) {
+        console.error("Delete Message Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 });

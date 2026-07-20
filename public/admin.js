@@ -106,6 +106,7 @@ async function fetchDashboardStats() {
             const countBanners = document.getElementById('count-banners');
             const countSliders = document.getElementById('count-sliders');
             const countReturns = document.getElementById('count-returns');
+            const countMessages = document.getElementById('count-messages');
             const totalRevenue = document.getElementById('total-revenue');
 
             if (countOrders) countOrders.innerText = data.stats.ordersCount || 0;
@@ -113,6 +114,7 @@ async function fetchDashboardStats() {
             if (countBanners) countBanners.innerText = data.stats.bannersCount || 0;
             if (countSliders) countSliders.innerText = data.stats.slidersCount || 0;
             if (countReturns) countReturns.innerText = data.stats.returnsCount || 0;
+            if (countMessages) countMessages.innerText = data.stats.messagesCount || 0;
             if (totalRevenue) totalRevenue.innerText = Number(data.stats.totalRevenue || 0).toLocaleString();
         }
     } catch (err) {
@@ -142,6 +144,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
         if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
+        if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         titleElement.innerText = cleanTitle;
     }
 
@@ -155,6 +158,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-banners') loadAdminBanners();
     if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
     if (tabName === 'manage-returns') fetchReturnRequests();
+    if (tabName === 'manage-messages') fetchContactMessages();
 }
 
 // ==========================================
@@ -1045,3 +1049,109 @@ async function updateReturnStatus(requestId, status) {
 // Expose actions to global context
 window.fetchReturnRequests = fetchReturnRequests;
 window.updateReturnStatus = updateReturnStatus;
+
+// ==========================================
+// CUSTOMER CONTACT MESSAGES MANAGEMENT
+// ==========================================
+
+async function fetchContactMessages() {
+    const tbody = document.getElementById('messages-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch('/api/admin/messages', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.messages || data.messages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No contact messages received yet.</td></tr>';
+            return;
+        }
+
+        data.messages.forEach(msg => {
+            const date = new Date(msg.createdAt).toLocaleString();
+            
+            // Format status badge
+            let statusBadge = '';
+            if (msg.status === 'unread') {
+                statusBadge = '<span style="color:#0d6efd; font-weight:bold; background:#e3f2fd; padding:4px 8px; border-radius:4px;">Unread</span>';
+            } else if (msg.status === 'read') {
+                statusBadge = '<span style="color:#6c757d; font-weight:bold; background:#e2e3e5; padding:4px 8px; border-radius:4px;">Read</span>';
+            }
+
+            // Read/Delete actions
+            const markReadButton = msg.status === 'unread'
+                ? `<button class="btn" style="background:#0d6efd; padding:6px 12px; font-size:12px; margin:0 5px 0 0; width:auto; display:inline-block;" onclick="markMessageRead('${msg._id}')"><i class="fas fa-envelope-open"></i> Read</button>`
+                : '';
+
+            const deleteButton = `<button class="btn" style="background:#dc3545; padding:6px 12px; font-size:12px; margin:0; width:auto; display:inline-block;" onclick="deleteMessage('${msg._id}')"><i class="fas fa-trash-alt"></i> Delete</button>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${msg.name}</strong></td>
+                    <td>${msg.email}</td>
+                    <td style="font-size:13px; color:#555; max-width:350px; word-wrap:break-word;">${msg.message}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        ${markReadButton}
+                        ${deleteButton}
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching contact messages:", err);
+    }
+}
+
+async function markMessageRead(messageId) {
+    try {
+        const response = await fetch(`/api/admin/messages/${messageId}/read`, {
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            fetchContactMessages(); // Refresh the list
+            fetchDashboardStats();  // Update dashboard unread counter
+        } else {
+            alert("Failed to mark message as read: " + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error marking message as read:", err);
+        alert("An error occurred connecting to the server.");
+    }
+}
+
+async function deleteMessage(messageId) {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+
+    try {
+        const response = await fetch(`/api/admin/messages/${messageId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert("Message deleted successfully!");
+            fetchContactMessages(); // Refresh the list
+            fetchDashboardStats();  // Update dashboard counter
+        } else {
+            alert("Failed to delete message: " + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error deleting message:", err);
+        alert("An error occurred connecting to the server.");
+    }
+}
+
+// Expose actions to global context
+window.fetchContactMessages = fetchContactMessages;
+window.markMessageRead = markMessageRead;
+window.deleteMessage = deleteMessage;
