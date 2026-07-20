@@ -9,6 +9,9 @@ const orderSchema = new mongoose.Schema({
     transactionId: { type: String, default: 'N/A' }, // 🌟 FIXED: Removed 'required: true' so COD works
     cartItems: { type: Array, required: true }, 
     totalAmount: { type: Number, required: true },
+    discountAmount: { type: Number, default: 0 },
+    promoCode: { type: String, default: "" },
+    shippingFee: { type: Number, default: 0 },
     paymentMethod: { type: String, default: 'bKash' },
     orderDate: { type: Date, default: Date.now }
 });

@@ -538,7 +538,7 @@ app.get('/api/products/:id', async (req, res) => {
 // 🌟 FIX: Array of routes catches BOTH /api/orders and /api/checkout just in case!
 app.post(['/api/orders', '/api/checkout'], async (req, res) => {
     try {
-        const { name, email, phone, address, paymentMethod, trxId, cartItems, totalAmount } = req.body;
+        const { name, email, phone, address, paymentMethod, trxId, cartItems, totalAmount, discountAmount, promoCode, shippingFee } = req.body;
 
         // 1. Generate Random Order Number
         const orderNumber = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
@@ -554,6 +554,9 @@ app.post(['/api/orders', '/api/checkout'], async (req, res) => {
             transactionId: trxId, 
             cartItems, 
             totalAmount,
+            discountAmount: discountAmount || 0,
+            promoCode: promoCode || '',
+            shippingFee: shippingFee || 0,
             orderDate: new Date()
         });
         await newOrder.save(); 

@@ -515,7 +515,10 @@ if (paymentForm) {
             paymentMethod: selectedMethod,
             trxId: selectedMethod === 'bkash' ? trxIdInput : 'Cash On Delivery', 
             cartItems: cart, 
-            totalAmount: finalAmount
+            totalAmount: finalAmount,
+            discountAmount: discount,
+            promoCode: window.appliedPromoCode || '',
+            shippingFee: shippingFee
         };
 
         try {

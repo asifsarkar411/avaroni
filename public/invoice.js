@@ -25,13 +25,15 @@ function downloadInvoice(orderNumber) {
                         <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;">${index + 1}</td>
                         <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;">${item.name}</td>
                         <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px;">${item.quantity}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px;">\u09f3${Number(item.price).toLocaleString()}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px; font-weight: 600;">\u09f3${itemTotal.toLocaleString()}</td>
+                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px;">৳${Number(item.price).toLocaleString()}</td>
+                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px; font-weight: 600;">৳${itemTotal.toLocaleString()}</td>
                     </tr>
                 `;
             });
 
-            const delivery = order.totalAmount - subtotal > 0 ? order.totalAmount - subtotal : 0;
+            const discount = order.discountAmount !== undefined ? Number(order.discountAmount) : 0;
+            const delivery = order.shippingFee !== undefined ? Number(order.shippingFee) : (order.totalAmount - subtotal + discount > 0 ? order.totalAmount - subtotal + discount : 0);
+
             const invoiceHtml = `
 <!DOCTYPE html>
 <html>
@@ -59,7 +61,7 @@ function downloadInvoice(orderNumber) {
         thead th { padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #e60050; font-weight: 700; letter-spacing: 0.5px; }
         thead th:nth-child(3), thead th:nth-child(4), thead th:nth-child(5) { text-align: right; }
         .totals-section { display: flex; justify-content: flex-end; }
-        .totals-table { width: 250px; }
+        .totals-table { width: 280px; }
         .totals-table .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #555; }
         .totals-table .row.grand-total { border-top: 2px solid #e60050; margin-top: 8px; padding-top: 10px; font-size: 18px; font-weight: 700; color: #e60050; }
         .invoice-footer { margin-top: 40px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 15px; }
@@ -69,7 +71,7 @@ function downloadInvoice(orderNumber) {
     <div class="invoice-container">
         <div class="invoice-header">
             <div class="invoice-brand">
-                <h1>\u0986\u09ad\u09b0\u09a3\u09c0</h1>
+                <h1>আভরণী</h1>
                 <p>Your one-stop shop for fashion and beauty</p>
             </div>
             <div class="invoice-meta">
@@ -111,14 +113,15 @@ function downloadInvoice(orderNumber) {
 
         <div class="totals-section">
             <div class="totals-table">
-                <div class="row"><span>Subtotal</span><span>\u09f3${subtotal.toLocaleString()}</span></div>
-                <div class="row"><span>Delivery</span><span>\u09f3${delivery.toLocaleString()}</span></div>
-                <div class="row grand-total"><span>Total</span><span>\u09f3${Number(order.totalAmount).toLocaleString()}</span></div>
+                <div class="row"><span>Subtotal</span><span>৳${subtotal.toLocaleString()}</span></div>
+                <div class="row"><span>Delivery</span><span>৳${delivery.toLocaleString()}</span></div>
+                ${discount > 0 ? `<div class="row" style="color: #28a745; font-weight: 600;"><span>Discount ${order.promoCode ? `(${order.promoCode})` : ''}</span><span>-৳${discount.toLocaleString()}</span></div>` : ''}
+                <div class="row grand-total"><span>Total</span><span>৳${Number(order.totalAmount).toLocaleString()}</span></div>
             </div>
         </div>
 
         <div class="invoice-footer">
-            <p>Thank you for shopping with \u0986\u09ad\u09b0\u09a3\u09c0!</p>
+            <p>Thank you for shopping with আভরণী!</p>
             <p>This is a computer-generated invoice. No signature required.</p>
         </div>
     </div>
