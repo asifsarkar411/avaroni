@@ -7,6 +7,16 @@ async function loadProducts(category) {
     const productContainer = document.getElementById('product-list') || document.getElementById('products-container');
     if (!productContainer) return; 
 
+    // Render skeleton placeholders while fetching products
+    productContainer.innerHTML = `
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+    `;
+
     try {
         const response = await fetch(`/api/products?category=${category}`);
         const data = await response.json();
@@ -139,19 +149,17 @@ function addToCart(id, name, price, image, maxStock) {
         
         if (existingItem.quantity < stockLimit) {
             existingItem.quantity += 1;
-            alert(`${name} quantity increased!`);
         } else {
             alert(`Sorry, we only have ${stockLimit} of these in stock!`);
             return; 
         }
     } else {
         cart.push({ id, name, price, image, quantity: 1, maxStock }); 
-        alert(`${name} added to cart successfully!`);
     }
     
     localStorage.setItem(cartKey, JSON.stringify(cart));
-    renderCart(); 
     updateCartBadge();
+    window.location.href = 'cart.html';
 }
 
 function togglePaymentDetails() {
@@ -188,18 +196,25 @@ function renderCart() {
 
     if (!cartContainer && !totalElement) return;
 
-    cartContainer.innerHTML = '';
+    if (cartContainer) cartContainer.innerHTML = '';
     let subtotal = 0;
 
     if (cart.length === 0) {
-        cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+        if (cartContainer) cartContainer.innerHTML = '<p style="text-align:center; padding: 30px; color: #888;">Your cart is empty. <a href="index.html" style="color:#e60050;">Start shopping!</a></p>';
         if (totalElement) totalElement.innerText = '0';
         if (subtotalElement) subtotalElement.innerText = '0';
         if (shippingElement) shippingElement.innerText = '0';
         if (discountRow) discountRow.style.display = 'none';
+        // Hide proceed button when cart is empty
+        const proceedBtn = document.getElementById('proceed-to-payment-btn');
+        if (proceedBtn) proceedBtn.style.display = 'none';
         updateCartBadge();
         return;
     }
+
+    // Show proceed button when cart has items
+    const proceedBtn = document.getElementById('proceed-to-payment-btn');
+    if (proceedBtn) proceedBtn.style.display = '';
 
     cart.forEach(item => {
         let itemTotal = Number(item.price) * Number(item.quantity);
@@ -208,18 +223,28 @@ function renderCart() {
             cartContainer.innerHTML += `
                 <div class="cart-item">
                     <img src="${item.image}" alt="${item.name}">
-                    <span>${item.name}</span>
-                    <span class="cart-item-price">৳${item.price}</span>
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <span class="cart-item-unit-price">৳${item.price} each</span>
+                    </div>
                     <div class="cart-item-qty">
-                        <button class="qty-btn qty-decrease" data-id="${item.id}" style="padding: 2px 8px; cursor: pointer;">-</button>
-                        <span style="margin: 0 10px; font-weight: bold;">${item.quantity}</span>
-                        <button class="qty-btn qty-increase" data-id="${item.id}" style="padding: 2px 8px; cursor: pointer;">+</button>
+                        <button class="qty-btn qty-decrease" data-id="${item.id}">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="qty-btn qty-increase" data-id="${item.id}">+</button>
                     </div>
                     <strong class="cart-item-total">৳${itemTotal}</strong>
+                    <button class="cart-remove-btn remove-btn" data-id="${item.id}" title="Remove item"><i class="fas fa-trash"></i></button>
                 </div>
             `;
         }
     });
+
+    // Add event listeners for new buttons
+    if (cartContainer) {
+        cartContainer.querySelectorAll('.qty-increase').forEach(btn => btn.onclick = () => changeQty(btn.dataset.id, 1));
+        cartContainer.querySelectorAll('.qty-decrease').forEach(btn => btn.onclick = () => changeQty(btn.dataset.id, -1));
+        cartContainer.querySelectorAll('.remove-btn').forEach(btn => btn.onclick = () => removeFromCart(btn.dataset.id));
+    }
 
     // Shipping fee based on delivery location
     const deliveryRadio = document.querySelector('input[name="deliveryLocation"]:checked');
@@ -277,6 +302,13 @@ function changeQty(id, change) {
         renderCart(); 
         updateCartBadge();
     }
+}
+
+function removeFromCart(id) {
+    cart = cart.filter(i => i.id !== id);
+    localStorage.setItem(cartKey, JSON.stringify(cart));
+    renderCart();
+    updateCartBadge();
 }
 
 // Function to update cart badge indicators dynamically
@@ -513,6 +545,7 @@ if (paymentForm) {
                         <p style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
                         <p>Your order number is: <strong>${data.orderNumber || 'N/A'}</strong></p>
                         <br>
+                        <button onclick="downloadInvoice('${data.orderNumber}')" class="btn" style="padding: 10px 20px; background-color: #e60050; color: white; border-radius: 4px; margin-right: 10px; cursor: pointer;"><i class="fas fa-file-download"></i> Download Invoice</button>
                         <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
                     `;
                 }
@@ -820,6 +853,14 @@ async function loadNewArrivals() {
     const grid = document.getElementById('new-arrivals-grid');
     if (!grid) return;
 
+    // Render skeleton placeholders while fetching new arrivals
+    grid.innerHTML = `
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+    `;
+
     try {
         const response = await fetch('/api/products');
         const data = await response.json();
@@ -965,6 +1006,17 @@ async function openProductModal(productId) {
     // Show modal with loading state
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+
+    // Show skeleton placeholders for related products immediately
+    const relatedGrid = document.getElementById('related-products-grid');
+    if (relatedGrid) {
+        relatedGrid.innerHTML = `
+            <div class="skeleton-card" style="height: 180px; gap: 8px; padding: 10px;"><div class="skeleton-loader skeleton-image" style="height: 100px; margin-bottom:5px;"></div><div class="skeleton-loader skeleton-title" style="height: 12px; margin: 4px auto;"></div><div class="skeleton-loader skeleton-price" style="height: 10px; width: 60%; margin: 4px auto;"></div></div>
+            <div class="skeleton-card" style="height: 180px; gap: 8px; padding: 10px;"><div class="skeleton-loader skeleton-image" style="height: 100px; margin-bottom:5px;"></div><div class="skeleton-loader skeleton-title" style="height: 12px; margin: 4px auto;"></div><div class="skeleton-loader skeleton-price" style="height: 10px; width: 60%; margin: 4px auto;"></div></div>
+            <div class="skeleton-card" style="height: 180px; gap: 8px; padding: 10px;"><div class="skeleton-loader skeleton-image" style="height: 100px; margin-bottom:5px;"></div><div class="skeleton-loader skeleton-title" style="height: 12px; margin: 4px auto;"></div><div class="skeleton-loader skeleton-price" style="height: 10px; width: 60%; margin: 4px auto;"></div></div>
+            <div class="skeleton-card" style="height: 180px; gap: 8px; padding: 10px;"><div class="skeleton-loader skeleton-image" style="height: 100px; margin-bottom:5px;"></div><div class="skeleton-loader skeleton-title" style="height: 12px; margin: 4px auto;"></div><div class="skeleton-loader skeleton-price" style="height: 10px; width: 60%; margin: 4px auto;"></div></div>
+        `;
+    }
 
     try {
         const response = await fetch(`/api/products/${productId}`);

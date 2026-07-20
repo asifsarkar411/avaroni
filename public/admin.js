@@ -304,7 +304,7 @@ async function fetchOrders() {
         tbody.innerHTML = '';
 
         if (!data.orders || data.orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No orders found.</td></tr>';
             return;
         }
 
@@ -326,6 +326,9 @@ async function fetchOrders() {
                     <td><strong>${order.transactionId || 'N/A'}</strong></td>
                     <td style="color:#e60050; font-weight:bold;">৳${order.totalAmount}</td>
                     <td class="items-list">${itemsList}</td>
+                    <td>
+                        <button onclick="downloadInvoice('${order.orderNumber}')" class="btn" style="margin-top:0; padding: 6px 12px; font-size:12px; background:#e60050; color:white; border:none; border-radius:4px; cursor:pointer;"><i class="fas fa-file-invoice"></i> Invoice</button>
+                    </td>
                 </tr>
             `;
         });

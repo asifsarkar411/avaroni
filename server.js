@@ -723,6 +723,18 @@ app.get('/api/admin/orders', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Get Order by Order Number (for invoice generation)
+app.get('/api/orders/:orderNumber', async (req, res) => {
+    try {
+        const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error("Get Order Error:", error);
+        res.status(500).json({ success: false });
+    }
+});
+
 // Admin Manage Banner Cards
 app.post('/api/banner-cards', verifyAdminToken, async (req, res) => {
     try {
