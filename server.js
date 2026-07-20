@@ -713,6 +713,35 @@ app.patch('/api/admin/products/:id/toggle', verifyAdminToken, async (req, res) =
     }
 });
 
+// Get Admin Dashboard Stats
+app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
+    try {
+        const ordersCount = await Order.countDocuments();
+        const productsCount = await Product.countDocuments();
+        const bannersCount = await BannerCard.countDocuments();
+        const slidersCount = await NavSlider.countDocuments();
+
+        const revenueData = await Order.aggregate([
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+        const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+        res.json({
+            success: true,
+            stats: {
+                ordersCount,
+                productsCount,
+                bannersCount,
+                slidersCount,
+                totalRevenue
+            }
+        });
+    } catch (error) {
+        console.error("Dashboard Stats Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load statistics" });
+    }
+});
+
 // Get Customer Orders
 app.get('/api/admin/orders', verifyAdminToken, async (req, res) => {
     try {

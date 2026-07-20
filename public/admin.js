@@ -93,10 +93,36 @@ function showDashboard() {
     }
     
     // Load default data on startup
+    fetchDashboardStats();
     fetchOrders();
     loadAdminBanners(); 
     loadCategories();
     loadAdminNavSliders();
+}
+
+async function fetchDashboardStats() {
+    try {
+        const response = await fetch('/api/admin/dashboard-stats', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        if (data.success && data.stats) {
+            const countOrders = document.getElementById('count-orders');
+            const countProducts = document.getElementById('count-products');
+            const countBanners = document.getElementById('count-banners');
+            const countSliders = document.getElementById('count-sliders');
+            const totalRevenue = document.getElementById('total-revenue');
+
+            if (countOrders) countOrders.innerText = data.stats.ordersCount || 0;
+            if (countProducts) countProducts.innerText = data.stats.productsCount || 0;
+            if (countBanners) countBanners.innerText = data.stats.bannersCount || 0;
+            if (countSliders) countSliders.innerText = data.stats.slidersCount || 0;
+            if (totalRevenue) totalRevenue.innerText = Number(data.stats.totalRevenue || 0).toLocaleString();
+        }
+    } catch (err) {
+        console.error("Error loading dashboard stats:", err);
+    }
 }
 
 function switchTab(tabName) {
@@ -109,7 +135,22 @@ function switchTab(tabName) {
     const targetTab = document.getElementById(`${tabName}-tab`);
     if (targetTab) targetTab.classList.add('active');
 
+    // Update Topbar Title
+    const titleElement = document.getElementById('tab-title');
+    if (titleElement) {
+        let cleanTitle = "Dashboard Overview";
+        if (tabName === 'orders') cleanTitle = "Customer Orders";
+        if (tabName === 'manage-products') cleanTitle = "Manage Inventory";
+        if (tabName === 'add-product') cleanTitle = "Add New Product";
+        if (tabName === 'manage-categories') cleanTitle = "Manage Categories";
+        if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
+        if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
+        if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
+        titleElement.innerText = cleanTitle;
+    }
+
     // Fetch data dynamically based on the active tab
+    if (tabName === 'dashboard') fetchDashboardStats();
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'manage-products') fetchManageProducts();
     if (tabName === 'add-product') populateAddProductCategories();
