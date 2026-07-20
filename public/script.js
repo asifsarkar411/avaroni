@@ -108,7 +108,9 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
 
     filtered.forEach(product => {
         const fullImageUrl = product.imageUrl;
-        const stockText = product.stockQuantity > 0 ? `<p style="color:green;">In Stock: ${product.stockQuantity}</p>` : `<p style="color:red;">Out of Stock</p>`;
+        const stockText = product.stockQuantity > 0 
+            ? `<div class="stock-status in-stock"><i class="fas fa-check-circle"></i> In Stock: ${product.stockQuantity}</div>` 
+            : `<div class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</div>`;
         const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
 
         container.innerHTML += `
@@ -883,8 +885,8 @@ async function loadNewArrivals() {
         latestProducts.forEach(product => {
             const fullImageUrl = product.imageUrl;
             const stockText = product.stockQuantity > 0 
-                ? `<p style="color:green;">In Stock: ${product.stockQuantity}</p>` 
-                : `<p style="color:red;">Out of Stock</p>`;
+                ? `<div class="stock-status in-stock"><i class="fas fa-check-circle"></i> In Stock: ${product.stockQuantity}</div>` 
+                : `<div class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</div>`;
             const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
 
             grid.innerHTML += `
