@@ -368,18 +368,25 @@ body {
 }
 
 
+.slider-card-wrapper {
+    margin: 30px auto;
+    max-width: 1200px;
+    padding: 0 15px;
+    width: 100%;
+}
+
 /* =========================================
    Homepage Hero Slider
 ========================================= */
 .hero-slider {
     position: relative;
     width: 100%;
-    max-width: 800px;
-    height: 400px; /* Adjust height as needed */
+    max-width: 1200px;
+    height: 480px; /* Default height for large desktop screens */
     margin: 20px auto;
     overflow: hidden;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     background: #f4f4f4;
 }
 
@@ -400,6 +407,31 @@ body {
     height: 100%;
     object-fit: cover; /* Keeps images looking professional without stretching */
     display: block;
+}
+
+@media (max-width: 1024px) {
+    .hero-slider {
+        height: 380px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-slider {
+        height: 260px;
+        border-radius: 8px;
+        margin: 15px auto;
+    }
+    .slider-card-wrapper {
+        margin: 15px auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-slider {
+        height: 180px;
+        border-radius: 6px;
+        margin: 10px auto;
+    }
 }
 
 /* =========================================
