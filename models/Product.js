@@ -15,4 +15,6 @@ const productSchema = new mongoose.Schema({
     stockQuantity: { type: Number, required: true, default: 1 } // 🌟 NEW: Added Stock tracker
 });
 
+productSchema.index({ category: 1, isAvailable: 1 });
+
 module.exports = mongoose.model('Product', productSchema);

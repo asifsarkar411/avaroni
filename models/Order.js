@@ -13,4 +13,6 @@ const orderSchema = new mongoose.Schema({
     orderDate: { type: Date, default: Date.now }
 });
 
+orderSchema.index({ orderNumber: 1 });
+
 module.exports = mongoose.model('Order', orderSchema);

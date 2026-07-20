@@ -21,6 +21,7 @@ const sanitize = require('mongo-sanitize');
 const helmet = require('helmet');
 const cors = require('cors');
 const multer = require('multer');
+const compression = require('compression');
 
 // --- MODELS ---
 const User = require('./models/User');           // Secure Login User Model
@@ -34,19 +35,29 @@ const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 const app = express();
 
 // ==========================================
-// MIDDLEWARE & SECURITY
+// MIDDLEWARE & SECURITY & OPTIMIZATION
 // ==========================================
-// FIX: Disabled CSP temporarily so your inline HTML scripts don't get blocked
+app.use(compression()); // Enable Gzip compression to reduce network payload sizes
+
 app.use(helmet({
     contentSecurityPolicy: false, 
 })); 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors()); // Allow frontend to communicate with backend
+
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: function (res, filePath) {
-        if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+        // Optimize caching headers for static assets
+        if (filePath.endsWith('.html')) {
+            // HTML files: always re-validate to ensure latest content updates
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+            // CSS/JS: Cache for 1 hour, re-validate afterwards to maintain fresh styling/scripting
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+        } else if (/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i.test(filePath)) {
+            // Images: Cache long term (7 days) for instant loading
+            res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
         }
     }
 })); // Serves your HTML/CSS/JS
