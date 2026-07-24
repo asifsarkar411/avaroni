@@ -91,28 +91,41 @@
     const categorySlug = params.get('cat');
     const subcategoryFilter = params.get('sub');
 
+    const titleEl = document.getElementById('category-page-title');
+
     if (!categorySlug) {
-        document.getElementById('category-page-title').innerText = 'Category Not Found';
+        if (titleEl) titleEl.innerText = 'Category Not Found';
         document.getElementById('product-list').innerHTML = '<p style="text-align:center; color:#999; grid-column: 1/-1; padding: 40px;">No category specified. Please select a category from the menu.</p>';
         return;
     }
 
-    // Fetch category display name and set page title
+    // Instantly set initial formatted title so it NEVER gets stuck on "Loading..."
+    const prettyCategoryName = categorySlug.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (titleEl) {
+        titleEl.innerText = subcategoryFilter 
+            ? `${prettyCategoryName} — ${subcategoryFilter}` 
+            : `${prettyCategoryName} Collection`;
+    }
+    document.title = `${prettyCategoryName} | আভরণী`;
+
+    // Fetch official category display name and build subcategory tabs
     fetch('/api/categories')
         .then(res => res.json())
         .then(data => {
             if (data.success && data.categories) {
-                const cat = data.categories.find(c => c.slug === categorySlug);
+                const cat = data.categories.find(c => c.slug.toLowerCase() === categorySlug.toLowerCase() || c.name.toLowerCase() === categorySlug.toLowerCase());
                 if (cat) {
-                    const titleEl = document.getElementById('category-page-title');
-                    titleEl.innerText = subcategoryFilter 
-                        ? `${cat.displayName} — ${subcategoryFilter}` 
-                        : `${cat.displayName} Collection`;
+                    if (titleEl) {
+                        titleEl.innerText = subcategoryFilter 
+                            ? `${cat.displayName} — ${subcategoryFilter}` 
+                            : `${cat.displayName} Collection`;
+                    }
                     document.title = `${cat.displayName} | আভরণী`;
 
                     // Build subcategory filter tabs
                     if (cat.subcategories && cat.subcategories.length > 0) {
                         const filterContainer = document.getElementById('subcategory-filter');
+                        filterContainer.innerHTML = '';
                         filterContainer.style.display = 'flex';
 
                         // "All" tab
@@ -130,21 +143,19 @@
                             filterContainer.appendChild(btn);
                         });
                     }
-                } else {
-                    document.getElementById('category-page-title').innerText = categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1) + ' Collection';
                 }
             }
         })
         .catch(err => console.error("Error loading category info:", err));
 
-    // Load products for this category
-    setTimeout(() => {
-        if (typeof loadProducts === 'function') {
-            loadProducts(categorySlug, subcategoryFilter || '');
-        } else {
-            console.error("loadProducts function not found.");
-        }
-    }, 100);
+    // Load products for this category immediately
+    if (typeof loadProducts === 'function') {
+        loadProducts(categorySlug);
+    } else {
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof loadProducts === 'function') loadProducts(categorySlug);
+        });
+    }
 })();
 </script>
 </body>

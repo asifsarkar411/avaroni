@@ -703,14 +703,14 @@ async function handleAddCategory(e) {
     if (!name) return;
 
     try {
-        const response = await fetch('/api/admin/categories', {
+        const response = await fetchWithAuth('/api/admin/categories', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                ...getAuthHeaders()
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ displayName: name })
         });
+        if (!response) return;
         const data = await response.json();
         if (data.success) {
             alert('Category added successfully!');
@@ -727,18 +727,22 @@ async function handleAddCategory(e) {
 
 async function handleAddSubcategory(catId) {
     const input = document.getElementById(`new-sub-${catId}`);
+    if (!input) return;
     const name = input.value.trim();
-    if (!name) return;
+    if (!name) {
+        alert("Please enter a subcategory name.");
+        return;
+    }
 
     try {
-        const response = await fetch(`/api/admin/categories/${catId}/subcategories`, {
+        const response = await fetchWithAuth(`/api/admin/categories/${catId}/subcategories`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                ...getAuthHeaders()
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ subcategory: name })
         });
+        if (!response) return;
         const data = await response.json();
         if (data.success) {
             input.value = '';
@@ -755,10 +759,10 @@ async function handleAddSubcategory(catId) {
 async function deleteSubcategory(catId, subName) {
     if (!confirm(`Remove subcategory "${subName}"?`)) return;
     try {
-        const response = await fetch(`/api/admin/categories/${catId}/subcategories/${encodeURIComponent(subName)}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+        const response = await fetchWithAuth(`/api/admin/categories/${catId}/subcategories/${encodeURIComponent(subName)}`, {
+            method: 'DELETE'
         });
+        if (!response) return;
         const data = await response.json();
         if (data.success) {
             renderCategoriesTab();
@@ -774,10 +778,10 @@ async function deleteSubcategory(catId, subName) {
 async function deleteCategory(catId) {
     if (!confirm("Are you sure you want to delete this Category? All its subcategories will be removed.")) return;
     try {
-        const response = await fetch(`/api/admin/categories/${catId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+        const response = await fetchWithAuth(`/api/admin/categories/${catId}`, {
+            method: 'DELETE'
         });
+        if (!response) return;
         const data = await response.json();
         if (data.success) {
             renderCategoriesTab();

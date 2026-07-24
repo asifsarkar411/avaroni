@@ -419,22 +419,37 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
+// Helper function to generate clean URL slug
+function generateCategorySlug(str) {
+    if (!str) return 'cat-' + Date.now();
+    let slug = str.trim().toLowerCase()
+        .replace(/[\s_]+/g, '-')
+        .replace(/[^\w\u00C0-\u024F\u0980-\u09FF-]/g, '')
+        .replace(/-+/g, '-');
+    return slug || ('cat-' + Date.now());
+}
+
 // Add Category (Admin)
 app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
     try {
         const { displayName, subcategories } = req.body;
-        const name = displayName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const slug = name;
+        if (!displayName || !displayName.trim()) {
+            return res.status(400).json({ success: false, message: "Category name is required" });
+        }
 
-        // Check if category already exists
-        let category = await Category.findOne({ name });
+        const cleanDisplayName = displayName.trim();
+        const slug = generateCategorySlug(cleanDisplayName);
+        const name = slug;
+
+        // Check if category already exists by slug or name
+        let category = await Category.findOne({ $or: [{ slug }, { name }] });
         if (category) {
             return res.status(400).json({ success: false, message: "Category already exists" });
         }
 
         category = new Category({
             name,
-            displayName,
+            displayName: cleanDisplayName,
             slug,
             subcategories: subcategories || []
         });
@@ -451,14 +466,19 @@ app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
 app.post('/api/admin/categories/:id/subcategories', verifyAdminToken, async (req, res) => {
     try {
         const { subcategory } = req.body;
-        if (!subcategory) return res.status(400).json({ success: false, message: "Subcategory name is required" });
+        if (!subcategory || !subcategory.trim()) {
+            return res.status(400).json({ success: false, message: "Subcategory name is required" });
+        }
 
+        const cleanSub = subcategory.trim();
         const category = await Category.findById(req.params.id);
         if (!category) return res.status(404).json({ success: false, message: "Category not found" });
 
-        // Add subcategory if it doesn't already exist
-        if (!category.subcategories.includes(subcategory)) {
-            category.subcategories.push(subcategory);
+        // Add subcategory if it doesn't already exist (case-insensitive check)
+        const exists = category.subcategories.some(s => s.toLowerCase() === cleanSub.toLowerCase());
+        if (!exists) {
+            category.subcategories.push(cleanSub);
+            category.markModified('subcategories');
             await category.save();
         }
 
@@ -475,7 +495,9 @@ app.delete('/api/admin/categories/:id/subcategories/:subName', verifyAdminToken,
         const category = await Category.findById(req.params.id);
         if (!category) return res.status(404).json({ success: false, message: "Category not found" });
 
-        category.subcategories = category.subcategories.filter(sub => sub.toLowerCase() !== req.params.subName.toLowerCase());
+        const subToDelete = decodeURIComponent(req.params.subName).trim().toLowerCase();
+        category.subcategories = category.subcategories.filter(sub => sub.toLowerCase() !== subToDelete);
+        category.markModified('subcategories');
         await category.save();
 
         res.json({ success: true, category });
