@@ -122,12 +122,20 @@ async function seedCategories() {
   }
 }
 
-// Helper function to convert base64 image data into static high-resolution binary files
+// Helper function to handle image storage:
+// - On Vercel: store Base64 directly in MongoDB (already compressed ~250KB, files on /tmp aren't HTTP-accessible)
+// - On local dev: write file to disk and return the /uploads URL path
 function saveBase64Image(base64Str) {
     if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
         return base64Str; // Return as-is if already a path or invalid
     }
 
+    // On Vercel: /tmp is ephemeral and not served via HTTP — store Base64 directly in DB
+    if (process.env.VERCEL) {
+        return base64Str; // Return Base64 as-is; browser renders data: URLs natively
+    }
+
+    // On local dev: write to disk and return file URL
     try {
         const matches = base64Str.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
         if (!matches || matches.length !== 3) {
@@ -137,7 +145,7 @@ function saveBase64Image(base64Str) {
         const ext = matches[1].split('/')[1] || 'jpg';
         const buffer = Buffer.from(matches[2], 'base64');
         const filename = `${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}.${ext}`;
-        const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : path.join(__dirname, 'public/uploads');
+        const uploadDir = path.join(__dirname, 'public/uploads');
 
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
@@ -151,6 +159,11 @@ function saveBase64Image(base64Str) {
         console.error("Error converting base64 to file:", err.message);
         return base64Str;
     }
+}
+
+// Serve uploaded files on local dev (Vercel uses DB-stored Base64 instead)
+if (!process.env.VERCEL) {
+    app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 }
 
 // Database migration script to automatically clean up legacy base64 strings
