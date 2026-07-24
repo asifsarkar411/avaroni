@@ -66,20 +66,43 @@ app.use(express.static(path.join(__dirname, 'public'), {
 })); // Serves your HTML/CSS/JS
 
 // ==========================================
-// DATABASE CONNECTION
+// DATABASE CONNECTION (SERVERLESS OPTIMIZED)
 // ==========================================
-const dbOptions = {
-  serverSelectionTimeoutMS: 5000,
-};
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_store', dbOptions)
-  .then(async () => {
-    console.log('MongoDB Connected successfully');
-    await seedCategories();
-    await migrateBase64ToFiles();
-  })
-  .catch(err => {
-    console.error('MongoDB Connection Error:', err);
-  });
+let isConnected = false;
+
+async function connectDB() {
+    if (isConnected || mongoose.connection.readyState >= 1) {
+        isConnected = true;
+        return;
+    }
+
+    try {
+        const dbOptions = {
+            serverSelectionTimeoutMS: 5000,
+            maxPoolSize: 10
+        };
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_store', dbOptions);
+        isConnected = true;
+        console.log('MongoDB Connected successfully');
+
+        // Only run seeding/migrations on local dev server startup (never block serverless requests)
+        if (!process.env.VERCEL) {
+            await seedCategories();
+            await migrateBase64ToFiles();
+        }
+    } catch (err) {
+        console.error('MongoDB Connection Error:', err);
+    }
+}
+
+// Global middleware ensuring DB connection for all API routes
+app.use('/api', async (req, res, next) => {
+    await connectDB();
+    next();
+});
+
+// Initial local connection trigger
+connectDB();
 
 // Seed Categories Function
 async function seedCategories() {
@@ -98,6 +121,7 @@ async function seedCategories() {
     console.error('Error seeding categories:', err);
   }
 }
+
 // Helper function to convert base64 image data into static high-resolution binary files
 function saveBase64Image(base64Str) {
     if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
@@ -113,7 +137,7 @@ function saveBase64Image(base64Str) {
         const ext = matches[1].split('/')[1] || 'jpg';
         const buffer = Buffer.from(matches[2], 'base64');
         const filename = `${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}.${ext}`;
-        const uploadDir = 'public/uploads/';
+        const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : path.join(__dirname, 'public/uploads');
 
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
@@ -124,7 +148,7 @@ function saveBase64Image(base64Str) {
 
         return `/uploads/${filename}`;
     } catch (err) {
-        console.error("Error converting base64 to file:", err);
+        console.error("Error converting base64 to file:", err.message);
         return base64Str;
     }
 }

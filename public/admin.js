@@ -85,12 +85,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Helper to convert file to Base64
+// Helper to convert & compress image file to optimized Base64
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+            // Fallback for non-standard image types
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            return;
+        }
+
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const maxDim = 1200; // Max 1200px dimension for studio clarity
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress image to 0.82 quality JPEG for super fast network transfer
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.82);
+                resolve(compressedBase64);
+            };
+            img.onerror = () => resolve(event.target.result); // Fallback if image load fails
+        };
         reader.onerror = error => reject(error);
     });
 }
