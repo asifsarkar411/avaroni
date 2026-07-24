@@ -2,6 +2,67 @@
 // PRODUCTS & CART LOGIC
 // ==========================================
 
+// ==========================================
+// 🔍 INTERACTIVE HIGH-RES PRODUCT IMAGE ZOOM
+// ==========================================
+function initInteractiveZoom(img) {
+    if (!img || img.dataset.zoomInitialized) return;
+    img.dataset.zoomInitialized = "true";
+
+    const container = img.parentElement;
+    if (!container) return;
+
+    container.style.overflow = "hidden";
+    container.style.cursor = "zoom-in";
+
+    function handleZoomMove(clientX, clientY) {
+        const rect = container.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+
+        let x = ((clientX - rect.left) / rect.width) * 100;
+        let y = ((clientY - rect.top) / rect.height) * 100;
+
+        // Clamp values between 0% and 100%
+        x = Math.max(0, Math.min(100, x));
+        y = Math.max(0, Math.min(100, y));
+
+        img.style.transformOrigin = `${x}% ${y}%`;
+        img.style.transform = "scale(2.2)";
+    }
+
+    function resetZoom() {
+        img.style.transform = "scale(1)";
+        img.style.transformOrigin = "center center";
+    }
+
+    // Desktop: Mouse hover and move
+    container.addEventListener("mousemove", (e) => {
+        handleZoomMove(e.clientX, e.clientY);
+    });
+    container.addEventListener("mouseleave", resetZoom);
+
+    // Mobile: Touch and drag finger
+    container.addEventListener("touchstart", (e) => {
+        if (e.touches && e.touches.length > 0) {
+            handleZoomMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, { passive: true });
+
+    container.addEventListener("touchmove", (e) => {
+        if (e.touches && e.touches.length > 0) {
+            handleZoomMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, { passive: true });
+
+    container.addEventListener("touchend", resetZoom);
+    container.addEventListener("touchcancel", resetZoom);
+}
+
+// Scan and bind zoom to all product images on the page
+function bindAllProductZoomEffects() {
+    document.querySelectorAll('.product-image-wrap .product-image, .product-modal-image img')
+        .forEach(img => initInteractiveZoom(img));
+}
 // Function to load products dynamically from the database
 async function loadProducts(category) {
     const productContainer = document.getElementById('product-list') || document.getElementById('products-container');
@@ -115,7 +176,9 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
 
         container.innerHTML += `
             <div class="product-card" data-product-id="${product._id}">
-                <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                <div class="product-image-wrap">
+                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                </div>
                 <h3>${product.name}</h3>
                 <p class="price">৳${product.price}</p>
                 ${stockText}
@@ -128,6 +191,8 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
             </div>
         `;
     });
+
+    bindAllProductZoomEffects();
 }
 
 // Unique cart session ID generation per tab/session to avoid different tabs/customers sharing the same cart
@@ -891,7 +956,9 @@ async function loadNewArrivals() {
 
             grid.innerHTML += `
                 <div class="product-card" data-product-id="${product._id}">
-                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                    <div class="product-image-wrap">
+                        <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                    </div>
                     <h3>${product.name}</h3>
                     <p class="price">৳${product.price}</p>
                     ${stockText}
@@ -904,6 +971,8 @@ async function loadNewArrivals() {
                 </div>
             `;
         });
+
+        bindAllProductZoomEffects();
     } catch (error) {
         console.error("Error loading new arrivals:", error);
         grid.innerHTML = '<p style="text-align:center; color:red;">Failed to load products.</p>';
@@ -1039,8 +1108,15 @@ async function openProductModal(productId) {
         const product = data.product;
 
         // Fill modal content
-        document.getElementById('modal-product-image').src = product.imageUrl;
-        document.getElementById('modal-product-image').alt = product.name;
+        const modalImg = document.getElementById('modal-product-image');
+        modalImg.src = product.imageUrl;
+        modalImg.alt = product.name;
+        // Reset zoom state for re-use and attach interactive zoom
+        modalImg.removeAttribute('data-zoom-initialized');
+        modalImg.style.transform = 'scale(1)';
+        modalImg.style.transformOrigin = 'center center';
+        initInteractiveZoom(modalImg);
+
         document.getElementById('modal-product-name').innerText = product.name;
         document.getElementById('modal-product-price').innerText = `৳${product.price}`;
         
