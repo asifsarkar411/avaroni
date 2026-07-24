@@ -128,6 +128,16 @@ async function showDashboard() {
     const res = await fetchWithAuth('/api/user-data');
     if (res && res.ok) {
         fetchDashboardStats();
+        fetchAnalyticsCharts();
+    }
+}
+
+let chartInstances = {};
+
+function destroyChart(canvasId) {
+    if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+        delete chartInstances[canvasId];
     }
 }
 
@@ -156,6 +166,137 @@ async function fetchDashboardStats() {
         }
     } catch (err) {
         console.error("Error loading dashboard stats:", err);
+    }
+}
+
+async function fetchAnalyticsCharts() {
+    if (typeof Chart === 'undefined') return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/analytics');
+        if (!response) return;
+        const data = await response.json();
+        if (!data.success || !data.analytics) return;
+
+        const analytics = data.analytics;
+
+        // 1. Order Overview (Doughnut)
+        const ctx1 = document.getElementById('orderOverviewChart');
+        if (ctx1) {
+            destroyChart('orderOverviewChart');
+            chartInstances['orderOverviewChart'] = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(analytics.orderOverview),
+                    datasets: [{
+                        data: Object.values(analytics.orderOverview),
+                        backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // 2. Monthly Sales Trend (Line)
+        const ctx2 = document.getElementById('monthlySalesChart');
+        if (ctx2) {
+            destroyChart('monthlySalesChart');
+            chartInstances['monthlySalesChart'] = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: analytics.monthlySalesTrend.labels,
+                    datasets: [{
+                        label: 'Sales (৳)',
+                        data: analytics.monthlySalesTrend.data,
+                        borderColor: '#e60050',
+                        backgroundColor: 'rgba(230, 0, 80, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#e60050'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // 3. Monthly Payment Record (Bar)
+        const ctx3 = document.getElementById('paymentRecordChart');
+        if (ctx3) {
+            destroyChart('paymentRecordChart');
+            chartInstances['paymentRecordChart'] = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: analytics.paymentRecord.labels,
+                    datasets: [{
+                        label: 'Revenue (৳)',
+                        data: analytics.paymentRecord.data,
+                        backgroundColor: ['#0d6efd', '#d63384', '#6f42c1', '#fd7e14', '#198754'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // 4. Top Selling Products (Horizontal Bar)
+        const ctx4 = document.getElementById('topProductsChart');
+        if (ctx4) {
+            destroyChart('topProductsChart');
+            const hasData = analytics.topSellingProducts.labels.length > 0;
+            chartInstances['topProductsChart'] = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: hasData ? analytics.topSellingProducts.labels : ['No Sales Yet'],
+                    datasets: [{
+                        label: 'Quantity Sold',
+                        data: hasData ? analytics.topSellingProducts.data : [0],
+                        backgroundColor: '#6f42c1',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+    } catch (err) {
+        console.error("Error loading analytics charts:", err);
     }
 }
 

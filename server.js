@@ -16,6 +16,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 const nodemailer = require('nodemailer');
 const sanitize = require('mongo-sanitize');
 const helmet = require('helmet');
@@ -159,9 +160,10 @@ async function migrateBase64ToFiles() {
         const cards = await BannerCard.find();
         let migratedCardsCount = 0;
         for (const card of cards) {
+            if (!card || !Array.isArray(card.images)) continue;
             let updated = false;
             for (let i = 0; i < card.images.length; i++) {
-                if (card.images[i] && card.images[i].startsWith('data:image/')) {
+                if (card.images[i] && typeof card.images[i] === 'string' && card.images[i].startsWith('data:image/')) {
                     card.images[i] = saveBase64Image(card.images[i]);
                     updated = true;
                 }
@@ -198,8 +200,7 @@ const transporter = nodemailer.createTransport({
 // ==========================================
 // MULTER CONFIGURATION (Image Uploads)
 // ==========================================
-const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'public/uploads/';
-const fs = require('fs');
+const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : path.join(__dirname, 'public/uploads');
 try { if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true }); } catch(e) { console.warn('Upload dir creation skipped:', e.message); }
 
 app.use('/uploads', express.static(uploadDir));
@@ -601,7 +602,7 @@ app.delete('/api/admin/promocodes/:id', verifyAdminToken, async (req, res) => {
 // Get Products (supports ?category=, ?search=, no params = all products)
 app.get('/api/products', async (req, res) => {
     try {
-        let filter = { isAvailable: true }; 
+        let filter = { isAvailable: { $ne: false } }; 
         if (req.query.category) {
             filter.category = { $regex: new RegExp(`^${req.query.category}$`, 'i') };
         }
@@ -903,6 +904,112 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Dashboard Stats Error:", error);
         res.status(500).json({ success: false, message: "Failed to load statistics" });
+    }
+});
+
+// Get Admin Analytics & Graphs Data
+app.get('/api/admin/analytics', verifyAdminToken, async (req, res) => {
+    try {
+        const orders = await Order.find();
+        
+        // 1. Order Overview Status Breakdown
+        const orderStatusCounts = {
+            Pending: 0,
+            Processing: 0,
+            Completed: 0,
+            Cancelled: 0
+        };
+
+        orders.forEach(o => {
+            const rawStatus = (o.status || 'Pending').toLowerCase();
+            if (rawStatus.includes('process')) {
+                orderStatusCounts.Processing++;
+            } else if (rawStatus.includes('deliver') || rawStatus.includes('complet')) {
+                orderStatusCounts.Completed++;
+            } else if (rawStatus.includes('cancel')) {
+                orderStatusCounts.Cancelled++;
+            } else {
+                orderStatusCounts.Pending++;
+            }
+        });
+
+        // 2. Monthly Sales Trend (Last 6 Months)
+        const monthlySalesMap = {};
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const today = new Date();
+        
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+            monthlySalesMap[key] = 0;
+        }
+
+        orders.forEach(o => {
+            if (o.status !== 'Cancelled' && o.createdAt) {
+                const d = new Date(o.createdAt);
+                const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                if (monthlySalesMap[key] !== undefined) {
+                    monthlySalesMap[key] += (o.totalAmount || 0);
+                }
+            }
+        });
+
+        // 3. Monthly Payment Record (Breakdown by Payment Method)
+        const paymentMap = {
+            'Cash on Delivery': 0,
+            'bKash': 0,
+            'Nagad': 0,
+            'Rocket': 0,
+            'Bank Transfer': 0
+        };
+
+        orders.forEach(o => {
+            const method = o.paymentMethod || 'Cash on Delivery';
+            if (paymentMap[method] !== undefined) {
+                paymentMap[method] += (o.totalAmount || 0);
+            } else {
+                paymentMap['Cash on Delivery'] += (o.totalAmount || 0);
+            }
+        });
+
+        // 4. Top Selling Products
+        const productSalesMap = {};
+        orders.forEach(o => {
+            if (o.status !== 'Cancelled' && Array.isArray(o.items)) {
+                o.items.forEach(item => {
+                    const pName = item.name || 'Product';
+                    const qty = Number(item.quantity) || 1;
+                    productSalesMap[pName] = (productSalesMap[pName] || 0) + qty;
+                });
+            }
+        });
+
+        const topProducts = Object.keys(productSalesMap)
+            .map(name => ({ name, quantity: productSalesMap[name] }))
+            .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 5);
+
+        res.json({
+            success: true,
+            analytics: {
+                orderOverview: orderStatusCounts,
+                monthlySalesTrend: {
+                    labels: Object.keys(monthlySalesMap),
+                    data: Object.values(monthlySalesMap)
+                },
+                paymentRecord: {
+                    labels: Object.keys(paymentMap),
+                    data: Object.values(paymentMap)
+                },
+                topSellingProducts: {
+                    labels: topProducts.map(p => p.name),
+                    data: topProducts.map(p => p.quantity)
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Analytics Endpoint Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load analytics" });
     }
 });
 
