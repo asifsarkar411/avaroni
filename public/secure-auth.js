@@ -107,7 +107,7 @@ if (loginForm) {
                 const data = await response.json();
 
                 if (response.ok && data.twoFactorRequired) {
-                    showToast("Code sent to your email!", 'success');
+                    showToast(data.message || "Code sent to your email!", 'success');
                     if (otpGroup) otpGroup.style.display = 'block';
                     if (otpInput) {
                         otpInput.required = true;

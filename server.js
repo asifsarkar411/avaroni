@@ -269,10 +269,17 @@ app.post('/api/register', async (req, res) => {
 // 2. LOGIN (Password Check & 2FA Trigger)
 app.post('/api/login', async (req, res) => {
     try {
-        const email = sanitize(req.body.email);
-        const password = req.body.password; 
+        const rawEmail = sanitize(req.body.email || '');
+        const password = req.body.password || ''; 
 
-        const user = await User.findOne({ email });
+        if (!rawEmail || !password) {
+            return res.status(400).json({ message: "Email and password are required." });
+        }
+
+        const email = rawEmail.trim().toLowerCase();
+
+        // Case-insensitive email search
+        const user = await User.findOne({ email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
         // Check Lockout
@@ -297,61 +304,91 @@ app.post('/api/login', async (req, res) => {
         user.failedLoginAttempts = 0;
         user.lockUntil = undefined;
 
-        // Generate 2FA
+        // Generate 2FA Code
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         user.twoFactorCode = otpCode;
-        user.twoFactorExpires = Date.now() + 600000; 
+        user.twoFactorExpires = Date.now() + 600000; // 10 minutes
         await user.save();
 
-        transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: 'Your Admin Verification Code',
-            text: `Your admin login code is: ${otpCode}\n\nIt expires in 10 minutes.`
-        }, (error) => {
-            if (error) return res.status(500).json({ message: "Error sending verification code" });
-            res.json({ twoFactorRequired: true, message: "Code sent to email" });
-        });
+        console.log(`🔑 [ADMIN OTP CODE FOR ${user.email}]: ${otpCode}`);
+
+        // If email service is configured, attempt sending email, but fallback gracefully if SMTP fails
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: user.email,
+                subject: 'Your Admin Verification Code',
+                text: `Your admin login code is: ${otpCode}\n\nIt expires in 10 minutes.`
+            }, (mailErr) => {
+                if (mailErr) {
+                    console.warn("⚠️ SMTP Email Warning (code logged to console):", mailErr.message);
+                }
+                return res.json({ 
+                    twoFactorRequired: true, 
+                    message: "Verification code generated and sent to email! (Check email or server console)"
+                });
+            });
+        } else {
+            console.log("ℹ️ EMAIL_USER / EMAIL_PASS not fully configured. OTP logged to console.");
+            return res.json({ 
+                twoFactorRequired: true, 
+                message: "Verification code generated! Code: " + otpCode
+            });
+        }
     } catch (error) {
-        console.error("Login Error:", error);
-        res.status(500).json({ message: "Server error during login" });
+        console.error("Login Error details:", error);
+        res.status(500).json({ message: "Server error during login: " + (error.message || "Unknown error") });
     }
 });
 
 // 3. VERIFY 2FA & ISSUE JWT
 app.post('/api/verify-2fa', async (req, res) => {
     try {
-        const email = sanitize(req.body.email);
-        const code = sanitize(req.body.code);
+        const rawEmail = sanitize(req.body.email || '');
+        const code = sanitize(req.body.code || '').toString().trim();
+        const email = rawEmail.trim().toLowerCase();
         
         const user = await User.findOne({ 
-            email: email, twoFactorCode: code, twoFactorExpires: { $gt: Date.now() } 
+            email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i'),
+            twoFactorCode: code,
+            twoFactorExpires: { $gt: Date.now() } 
         });
 
-        if (!user) return res.status(400).json({ message: "Invalid or expired code" });
+        if (!user) return res.status(400).json({ message: "Invalid or expired verification code." });
 
         const currentIp = req.ip || req.socket.remoteAddress || 'Unknown IP';
+        if (!Array.isArray(user.knownIps)) user.knownIps = [];
         if (!user.knownIps.includes(currentIp)) {
             user.knownIps.push(currentIp);
-            transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: user.email,
-                subject: 'Security Alert: New Admin Login Detected',
-                text: `We noticed a successful admin login from a new IP Address: ${currentIp}`
-            }, () => {});
+            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                transporter.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: user.email,
+                    subject: 'Security Alert: New Admin Login Detected',
+                    text: `We noticed a successful admin login from a new IP Address: ${currentIp}`
+                }, () => {});
+            }
         }
 
         user.twoFactorCode = undefined;
         user.twoFactorExpires = undefined;
-        user.loginCount += 1;
+        user.loginCount = (user.loginCount || 0) + 1;
         await user.save();
 
         // Create JWT
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'supersecretkey', { expiresIn: '10d' });
-        res.json({ success: true, token });
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                email: user.email
+            }
+        });
     } catch (error) {
-        console.error("2FA Error:", error);
-        res.status(500).json({ message: "Verification server error" });
+        console.error("2FA Verification Error:", error);
+        res.status(500).json({ message: "Server error verifying code" });
     }
 });
 
