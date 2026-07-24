@@ -134,15 +134,30 @@ async function migrateBase64ToFiles() {
     try {
         console.log("Checking for legacy Base64 images in database to migrate...");
 
-        // 1. Migrate Products
-        const products = await Product.find({ imageUrl: /^data:image\// });
-        if (products.length > 0) {
-            console.log(`Found ${products.length} products with Base64 images. Migrating...`);
-            for (const prod of products) {
-                prod.imageUrl = saveBase64Image(prod.imageUrl);
+        // 1. Migrate & Normalize Products Image URLs
+        const allProducts = await Product.find();
+        let prodMigratedCount = 0;
+        for (const prod of allProducts) {
+            if (!prod.imageUrl || typeof prod.imageUrl !== 'string' || !prod.imageUrl.trim()) {
+                prod.imageUrl = './img/profile_image.jpg';
                 await prod.save();
+                prodMigratedCount++;
+            } else {
+                let clean = prod.imageUrl.trim().replace(/\\/g, '/');
+                if (clean.startsWith('data:image/')) {
+                    clean = saveBase64Image(clean);
+                } else if (clean.startsWith('uploads/')) {
+                    clean = '/' + clean;
+                }
+                if (clean !== prod.imageUrl) {
+                    prod.imageUrl = clean;
+                    await prod.save();
+                    prodMigratedCount++;
+                }
             }
-            console.log("Product images migration complete!");
+        }
+        if (prodMigratedCount > 0) {
+            console.log(`Normalized image URLs for ${prodMigratedCount} products.`);
         }
 
         // 2. Migrate NavSliders

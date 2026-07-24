@@ -2,6 +2,20 @@
 // PRODUCTS & CART LOGIC
 // ==========================================
 
+// Helper function to format image URLs safely
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
 // ==========================================
 // 🔍 INTERACTIVE HIGH-RES PRODUCT IMAGE ZOOM
 // ==========================================
@@ -168,7 +182,7 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
     }
 
     filtered.forEach(product => {
-        const fullImageUrl = product.imageUrl;
+        const fullImageUrl = formatImageUrl(product.imageUrl);
         const stockText = product.stockQuantity > 0 
             ? `<div class="stock-status in-stock"><i class="fas fa-check-circle"></i> In Stock: ${product.stockQuantity}</div>` 
             : `<div class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</div>`;
@@ -177,7 +191,7 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
         container.innerHTML += `
             <div class="product-card" data-product-id="${product._id}">
                 <div class="product-image-wrap">
-                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 </div>
                 <h3>${product.name}</h3>
                 <p class="price">৳${product.price}</p>
@@ -975,7 +989,7 @@ async function loadNewArrivals() {
         const latestProducts = data.products.slice(0, 20);
 
         latestProducts.forEach(product => {
-            const fullImageUrl = product.imageUrl;
+            const fullImageUrl = formatImageUrl(product.imageUrl);
             const stockText = product.stockQuantity > 0 
                 ? `<div class="stock-status in-stock"><i class="fas fa-check-circle"></i> In Stock: ${product.stockQuantity}</div>` 
                 : `<div class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</div>`;
@@ -984,7 +998,7 @@ async function loadNewArrivals() {
             grid.innerHTML += `
                 <div class="product-card" data-product-id="${product._id}">
                     <div class="product-image-wrap">
-                        <img src="${fullImageUrl}" alt="${product.name}" class="product-image">
+                        <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                     </div>
                     <h3>${product.name}</h3>
                     <p class="price">৳${product.price}</p>
@@ -1074,7 +1088,7 @@ async function performSearch(query) {
             item.className = 'search-result-item';
             item.setAttribute('data-product-id', product._id);
             item.innerHTML = `
-                <img src="${product.imageUrl}" alt="${product.name}">
+                <img src="${formatImageUrl(product.imageUrl)}" alt="${product.name}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 <div class="search-result-info">
                     <h4>${product.name}</h4>
                     <span>${product.category}${product.subcategory ? ' • ' + product.subcategory : ''}</span>
@@ -1136,7 +1150,8 @@ async function openProductModal(productId) {
 
         // Fill modal content
         const modalImg = document.getElementById('modal-product-image');
-        modalImg.src = product.imageUrl;
+        modalImg.src = formatImageUrl(product.imageUrl);
+        modalImg.onerror = function() { this.onerror=null; this.src='./img/profile_image.jpg'; };
         modalImg.alt = product.name;
         // Reset zoom state for re-use and attach interactive zoom
         modalImg.removeAttribute('data-zoom-initialized');
@@ -1180,7 +1195,7 @@ async function openProductModal(productId) {
             cartBtn.disabled = false;
             cartBtn.style.background = '';
             cartBtn.onclick = () => {
-                addToCart(product._id, product.name, product.price, product.imageUrl, product.stockQuantity);
+                addToCart(product._id, product.name, product.price, formatImageUrl(product.imageUrl), product.stockQuantity);
             };
         } else {
             cartBtn.disabled = true;
@@ -1196,7 +1211,7 @@ async function openProductModal(productId) {
                 data.relatedProducts.forEach(rp => {
                     relatedGrid.innerHTML += `
                         <div class="related-product-card" data-product-id="${rp._id}">
-                            <img src="${rp.imageUrl}" alt="${rp.name}">
+                            <img src="${formatImageUrl(rp.imageUrl)}" alt="${rp.name}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                             <h4>${rp.name}</h4>
                             <span class="related-price">৳${rp.price}</span>
                         </div>
@@ -1241,7 +1256,8 @@ async function loadNavbarSliders() {
         container.innerHTML = '';
         data.sliders.forEach((slider, idx) => {
             const img = document.createElement('img');
-            img.src = slider.imageUrl;
+            img.src = formatImageUrl(slider.imageUrl);
+            img.onerror = function() { this.onerror=null; this.src='./img/profile_image.jpg'; };
             img.alt = `Offer ${idx + 1}`;
             if (idx === 0) img.classList.add('active');
             

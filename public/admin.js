@@ -1,6 +1,17 @@
-// ==========================================
-// 🔒 SECURITY CHECK & INITIALIZATION
-// ==========================================
+// Helper function to format image URLs safely
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Check if user is logged in
     if (!localStorage.getItem('adminToken')) {
@@ -408,9 +419,10 @@ async function fetchManageProducts() {
         }
 
         data.products.forEach(prod => {
+            const imgUrl = formatImageUrl(prod.imageUrl);
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="${prod.imageUrl}" width="50" style="object-fit:cover; border-radius:4px;"></td>
+                    <td><img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="50" height="50" style="object-fit:cover; border-radius:4px;"></td>
                     <td><strong>${prod.name}</strong></td>
                     <td>${prod.category}</td>
                     <td>${prod.size || '-'}</td>
@@ -1065,7 +1077,7 @@ async function loadAdminNavSliders() {
         data.sliders.forEach(slider => {
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="${slider.imageUrl}" style="max-height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;"></td>
+                    <td><img src="${formatImageUrl(slider.imageUrl)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" style="max-height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;"></td>
                     <td>${slider.link || '<span style="color:#aaa; font-style:italic;">None</span>'}</td>
                     <td><strong>${slider.order}</strong></td>
                     <td>
@@ -1366,7 +1378,7 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-size').value = prod.size || '';
     document.getElementById('edit-prod-colour').value = prod.colour || '';
     document.getElementById('edit-prod-brand').value = prod.brand || '';
-    document.getElementById('edit-prod-preview').src = prod.imageUrl;
+    document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
 
     // Populate Category & Subcategory dropdowns
