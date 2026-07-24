@@ -813,7 +813,7 @@ app.get('/api/admin/products', verifyAdminToken, async (req, res) => {
         res.json({ success: true, products }); 
     } catch (error) { 
         console.error("Get Admin Products Error:", error);
-        res.status(500).json({ success: false }); 
+        res.status(500).json({ success: false, message: error.message || "Failed to fetch admin products" }); 
     }
 });
 
@@ -871,11 +871,17 @@ app.post('/api/products', verifyAdminToken, async (req, res) => {
 // Delete Product
 app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
     try { 
-        await Product.findByIdAndDelete(req.params.id); 
-        res.json({ success: true }); 
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID format" });
+        }
+        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+        if (!deletedProduct) {
+            return res.status(404).json({ success: false, message: "Product not found or already deleted" });
+        }
+        res.json({ success: true, message: "Product deleted successfully!" }); 
     } catch (error) { 
         console.error("Delete Product Error:", error);
-        res.status(500).json({ success: false }); 
+        res.status(500).json({ success: false, message: error.message || "Failed to delete product" }); 
     }
 });
 

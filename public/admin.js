@@ -456,17 +456,27 @@ async function toggleAvailability(id) {
 }
 
 async function deleteProduct(id) {
-    if(confirm("Are you sure you want to delete this product?")) {
+    if (!id || id === 'undefined') {
+        alert("Invalid product ID");
+        return;
+    }
+    if (confirm("Are you sure you want to delete this product?")) {
         try {
             const response = await fetchWithAuth(`/api/admin/products/${id}`, { 
                 method: 'DELETE'
             });
-            if (response && response.ok) {
+            if (!response) return;
+            const data = await response.json();
+            if (response.ok && data.success) {
                 fetchManageProducts();
                 fetchDashboardStats();
+                fetchAnalyticsCharts();
+            } else {
+                alert("Failed to delete product: " + (data.message || "Unknown error"));
             }
         } catch(err) {
             console.error("Error deleting product:", err);
+            alert("Network error deleting product.");
         }
     }
 }
