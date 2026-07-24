@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion & Style Blog | আভরণী</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .blog-hero {
+            background: linear-gradient(135deg, #111 0%, #333 100%);
+            color: #fff;
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .blog-hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #ffb6d8;
+        }
+
+        .blog-hero p {
+            font-size: 16px;
+            color: #ccc;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .blog-container {
+            max-width: 1100px;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .blog-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border: 1px solid #eee;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(230,0,80,0.15);
+        }
+
+        .blog-card-img {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .blog-tag {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #e60050;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 15px;
+            text-transform: uppercase;
+        }
+
+        .blog-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .blog-meta {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .blog-meta i {
+            color: #e60050;
+            margin-right: 5px;
+        }
+
+        .blog-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .blog-excerpt {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .blog-read-more {
+            color: #e60050;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s ease;
+            cursor: pointer;
+        }
+
+        .blog-read-more:hover {
+            gap: 10px;
+        }
+
+        /* Modal styling for reading blog post */
+        .blog-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .blog-modal-box {
+            background: #fff;
+            max-width: 750px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .blog-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .blog-modal-close:hover {
+            color: #e60050;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
+        <div class="nav-promo-slider" id="nav-promo-slider"></div>
+        <div class="nav-links">
+            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="search-bar-container">
+        <div class="search-bar-inner">
+            <i class="fas fa-search search-bar-icon"></i>
+            <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+            <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="search-results-dropdown" class="search-results-dropdown"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <div class="blog-hero">
+        <h1><i class="fas fa-newspaper"></i> आभाৰणी Style & Fashion Blog</h1>
+        <p>Discover the latest traditional dress trends, hand-crafted ornament styling tips, and festive wardrobe guides for every season.</p>
+    </div>
+
+    <div class="blog-container">
+        <div class="blog-grid">
+            <!-- Article 1 -->
+            <div class="blog-card">
+                <div class="blog-card-img" style="background-image: url('./img/profile_image.jpg');">
+                    <span class="blog-tag">Fashion Guide</span>
+                </div>
+                <div class="blog-content">
+                    <div class="blog-meta">
+                        <span><i class="far fa-calendar-alt"></i> July 24, 2026</span>
+                        <span><i class="far fa-clock"></i> 4 min read</span>
+                    </div>
+                    <h3 class="blog-title">Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh</h3>
+                    <p class="blog-excerpt">Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bengali festive fashion by storm this season...</p>
+                    <span class="blog-read-more" onclick="openBlogModal('salwar-kameez')">Read Full Article <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </div>
+
+            <!-- Article 2 -->
+            <div class="blog-card">
+                <div class="blog-card-img" style="background-image: url('./img/profile_image.jpg');">
+                    <span class="blog-tag">Jewelry Care</span>
+                </div>
+                <div class="blog-content">
+                    <div class="blog-meta">
+                        <span><i class="far fa-calendar-alt"></i> July 20, 2026</span>
+                        <span><i class="far fa-clock"></i> 3 min read</span>
+                    </div>
+                    <h3 class="blog-title">How to Maintain & Preserve Your Hand-Crafted Ornaments & Jewelry</h3>
+                    <p class="blog-excerpt">Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple home care techniques...</p>
+                    <span class="blog-read-more" onclick="openBlogModal('jewelry-care')">Read Full Article <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </div>
+
+            <!-- Article 3 -->
+            <div class="blog-card">
+                <div class="blog-card-img" style="background-image: url('./img/profile_image.jpg');">
+                    <span class="blog-tag">Kids Collection</span>
+                </div>
+                <div class="blog-content">
+                    <div class="blog-meta">
+                        <span><i class="far fa-calendar-alt"></i> July 15, 2026</span>
+                        <span><i class="far fa-clock"></i> 5 min read</span>
+                    </div>
+                    <h3 class="blog-title">Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear</h3>
+                    <p class="blog-excerpt">When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...</p>
+                    <span class="blog-read-more" onclick="openBlogModal('kids-fashion')">Read Full Article <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Article Detail Modal -->
+    <div id="blog-modal" class="blog-modal-overlay" style="display:none;">
+        <div class="blog-modal-box">
+            <span class="blog-modal-close" onclick="closeBlogModal()">&times;</span>
+            <div id="blog-modal-body"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const articles = {
+            'salwar-kameez': {
+                title: 'Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh',
+                date: 'July 24, 2026',
+                category: 'Fashion Guide',
+                content: `
+                    <p>Festive fashion in Bangladesh is undergoing a gorgeous transformation! Combining traditional craftsmanship with modern silhouettes, today's women are embracing vibrant colors, intricate embroidery, and lightweight fabrics.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">1. Organza Dupatta Sets</h4>
+                    <p>Organza brings a delicate, royal sheen to any ensemble. Paired with straight-cut Kameez and churidar, organza dupattas featuring floral embroidery or zari borders are a top favorite.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">2. Anarkali Floor-Length Gowns</h4>
+                    <p>For grand evening receptions and Eid celebrations, floor-length Anarkalis offer timeless grandeur and graceful flair.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">3. Pastel Silk Combinations</h4>
+                    <p>Soft mint green, powder blue, and blush pink silks are replacing heavy dark tones for day events, giving a fresh and sophisticated look.</p>
+                    <p style="margin-top:20px; font-weight:600; color:#333;">Discover our full Women's Dress collection at आभाৰણી to shop these trending styles today!</p>
+                `
+            },
+            'jewelry-care': {
+                title: 'How to Maintain & Preserve Your Hand-Crafted Ornaments & Jewelry',
+                date: 'July 20, 2026',
+                category: 'Jewelry Care',
+                content: `
+                    <p>Hand-crafted ornaments and fashion jewelry require delicate care to preserve their original shine and prevent oxidation or discoloration.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">1. Keep Away From Perfume & Moisture</h4>
+                    <p>Always apply your perfume, lotion, and hairspray BEFORE putting on your jewelry. Chemicals in sprays can erode protective coatings.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">2. Separate Storage Pouches</h4>
+                    <p>Store each piece in individual velvet pouches or zip-lock bags to avoid scratches caused by friction between metal components.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">3. Gently Wipe After Wearing</h4>
+                    <p>Before storing, wipe your ornaments with a soft microfiber cloth to remove natural skin oils and sweat accumulated during wear.</p>
+                `
+            },
+            'kids-fashion': {
+                title: 'Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear',
+                date: 'July 15, 2026',
+                category: 'Kids Collection',
+                content: `
+                    <p>Dressing children for traditional Bangladeshi events can be a delight when comfort is prioritized alongside style.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">1. Pure Cotton Inner Linings</h4>
+                    <p>Ensure any embellished kid's frock or panjabi features a soft 100% cotton inner lining to prevent itching or irritation during warm weather.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">2. Elasticated Waistbands</h4>
+                    <p>Choose trousers and skirts with adjustable elastic waistbands that allow free movement for playing and enjoying celebrations.</p>
+                    <h4 style="margin: 15px 0 8px; color: #e60050;">3. Lightweight Zari Details</h4>
+                    <p>Opt for woven motifs rather than heavy metallic beads for younger kids to keep outfits lightweight and comfortable all day long.</p>
+                `
+            }
+        };
+
+        function openBlogModal(key) {
+            const article = articles[key];
+            if (!article) return;
+            const body = document.getElementById('blog-modal-body');
+            body.innerHTML = `
+                <span style="background:#e60050; color:#fff; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">${article.category}</span>
+                <p style="color:#888; font-size:13px; margin: 10px 0;"><i class="far fa-calendar-alt"></i> ${article.date}</p>
+                <h2 style="color:#222; margin-bottom:15px; font-size:22px;">${article.title}</h2>
+                <hr style="border:0; border-top:1px solid #eee; margin-bottom:20px;">
+                <div style="font-size:15px; line-height:1.7; color:#444;">${article.content}</div>
+            `;
+            document.getElementById('blog-modal').style.display = 'flex';
+        }
+
+        function closeBlogModal() {
+            document.getElementById('blog-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

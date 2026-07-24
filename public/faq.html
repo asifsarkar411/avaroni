@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequently Asked Questions (FAQ) | আভরণী</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .faq-hero {
+            background: linear-gradient(135deg, #e60050 0%, #990035 100%);
+            color: #fff;
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.2);
+        }
+
+        .faq-hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .faq-hero p {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+
+        .faq-search-box {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .faq-search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border-radius: 30px;
+            border: none;
+            font-size: 15px;
+            outline: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+        }
+
+        .faq-search-box i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 16px;
+        }
+
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto 50px;
+            padding: 0 20px;
+        }
+
+        .faq-categories {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .faq-cat-btn {
+            background: #fff;
+            border: 1.5px solid #e0e0e0;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .faq-cat-btn:hover, .faq-cat-btn.active {
+            background: #e60050;
+            color: #fff;
+            border-color: #e60050;
+        }
+
+        .faq-item {
+            background: #fff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #eee;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            box-shadow: 0 4px 12px rgba(230,0,80,0.12);
+        }
+
+        .faq-question {
+            padding: 18px 22px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .faq-question i {
+            color: #e60050;
+            transition: transform 0.3s ease;
+            font-size: 14px;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), padding 0.35s ease;
+            background: #fafafa;
+            border-top: 1px solid transparent;
+            color: #555;
+            line-height: 1.6;
+            font-size: 14.5px;
+            padding: 0 22px;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 16px 22px 20px;
+            border-top-color: #eee;
+        }
+
+        .faq-contact-box {
+            text-align: center;
+            background: #fff;
+            border: 2px dashed #e60050;
+            padding: 30px 20px;
+            border-radius: 12px;
+            margin-top: 40px;
+        }
+
+        .faq-contact-box h3 {
+            color: #e60050;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .faq-contact-box p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .faq-contact-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .faq-btn-wa {
+            background: #25D366;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .faq-btn-phone {
+            background: #e60050;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
+        <div class="nav-promo-slider" id="nav-promo-slider"></div>
+        <div class="nav-links">
+            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="search-bar-container">
+        <div class="search-bar-inner">
+            <i class="fas fa-search search-bar-icon"></i>
+            <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+            <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="search-results-dropdown" class="search-results-dropdown"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <!-- FAQ Hero Section -->
+    <div class="faq-hero">
+        <h1><i class="fas fa-question-circle"></i> Frequently Asked Questions</h1>
+        <p>Find quick answers to common questions about orders, shipping, returns, payment methods, and product care at आभाৰণী.</p>
+        <div class="faq-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="faq-search-input" placeholder="Type your question here (e.g. delivery, payment, return)...">
+        </div>
+    </div>
+
+    <div class="faq-container">
+        <!-- Category Filter Tabs -->
+        <div class="faq-categories">
+            <button class="faq-cat-btn active" data-cat="all">All Questions</button>
+            <button class="faq-cat-btn" data-cat="orders">Orders & Delivery</button>
+            <button class="faq-cat-btn" data-cat="payment">Payment Methods</button>
+            <button class="faq-cat-btn" data-cat="returns">Returns & Exchange</button>
+            <button class="faq-cat-btn" data-cat="products">Products & Quality</button>
+        </div>
+
+        <!-- FAQ Items -->
+        <div id="faq-list">
+            <!-- Item 1 -->
+            <div class="faq-item" data-category="orders">
+                <div class="faq-question">
+                    <span><i class="fas fa-truck" style="margin-right:8px;"></i> How long does delivery take inside Bangladesh?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Inside Dhaka, orders are delivered within 24 to 48 hours. For orders outside Dhaka, delivery takes 2 to 4 business days via courier services (Steadfast / RedX / SA Paribahan).
+                </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="faq-item" data-category="orders">
+                <div class="faq-question">
+                    <span><i class="fas fa-shipping-fast" style="margin-right:8px;"></i> What are the delivery charges?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Standard delivery inside Dhaka is ৳60. Outside Dhaka delivery charge is ৳120. Special express delivery options are available upon request.
+                </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="faq-item" data-category="payment">
+                <div class="faq-question">
+                    <span><i class="fas fa-wallet" style="margin-right:8px;"></i> Which payment methods do you accept?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    We accept Cash on Delivery (COD), bKash, Nagad, Rocket, and Bank Transfers. You can select your preferred payment option at checkout.
+                </div>
+            </div>
+
+            <!-- Item 4 -->
+            <div class="faq-item" data-category="payment">
+                <div class="faq-question">
+                    <span><i class="fas fa-shield-alt" style="margin-right:8px;"></i> Is Cash on Delivery (COD) available everywhere?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! We provide Cash on Delivery all across Bangladesh so you can inspect your parcel before handing over payment to the delivery agent.
+                </div>
+            </div>
+
+            <!-- Item 5 -->
+            <div class="faq-item" data-category="returns">
+                <div class="faq-question">
+                    <span><i class="fas fa-undo-alt" style="margin-right:8px;"></i> What is your return & replacement policy?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    If you receive a defective, damaged, or wrong item, you can request an instant return or exchange within 7 days of delivery. Please visit our <a href="return-product.html" style="color:#e60050; font-weight:600;">Return Product page</a> to submit a request.
+                </div>
+            </div>
+
+            <!-- Item 6 -->
+            <div class="faq-item" data-category="returns">
+                <div class="faq-question">
+                    <span><i class="fas fa-exchange-alt" style="margin-right:8px;"></i> Can I change my dress size after ordering?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes, if the desired size is in stock, we will exchange it for you free of charge (customer pays the delivery fee for size swaps).
+                </div>
+            </div>
+
+            <!-- Item 7 -->
+            <div class="faq-item" data-category="products">
+                <div class="faq-question">
+                    <span><i class="fas fa-gem" style="margin-right:8px;"></i> Are the product images 100% real?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! All product images displayed on आभाৰણી are 100% original high-resolution studio photos of our actual stock. What you see is exactly what you receive.
+                </div>
+            </div>
+
+            <!-- Item 8 -->
+            <div class="faq-item" data-category="products">
+                <div class="faq-question">
+                    <span><i class="fas fa-sparkles" style="margin-right:8px;"></i> How should I care for handcrafted jewelry & ornaments?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Keep your ornaments dry and away from direct perfume, hairspray, or harsh chemicals. Store each piece in a zip-lock pouch or velvet box to maintain shine and prevent tarnishing.
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Box -->
+        <div class="faq-contact-box">
+            <h3><i class="fas fa-headset"></i> Still Have Questions?</h3>
+            <p>Our friendly support team is ready to assist you via phone or WhatsApp 7 days a week.</p>
+            <div class="faq-contact-btns">
+                <a href="https://wa.me/8801743648510" target="_blank" class="faq-btn-wa">
+                    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+                <a href="tel:+8801743648510" class="faq-btn-phone">
+                    <i class="fas fa-phone-alt"></i> Call 01743648510
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Accordion Toggle
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.addEventListener('click', () => {
+                const item = q.parentElement;
+                const isActive = item.classList.contains('active');
+                
+                // Close other items
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+                
+                // Toggle clicked item
+                if (!isActive) {
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // Search Filter
+        const searchInput = document.getElementById('faq-search-input');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const qText = item.querySelector('.faq-question').innerText.toLowerCase();
+                const aText = item.querySelector('.faq-answer').innerText.toLowerCase();
+                if (qText.includes(term) || aText.includes(term)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Category Filter
+        document.querySelectorAll('.faq-cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                const cat = e.target.getAttribute('data-cat');
+                
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    if (cat === 'all' || item.getAttribute('data-category') === cat) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

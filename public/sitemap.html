@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap | আভরণী</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sitemap-hero {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: #fff;
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 40px;
+        }
+
+        .sitemap-hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #ffb6d8;
+        }
+
+        .sitemap-hero p {
+            font-size: 16px;
+            color: #9ca3af;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .sitemap-container {
+            max-width: 1000px;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+        }
+
+        .sitemap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .sitemap-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            border-top: 4px solid #e60050;
+        }
+
+        .sitemap-card h3 {
+            font-size: 18px;
+            color: #111827;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sitemap-card h3 i {
+            color: #e60050;
+        }
+
+        .sitemap-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sitemap-list li {
+            margin-bottom: 12px;
+        }
+
+        .sitemap-list a {
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 14.5px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .sitemap-list a:hover {
+            color: #e60050;
+            transform: translateX(4px);
+        }
+
+        .sitemap-list a i {
+            font-size: 11px;
+            color: #e60050;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
+        <div class="nav-promo-slider" id="nav-promo-slider"></div>
+        <div class="nav-links">
+            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="search-bar-container">
+        <div class="search-bar-inner">
+            <i class="fas fa-search search-bar-icon"></i>
+            <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+            <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="search-results-dropdown" class="search-results-dropdown"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <div class="sitemap-hero">
+        <h1><i class="fas fa-sitemap"></i> Website Sitemap</h1>
+        <p>Complete structure and page directory of आभाৰણી for easy navigation.</p>
+    </div>
+
+    <div class="sitemap-container">
+        <div class="sitemap-grid">
+            <!-- Section 1 -->
+            <div class="sitemap-card">
+                <h3><i class="fas fa-home"></i> Main Pages</h3>
+                <ul class="sitemap-list">
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Homepage</a></li>
+                    <li><a href="cart.html"><i class="fas fa-chevron-right"></i> Shopping Cart & Checkout</a></li>
+                    <li><a href="payment.html"><i class="fas fa-chevron-right"></i> Payment Confirmation</a></li>
+                    <li><a href="admin-login.html"><i class="fas fa-chevron-right"></i> Admin Login</a></li>
+                </ul>
+            </div>
+
+            <!-- Section 2 -->
+            <div class="sitemap-card">
+                <h3><i class="fas fa-tags"></i> Shop Collections</h3>
+                <ul class="sitemap-list">
+                    <li><a href="women.html"><i class="fas fa-chevron-right"></i> Women Dress Collection</a></li>
+                    <li><a href="ornament.html"><i class="fas fa-chevron-right"></i> Handcrafted Ornaments</a></li>
+                    <li><a href="kids.html"><i class="fas fa-chevron-right"></i> Kids Zone Collection</a></li>
+                    <li><a href="category.html?cat=new"><i class="fas fa-chevron-right"></i> Dynamic Category Explorer</a></li>
+                </ul>
+            </div>
+
+            <!-- Section 3 -->
+            <div class="sitemap-card">
+                <h3><i class="fas fa-info-circle"></i> Information & Help</h3>
+                <ul class="sitemap-list">
+                    <li><a href="faq.html"><i class="fas fa-chevron-right"></i> Frequently Asked Questions (FAQ)</a></li>
+                    <li><a href="blog.html"><i class="fas fa-chevron-right"></i> Fashion & Style Blog</a></li>
+                    <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Section 4 -->
+            <div class="sitemap-card">
+                <h3><i class="fas fa-shield-alt"></i> Customer Care & Policies</h3>
+                <ul class="sitemap-list">
+                    <li><a href="return-policy.html"><i class="fas fa-chevron-right"></i> Return & Refund Policy</a></li>
+                    <li><a href="return-product.html"><i class="fas fa-chevron-right"></i> Request Product Return</a></li>
+                    <li><a href="sitemap.html"><i class="fas fa-chevron-right"></i> Complete Site Map</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

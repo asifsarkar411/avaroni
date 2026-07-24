@@ -482,10 +482,10 @@ function loadSidebarCategories(categories) {
     const closeBtn = sidebar.querySelector('.close-btn');
     const footerLinks = [];
 
-    // Save footer links (return, policy, about, contact)
+    // Save footer links (faq, blog, sitemap, return, policy, about, contact)
     sidebar.querySelectorAll('a').forEach(a => {
         const href = a.getAttribute('href') || '';
-        if (href.includes('return') || href.includes('about') || href.includes('contact') || href.includes('policy')) {
+        if (href.includes('return') || href.includes('about') || href.includes('contact') || href.includes('policy') || href.includes('faq') || href.includes('blog') || href.includes('sitemap')) {
             footerLinks.push(a.cloneNode(true));
         }
     });
@@ -524,6 +524,23 @@ function loadSidebarCategories(categories) {
     const hr = document.createElement('hr');
     hr.style.cssText = 'border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;';
     sidebar.appendChild(hr);
+
+    // If footer links were empty or missing FAQ/Blog/Sitemap, construct complete default quick links
+    if (footerLinks.length === 0) {
+        const createSidebarLink = (href, iconClass, text) => {
+            const a = document.createElement('a');
+            a.href = href;
+            a.innerHTML = `<i class="${iconClass}"></i> ${text}`;
+            return a;
+        };
+        footerLinks.push(createSidebarLink('faq.html', 'fas fa-question-circle', 'FAQ'));
+        footerLinks.push(createSidebarLink('blog.html', 'fas fa-newspaper', 'Blog'));
+        footerLinks.push(createSidebarLink('sitemap.html', 'fas fa-sitemap', 'Sitemap'));
+        footerLinks.push(createSidebarLink('return-product.html', 'fas fa-undo', 'Return Product'));
+        footerLinks.push(createSidebarLink('return-policy.html', 'fas fa-file-contract', 'Return Policy'));
+        footerLinks.push(createSidebarLink('about.html', 'fas fa-info-circle', 'About Us'));
+        footerLinks.push(createSidebarLink('contact.html', 'fas fa-envelope', 'Contact'));
+    }
 
     // Re-add footer links
     footerLinks.forEach(link => sidebar.appendChild(link));
@@ -767,6 +784,9 @@ function initFooterAndWidgets() {
                 <div class="footer-section">
                     <h3>Quick Links</h3>
                     <ul>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="sitemap.html">Sitemap</a></li>
                         <li><a href="about.html">About Us</a></li>
                         <li><a href="contact.html">Contact Us</a></li>
                         <li><a href="return-policy.html">Return Policy</a></li>
