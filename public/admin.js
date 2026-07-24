@@ -59,6 +59,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addNavSliderForm) {
         addNavSliderForm.addEventListener('submit', handleAddNavSlider);
     }
+
+    // 9. Edit Product Form Submit
+    const editProductForm = document.getElementById('edit-product-form');
+    if (editProductForm) {
+        editProductForm.addEventListener('submit', handleEditProductSubmit);
+    }
+
+    const editCategorySelect = document.getElementById('edit-prod-category');
+    if (editCategorySelect) {
+        editCategorySelect.addEventListener('change', (e) => {
+            populateEditSubcategories(e.target.value);
+        });
+    }
 });
 
 // Helper to convert file to Base64
@@ -189,13 +202,20 @@ function switchTab(tabName) {
 // DYNAMIC EVENT DELEGATORS
 // ==========================================
 
+let currentInventoryProducts = [];
+
 const manageTableBody = document.getElementById('manage-table-body');
 if (manageTableBody) {
     manageTableBody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('toggle-btn')) {
-            toggleAvailability(e.target.getAttribute('data-id'));
-        } else if (e.target.classList.contains('delete-btn')) {
-            deleteProduct(e.target.getAttribute('data-id'));
+        const targetBtn = e.target.closest('button');
+        if (!targetBtn) return;
+
+        if (targetBtn.classList.contains('edit-btn')) {
+            openEditModal(targetBtn.getAttribute('data-id'));
+        } else if (targetBtn.classList.contains('toggle-btn')) {
+            toggleAvailability(targetBtn.getAttribute('data-id'));
+        } else if (targetBtn.classList.contains('delete-btn')) {
+            deleteProduct(targetBtn.getAttribute('data-id'));
         }
     });
 }
@@ -239,6 +259,8 @@ async function fetchManageProducts() {
             return;
         }
 
+        currentInventoryProducts = data.products;
+
         if (data.products.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products in inventory.</td></tr>';
             return;
@@ -247,18 +269,19 @@ async function fetchManageProducts() {
         data.products.forEach(prod => {
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="${prod.imageUrl}" width="50" style="object-fit:cover;"></td>
-                    <td>${prod.name}</td>
+                    <td><img src="${prod.imageUrl}" width="50" style="object-fit:cover; border-radius:4px;"></td>
+                    <td><strong>${prod.name}</strong></td>
                     <td>${prod.category}</td>
                     <td>${prod.size || '-'}</td>
                     <td>${prod.colour || '-'}</td>
                     <td>${prod.brand || '-'}</td>
-                    <td>৳${prod.price}</td>
+                    <td style="color:#0d6efd; font-weight:bold;">৳${prod.price}</td>
                     <td>${prod.stockQuantity} Left</td> 
-                    <td>${prod.isAvailable ? '<span style="color:green">Available</span>' : '<span style="color:red">Unavailable</span>'}</td>
+                    <td>${prod.isAvailable ? '<span style="color:green; font-weight:bold;">Available</span>' : '<span style="color:red; font-weight:bold;">Unavailable</span>'}</td>
                     <td>
-                        <button data-id="${prod._id}" class="btn toggle-btn" style="background:#333; font-size:12px; width:100%; margin-bottom:5px; padding: 5px;">Hide/Show</button>
-                        <button data-id="${prod._id}" class="btn delete-btn" style="background:red; font-size:12px; width:100%; padding: 5px;">Delete</button>
+                        <button data-id="${prod._id}" class="btn edit-btn" style="background:#0d6efd; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-edit"></i> Edit</button>
+                        <button data-id="${prod._id}" class="btn toggle-btn" style="background:#333; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-eye-slash"></i> Hide/Show</button>
+                        <button data-id="${prod._id}" class="btn delete-btn" style="background:#dc3545; font-size:12px; width:100%; padding:5px;"><i class="fas fa-trash-alt"></i> Delete</button>
                     </td>
                 </tr>
             `;
@@ -1179,3 +1202,133 @@ async function deleteMessage(messageId) {
 window.fetchContactMessages = fetchContactMessages;
 window.markMessageRead = markMessageRead;
 window.deleteMessage = deleteMessage;
+
+// ==========================================
+// EDIT PRODUCT MODAL HANDLERS
+// ==========================================
+
+async function openEditModal(id) {
+    const prod = currentInventoryProducts.find(p => p._id === id);
+    if (!prod) {
+        alert("Product details not found. Please refresh the inventory table.");
+        return;
+    }
+
+    document.getElementById('edit-prod-id').value = prod._id;
+    document.getElementById('edit-prod-name').value = prod.name;
+    document.getElementById('edit-prod-price').value = prod.price;
+    document.getElementById('edit-prod-stock').value = prod.stockQuantity;
+    document.getElementById('edit-prod-size').value = prod.size || '';
+    document.getElementById('edit-prod-colour').value = prod.colour || '';
+    document.getElementById('edit-prod-brand').value = prod.brand || '';
+    document.getElementById('edit-prod-preview').src = prod.imageUrl;
+    document.getElementById('edit-prod-image').value = '';
+
+    // Populate Category & Subcategory dropdowns
+    if (typeof localCategories === 'undefined' || localCategories.length === 0) {
+        await loadCategories();
+    }
+
+    const catSelect = document.getElementById('edit-prod-category');
+    if (catSelect) {
+        catSelect.innerHTML = `<option value="" disabled>Select Category</option>`;
+        localCategories.forEach(cat => {
+            const selected = cat.slug === prod.category ? 'selected' : '';
+            catSelect.innerHTML += `<option value="${cat.slug}" ${selected}>${cat.displayName}</option>`;
+        });
+    }
+
+    populateEditSubcategories(prod.category, prod.subcategory);
+
+    const modal = document.getElementById('edit-product-modal');
+    if (modal) modal.style.display = 'block';
+}
+
+function populateEditSubcategories(categorySlug, selectedSubcat = '') {
+    const subSelect = document.getElementById('edit-prod-subcategory');
+    if (!subSelect) return;
+
+    const category = localCategories.find(c => c.slug === categorySlug);
+    if (!category || !category.subcategories || category.subcategories.length === 0) {
+        subSelect.innerHTML = `<option value="" selected>No subcategories</option>`;
+        return;
+    }
+
+    subSelect.innerHTML = `<option value="" ${!selectedSubcat ? 'selected' : ''}>Select Subcategory</option>`;
+    category.subcategories.forEach(sub => {
+        const selected = sub === selectedSubcat ? 'selected' : '';
+        subSelect.innerHTML += `<option value="${sub}" ${selected}>${sub}</option>`;
+    });
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-product-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleEditProductSubmit(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('edit-prod-id').value;
+    const saveBtn = document.getElementById('update-product-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Saving Changes...';
+
+    const imageFile = document.getElementById('edit-prod-image').files[0];
+    let imageBase64 = "";
+
+    if (imageFile) {
+        try {
+            imageBase64 = await fileToBase64(imageFile);
+        } catch (err) {
+            console.error("Error reading image:", err);
+            alert("Failed to read new image file.");
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Changes';
+            return;
+        }
+    }
+
+    const payload = {
+        name: document.getElementById('edit-prod-name').value,
+        price: document.getElementById('edit-prod-price').value,
+        category: document.getElementById('edit-prod-category').value,
+        subcategory: document.getElementById('edit-prod-subcategory').value,
+        size: document.getElementById('edit-prod-size').value,
+        colour: document.getElementById('edit-prod-colour').value,
+        brand: document.getElementById('edit-prod-brand').value,
+        stock: document.getElementById('edit-prod-stock').value,
+        image: imageBase64
+    };
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/products/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response) return;
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Product updated successfully!');
+            closeEditModal();
+            fetchManageProducts();
+        } else {
+            alert('Failed to update product: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error("Error updating product:", err);
+        alert("An error occurred connecting to the server.");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Changes';
+    }
+}
+
+// Expose modal handlers to global context
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;

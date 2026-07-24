@@ -831,7 +831,77 @@
         </main>
     </div>
 
+    <!-- EDIT PRODUCT MODAL -->
+    <div id="edit-product-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); overflow-y: auto;">
+        <div style="background-color: #fff; margin: 30px auto; padding: 25px; border-radius: 12px; max-width: 600px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;">
+            <span onclick="closeEditModal()" style="position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+            <h2 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Product Details</h2>
+            
+            <form id="edit-product-form" style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="hidden" id="edit-prod-id">
+                
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Product Name:</label>
+                    <input type="text" id="edit-prod-name" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category:</label>
+                        <select id="edit-prod-category" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: white;">
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Subcategory:</label>
+                        <select id="edit-prod-subcategory" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: white;">
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Price (৳):</label>
+                        <input type="number" id="edit-prod-price" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Stock Quantity:</label>
+                        <input type="number" id="edit-prod-stock" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Size (Optional):</label>
+                        <input type="text" id="edit-prod-size" placeholder="e.g. M, L, XL" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Colour (Optional):</label>
+                        <input type="text" id="edit-prod-colour" placeholder="e.g. Red, Blue" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Brand (Optional):</label>
+                        <input type="text" id="edit-prod-brand" placeholder="e.g. Avaroni" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Product Image:</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <img id="edit-prod-preview" src="" alt="Current Image" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">
+                        <span style="font-size: 13px; color: #666;">Current photo. Select new file below only if replacing:</span>
+                    </div>
+                    <input type="file" id="edit-prod-image" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                    <button type="button" onclick="closeEditModal()" class="btn" style="background: #6c757d; width: auto; padding: 10px 20px;">Cancel</button>
+                    <button type="submit" id="update-product-btn" class="btn" style="background: #0d6efd; width: auto; padding: 10px 20px;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="invoice.js"></script>
-    <script src="admin.js?v=5.0"></script>
+    <script src="admin.js?v=6.0"></script>
 </body>
 </html>

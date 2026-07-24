@@ -802,6 +802,38 @@ app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Edit / Update Product (Admin)
+app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const { name, price, category, subcategory, size, colour, brand, stock, image } = req.body;
+        
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        if (name !== undefined) product.name = name.trim();
+        if (price !== undefined) product.price = Number(price);
+        if (category !== undefined) product.category = category;
+        if (subcategory !== undefined) product.subcategory = subcategory;
+        if (size !== undefined) product.size = size.trim();
+        if (colour !== undefined) product.colour = colour.trim();
+        if (brand !== undefined) product.brand = brand.trim();
+        if (stock !== undefined) product.stockQuantity = Number(stock);
+
+        // If a new image was uploaded (Base64 string), save as static high-res file
+        if (image && image.trim() !== '' && image !== product.imageUrl) {
+            product.imageUrl = saveBase64Image(image);
+        }
+
+        await product.save();
+        res.json({ success: true, message: "Product updated successfully!", product });
+    } catch (error) {
+        console.error("Update Product Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update product" });
+    }
+});
+
 // Toggle Product Availability
 app.patch('/api/admin/products/:id/toggle', verifyAdminToken, async (req, res) => {
     try {
