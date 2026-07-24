@@ -410,7 +410,7 @@ async function loadNavCategories() {
     if (!navLinksContainer) return;
 
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories', { cache: 'no-store' });
         const data = await response.json();
         if (!data.success || !data.categories) return;
 
