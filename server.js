@@ -762,7 +762,8 @@ app.post('/api/products', verifyAdminToken, async (req, res) => {
             if (req.file) {
                 imageUrl = `/uploads/${req.file.filename}`;
             }
-            // JSON body with Base64 image
+        } else {
+            // JSON body with Base64 image — convert to high-res static file
             imageUrl = saveBase64Image(bodyData.image || "");
         }
 

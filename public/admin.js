@@ -79,6 +79,28 @@ function getAuthHeaders() {
     };
 }
 
+// Wrapper around fetch that automatically handles expired/invalid token sessions (401/403)
+async function fetchWithAuth(url, options = {}) {
+    const headers = {
+        ...getAuthHeaders(),
+        ...(options.headers || {})
+    };
+    
+    try {
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            alert("Your session has expired or is invalid. Please log in again.");
+            window.location.href = 'admin-login.html';
+            return null;
+        }
+        return response;
+    } catch (err) {
+        console.error("Network or fetch error:", err);
+        throw err;
+    }
+}
+
 // ==========================================
 // CORE FUNCTIONS
 // ==========================================
@@ -88,16 +110,18 @@ function logout() {
     window.location.href = 'admin-login.html'; 
 }
 
-function showDashboard() {
-    // Load dashboard stats on startup
-    fetchDashboardStats();
+async function showDashboard() {
+    // Validate session token on startup before fetching stats
+    const res = await fetchWithAuth('/api/user-data');
+    if (res && res.ok) {
+        fetchDashboardStats();
+    }
 }
 
 async function fetchDashboardStats() {
     try {
-        const response = await fetch('/api/admin/dashboard-stats', {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth('/api/admin/dashboard-stats');
+        if (!response) return;
         const data = await response.json();
         
         if (data.success && data.stats) {
@@ -202,9 +226,8 @@ if (adminCardsContainer) {
 
 async function fetchManageProducts() {
     try {
-        const response = await fetch('/api/admin/products', {
-            headers: getAuthHeaders()
-        });
+        const response = await fetchWithAuth('/api/admin/products');
+        if (!response) return;
         const data = await response.json();
         const tbody = document.getElementById('manage-table-body');
         
@@ -247,9 +270,8 @@ async function fetchManageProducts() {
 
 async function toggleAvailability(id) {
     try {
-        await fetch(`/api/admin/products/${id}/toggle`, { 
-            method: 'PATCH',
-            headers: getAuthHeaders()
+        await fetchWithAuth(`/api/admin/products/${id}/toggle`, { 
+            method: 'PATCH'
         });
         fetchManageProducts();
     } catch(err) {
@@ -260,11 +282,13 @@ async function toggleAvailability(id) {
 async function deleteProduct(id) {
     if(confirm("Are you sure you want to delete this product?")) {
         try {
-            await fetch(`/api/admin/products/${id}`, { 
-                method: 'DELETE',
-                headers: getAuthHeaders()
+            const response = await fetchWithAuth(`/api/admin/products/${id}`, { 
+                method: 'DELETE'
             });
-            fetchManageProducts();
+            if (response && response.ok) {
+                fetchManageProducts();
+                fetchDashboardStats();
+            }
         } catch(err) {
             console.error("Error deleting product:", err);
         }
