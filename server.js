@@ -71,7 +71,11 @@ const dbOptions = {
   serverSelectionTimeoutMS: 5000,
 };
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_store', dbOptions)
-  .then(() => console.log('MongoDB Connected successfully'))
+  .then(async () => {
+    console.log('MongoDB Connected successfully');
+    await seedCategories();
+    await migrateBase64ToFiles();
+  })
   .catch(err => {
     console.error('MongoDB Connection Error:', err);
   });
@@ -93,7 +97,91 @@ async function seedCategories() {
     console.error('Error seeding categories:', err);
   }
 }
-seedCategories();
+// Helper function to convert base64 image data into static high-resolution binary files
+function saveBase64Image(base64Str) {
+    if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
+        return base64Str; // Return as-is if already a path or invalid
+    }
+
+    try {
+        const matches = base64Str.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) {
+            return base64Str;
+        }
+
+        const ext = matches[1].split('/')[1] || 'jpg';
+        const buffer = Buffer.from(matches[2], 'base64');
+        const filename = `${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}.${ext}`;
+        const uploadDir = 'public/uploads/';
+
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const filePath = path.join(uploadDir, filename);
+        fs.writeFileSync(filePath, buffer);
+
+        return `/uploads/${filename}`;
+    } catch (err) {
+        console.error("Error converting base64 to file:", err);
+        return base64Str;
+    }
+}
+
+// Database migration script to automatically clean up legacy base64 strings
+async function migrateBase64ToFiles() {
+    try {
+        console.log("Checking for legacy Base64 images in database to migrate...");
+
+        // 1. Migrate Products
+        const products = await Product.find({ imageUrl: /^data:image\// });
+        if (products.length > 0) {
+            console.log(`Found ${products.length} products with Base64 images. Migrating...`);
+            for (const prod of products) {
+                prod.imageUrl = saveBase64Image(prod.imageUrl);
+                await prod.save();
+            }
+            console.log("Product images migration complete!");
+        }
+
+        // 2. Migrate NavSliders
+        const sliders = await NavSlider.find({ imageUrl: /^data:image\// });
+        if (sliders.length > 0) {
+            console.log(`Found ${sliders.length} nav sliders with Base64 images. Migrating...`);
+            for (const slider of sliders) {
+                slider.imageUrl = saveBase64Image(slider.imageUrl);
+                await slider.save();
+            }
+            console.log("Nav slider images migration complete!");
+        }
+
+        // 3. Migrate BannerCards
+        const cards = await BannerCard.find();
+        let migratedCardsCount = 0;
+        for (const card of cards) {
+            let updated = false;
+            for (let i = 0; i < card.images.length; i++) {
+                if (card.images[i] && card.images[i].startsWith('data:image/')) {
+                    card.images[i] = saveBase64Image(card.images[i]);
+                    updated = true;
+                }
+            }
+            if (updated) {
+                card.markModified('images');
+                await card.save();
+                migratedCardsCount++;
+            }
+        }
+        if (migratedCardsCount > 0) {
+            console.log(`Migrated images in ${migratedCardsCount} banner cards.`);
+        }
+
+        console.log("Legacy image migration check finished.");
+    } catch (err) {
+        console.error("Migration execution error:", err);
+    }
+}
+
 
 // ==========================================
 // NODEMAILER SETUP (For 2FA, Password Reset, & Order Receipts)
@@ -674,9 +762,8 @@ app.post('/api/products', verifyAdminToken, async (req, res) => {
             if (req.file) {
                 imageUrl = `/uploads/${req.file.filename}`;
             }
-        } else {
             // JSON body with Base64 image
-            imageUrl = bodyData.image || "";
+            imageUrl = saveBase64Image(bodyData.image || "");
         }
 
         if (!imageUrl) {
@@ -827,7 +914,7 @@ app.post('/api/banner-cards/:cardId/images', verifyAdminToken, upload.single('im
         
         // Support both Base64 JSON and Multer file upload
         if (req.body.image) {
-            imageUrl = req.body.image;
+            imageUrl = saveBase64Image(req.body.image);
         } else if (req.file) {
             imageUrl = `/uploads/${req.file.filename}`;
         } else {
@@ -881,7 +968,7 @@ app.post('/api/nav-sliders', verifyAdminToken, async (req, res) => {
         if (!imageData) return res.status(400).json({ success: false, message: "Image is required" });
 
         const newSlider = new NavSlider({
-            imageUrl: imageData,
+            imageUrl: saveBase64Image(imageData),
             link: link || '',
             order: order || 0
         });
