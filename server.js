@@ -580,7 +580,9 @@ app.delete('/api/admin/promocodes/:id', verifyAdminToken, async (req, res) => {
 app.get('/api/products', async (req, res) => {
     try {
         let filter = { isAvailable: true }; 
-        if (req.query.category) filter.category = req.query.category;
+        if (req.query.category) {
+            filter.category = { $regex: new RegExp(`^${req.query.category}$`, 'i') };
+        }
         
         // Search by name (case-insensitive partial match)
         if (req.query.search) {

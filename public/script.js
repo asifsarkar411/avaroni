@@ -391,8 +391,8 @@ function updateCartBadge() {
 
 // ==========================================
 // DYNAMIC CATEGORY NAVBAR BUILDER
-// ==========================================
-// Maps category slugs to their page files
+// Maps category slugs to their page files (hardcoded legacy pages)
+// Any category NOT in this map will use the dynamic category.html?cat=<slug> page
 const categoryPageMap = {
     'women': 'women.html',
     'womendress': 'women.html',
@@ -400,6 +400,10 @@ const categoryPageMap = {
     'kids': 'kids.html',
     'kidszone': 'kids.html'
 };
+
+function getCategoryPageUrl(slug, name) {
+    return categoryPageMap[slug] || categoryPageMap[name] || `category.html?cat=${slug}`;
+}
 
 async function loadNavCategories() {
     const navLinksContainer = document.querySelector('.nav-links');
@@ -418,7 +422,8 @@ async function loadNavCategories() {
         navLinksContainer.innerHTML = '';
 
         data.categories.forEach(cat => {
-            const pageFile = categoryPageMap[cat.slug] || categoryPageMap[cat.name] || `${cat.slug}.html`;
+            const pageFile = getCategoryPageUrl(cat.slug, cat.name);
+            const isDynamic = pageFile.startsWith('category.html');
 
             if (cat.subcategories && cat.subcategories.length > 0) {
                 // Create dropdown wrapper
@@ -441,7 +446,9 @@ async function loadNavCategories() {
 
                 cat.subcategories.forEach(sub => {
                     const subLink = document.createElement('a');
-                    subLink.href = `${pageFile}?sub=${encodeURIComponent(sub)}`;
+                    subLink.href = isDynamic 
+                        ? `category.html?cat=${cat.slug}&sub=${encodeURIComponent(sub)}`
+                        : `${pageFile}?sub=${encodeURIComponent(sub)}`;
                     subLink.textContent = sub;
                     dropContent.appendChild(subLink);
                 });
@@ -504,7 +511,7 @@ function loadSidebarCategories(categories) {
     };
 
     categories.forEach(cat => {
-        const pageFile = categoryPageMap[cat.slug] || categoryPageMap[cat.name] || `${cat.slug}.html`;
+        const pageFile = getCategoryPageUrl(cat.slug, cat.name);
         const iconClass = iconMap[cat.slug] || iconMap[cat.name] || 'fas fa-tag';
 
         const link = document.createElement('a');

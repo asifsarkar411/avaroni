@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আভরণী</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
+        <div class="nav-promo-slider" id="nav-promo-slider"></div>
+        <div class="nav-links">
+            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="search-bar-container">
+        <div class="search-bar-inner">
+            <i class="fas fa-search search-bar-icon"></i>
+            <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+            <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="search-results-dropdown" class="search-results-dropdown"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <h2 class="page-title" id="category-page-title">Loading...</h2>
+
+    <!-- Subcategory Filter Tabs -->
+    <div id="subcategory-filter" class="subcategory-filter" style="display:none; text-align:center; margin: 0 20px 20px; flex-wrap:wrap; gap:8px; justify-content:center;">
+    </div>
+    
+    <div class="product-grid" id="product-list">
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="product-detail-modal" class="product-modal-overlay" style="display:none;">
+        <div class="product-modal">
+            <button class="product-modal-close" id="modal-close-btn"><i class="fas fa-times"></i></button>
+            <div class="product-modal-body">
+                <div class="product-modal-image">
+                    <img id="modal-product-image" src="" alt="">
+                </div>
+                <div class="product-modal-info">
+                    <span class="product-modal-category" id="modal-product-category"></span>
+                    <h2 id="modal-product-name"></h2>
+                    <p class="product-modal-price" id="modal-product-price"></p>
+                    <p class="product-modal-stock" id="modal-product-stock"></p>
+                    <div id="modal-product-details" style="margin: 15px 0; font-size: 14px; line-height: 1.6; color: #555; border-top: 1px dotted #ddd; border-bottom: 1px dotted #ddd; padding: 10px 0; display: none;"></div>
+                    <button class="btn add-to-cart-btn product-modal-cart-btn" id="modal-add-to-cart-btn">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+            <div class="related-products-section">
+                <h3><i class="fas fa-th-large"></i> Related Products</h3>
+                <div class="related-products-grid" id="related-products-grid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="script.js"></script>
+<script>
+// ==========================================
+// DYNAMIC CATEGORY PAGE LOADER
+// ==========================================
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const categorySlug = params.get('cat');
+    const subcategoryFilter = params.get('sub');
+
+    if (!categorySlug) {
+        document.getElementById('category-page-title').innerText = 'Category Not Found';
+        document.getElementById('product-list').innerHTML = '<p style="text-align:center; color:#999; grid-column: 1/-1; padding: 40px;">No category specified. Please select a category from the menu.</p>';
+        return;
+    }
+
+    // Fetch category display name and set page title
+    fetch('/api/categories')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.categories) {
+                const cat = data.categories.find(c => c.slug === categorySlug);
+                if (cat) {
+                    const titleEl = document.getElementById('category-page-title');
+                    titleEl.innerText = subcategoryFilter 
+                        ? `${cat.displayName} — ${subcategoryFilter}` 
+                        : `${cat.displayName} Collection`;
+                    document.title = `${cat.displayName} | আভরণী`;
+
+                    // Build subcategory filter tabs
+                    if (cat.subcategories && cat.subcategories.length > 0) {
+                        const filterContainer = document.getElementById('subcategory-filter');
+                        filterContainer.style.display = 'flex';
+
+                        // "All" tab
+                        const allBtn = document.createElement('a');
+                        allBtn.href = `category.html?cat=${categorySlug}`;
+                        allBtn.className = 'subcategory-tab' + (!subcategoryFilter ? ' active' : '');
+                        allBtn.textContent = `All ${cat.displayName}`;
+                        filterContainer.appendChild(allBtn);
+
+                        cat.subcategories.forEach(sub => {
+                            const btn = document.createElement('a');
+                            btn.href = `category.html?cat=${categorySlug}&sub=${encodeURIComponent(sub)}`;
+                            btn.className = 'subcategory-tab' + (subcategoryFilter === sub ? ' active' : '');
+                            btn.textContent = sub;
+                            filterContainer.appendChild(btn);
+                        });
+                    }
+                } else {
+                    document.getElementById('category-page-title').innerText = categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1) + ' Collection';
+                }
+            }
+        })
+        .catch(err => console.error("Error loading category info:", err));
+
+    // Load products for this category
+    setTimeout(() => {
+        if (typeof loadProducts === 'function') {
+            loadProducts(categorySlug, subcategoryFilter || '');
+        } else {
+            console.error("loadProducts function not found.");
+        }
+    }, 100);
+})();
+</script>
+</body>
+</html>
