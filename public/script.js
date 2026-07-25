@@ -160,6 +160,7 @@ async function loadProducts(category) {
             }
 
             // Initially render products (filtered if ?sub= param exists)
+            window.currentMasterProducts = allProducts;
             renderFilteredProducts(allProducts, initialFilter, productContainer);
         }
     } catch (error) {
@@ -172,12 +173,27 @@ async function loadProducts(category) {
 function renderFilteredProducts(products, subcategoryFilter, container) {
     container.innerHTML = '';
     
-    const filtered = subcategoryFilter === 'all' 
-        ? products 
+    let filtered = subcategoryFilter === 'all' 
+        ? [...products] 
         : products.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === subcategoryFilter);
 
+    // Apply global filter & sort selection if active
+    const filterSelect = document.getElementById('global-filter-select');
+    if (filterSelect) {
+        const val = filterSelect.value;
+        if (val.startsWith('sub:') && subcategoryFilter === 'all') {
+            const targetSub = val.replace('sub:', '').toLowerCase();
+            filtered = filtered.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
+        }
+        if (val === 'price-asc') {
+            filtered.sort((a, b) => Number(a.price) - Number(b.price));
+        } else if (val === 'price-desc') {
+            filtered.sort((a, b) => Number(b.price) - Number(a.price));
+        }
+    }
+
     if (filtered.length === 0) {
-        container.innerHTML = `<p style="text-align:center; width:100%; color: #666; margin-top: 20px;">No products found in this subcategory.</p>`;
+        container.innerHTML = `<p style="text-align:center; width:100%; color: #666; margin-top: 20px;">No products found in this category.</p>`;
         return;
     }
 
@@ -492,11 +508,8 @@ function loadSidebarCategories(categories) {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
 
-    // Preserve close button and footer links
-    const closeBtn = sidebar.querySelector('.close-btn');
+    // Preserve footer links (faq, blog, sitemap, return, policy, about, contact)
     const footerLinks = [];
-
-    // Save footer links (faq, blog, sitemap, return, policy, about, contact)
     sidebar.querySelectorAll('a').forEach(a => {
         const href = a.getAttribute('href') || '';
         if (href.includes('return') || href.includes('about') || href.includes('contact') || href.includes('policy') || href.includes('faq') || href.includes('blog') || href.includes('sitemap')) {
@@ -505,12 +518,23 @@ function loadSidebarCategories(categories) {
     });
 
     sidebar.innerHTML = '';
-    if (closeBtn) sidebar.appendChild(closeBtn.cloneNode(true));
 
-    // Re-attach close button event
-    const newCloseBtn = sidebar.querySelector('.close-btn');
-    if (newCloseBtn) {
-        newCloseBtn.addEventListener('click', (e) => {
+    // Create sidebar header with website logo and close button
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'sidebar-header';
+    headerDiv.innerHTML = `
+        <a href="index.html" class="sidebar-brand">
+            <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+            <span>আভরণী</span>
+        </a>
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+    `;
+    sidebar.appendChild(headerDiv);
+
+    // Re-attach close button event listener
+    const closeBtn = headerDiv.querySelector('#close-sidebar-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             toggleSidebar();
         });
@@ -850,6 +874,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize search functionality
     initSearch();
 
+    // Initialize search bar filter functionality
+    initGlobalFilter();
+
     // If on cart page, prevent checkout if cart is empty
     const confirmOrderBtn = document.querySelector('a[href="payment.html"]');
     if (confirmOrderBtn) {
@@ -987,33 +1014,9 @@ async function loadNewArrivals() {
         grid.innerHTML = '';
         // Show latest products (already sorted newest first by the API)
         const latestProducts = data.products.slice(0, 20);
+        window.currentMasterProducts = latestProducts;
 
-        latestProducts.forEach(product => {
-            const fullImageUrl = formatImageUrl(product.imageUrl);
-            const stockText = product.stockQuantity > 0 
-                ? `<div class="stock-status in-stock"><i class="fas fa-check-circle"></i> In Stock: ${product.stockQuantity}</div>` 
-                : `<div class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</div>`;
-            const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
-
-            grid.innerHTML += `
-                <div class="product-card" data-product-id="${product._id}">
-                    <div class="product-image-wrap">
-                        <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
-                    </div>
-                    <h3>${product.name}</h3>
-                    <p class="price">৳${product.price}</p>
-                    ${stockText}
-                    <button class="btn add-to-cart-btn" ${btnStatus} 
-                        data-id="${product._id}" 
-                        data-name="${product.name.replace(/"/g, '&quot;')}" 
-                        data-price="${product.price}" 
-                        data-image="${fullImageUrl}" 
-                        data-stock="${product.stockQuantity}">Add to Cart</button>
-                </div>
-            `;
-        });
-
-        bindAllProductZoomEffects();
+        renderFilteredProducts(latestProducts, 'all', grid);
     } catch (error) {
         console.error("Error loading new arrivals:", error);
         grid.innerHTML = '<p style="text-align:center; color:red;">Failed to load products.</p>';
@@ -1021,9 +1024,87 @@ async function loadNewArrivals() {
 }
 
 // ==========================================
-// GLOBAL SEARCH FUNCTIONALITY
+// GLOBAL SEARCH & FILTER FUNCTIONALITY
 // ==========================================
 let searchTimeout = null;
+
+async function populateGlobalFilterSubcategories() {
+    const subGroup = document.getElementById('filter-subcategories-group');
+    if (!subGroup) return;
+
+    try {
+        const subcategoriesSet = new Set();
+
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.categories)) {
+            data.categories.forEach(cat => {
+                if (Array.isArray(cat.subcategories)) {
+                    cat.subcategories.forEach(sub => {
+                        if (sub && sub.trim()) subcategoriesSet.add(sub.trim());
+                    });
+                }
+            });
+        }
+
+        // Also check products for custom subcategories
+        const prodRes = await fetch('/api/products');
+        const prodData = await prodRes.json();
+        if (prodData.success && Array.isArray(prodData.products)) {
+            prodData.products.forEach(p => {
+                if (p.subcategory && p.subcategory.trim()) {
+                    subcategoriesSet.add(p.subcategory.trim());
+                }
+            });
+        }
+
+        subGroup.innerHTML = '';
+        subcategoriesSet.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = `sub:${sub.toLowerCase()}`;
+            opt.textContent = sub;
+            subGroup.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Error populating filter subcategories:", err);
+    }
+}
+
+function initGlobalFilter() {
+    const filterSelect = document.getElementById('global-filter-select');
+    if (!filterSelect) return;
+
+    populateGlobalFilterSubcategories();
+
+    filterSelect.addEventListener('change', () => {
+        applyGlobalFilterAndSort();
+    });
+}
+
+function applyGlobalFilterAndSort() {
+    const filterSelect = document.getElementById('global-filter-select');
+    if (!filterSelect) return;
+
+    const searchInput = document.getElementById('global-search-input');
+    const query = searchInput ? searchInput.value.trim() : '';
+
+    if (query.length >= 2) {
+        performSearch(query);
+        return;
+    }
+
+    const productContainer = document.getElementById('product-list') || 
+                             document.getElementById('products-container') || 
+                             document.getElementById('new-arrivals-grid');
+
+    if (window.currentMasterProducts && Array.isArray(window.currentMasterProducts) && productContainer) {
+        // Re-render product container respecting the global filter select
+        const activeSubBtn = document.querySelector('#subcategory-filters .filter-btn.active');
+        const currentSub = activeSubBtn ? activeSubBtn.getAttribute('data-sub') : 'all';
+        renderFilteredProducts(window.currentMasterProducts, currentSub, productContainer);
+    }
+}
 
 function initSearch() {
     const searchInput = document.getElementById('global-search-input');
@@ -1070,6 +1151,9 @@ function initSearch() {
 
 async function performSearch(query) {
     const dropdown = document.getElementById('search-results-dropdown');
+    const filterSelect = document.getElementById('global-filter-select');
+    const filterVal = filterSelect ? filterSelect.value : 'all';
+
     if (!dropdown) return;
 
     try {
@@ -1082,8 +1166,29 @@ async function performSearch(query) {
             return;
         }
 
+        let products = [...data.products];
+
+        // Apply subcategory filter
+        if (filterVal.startsWith('sub:')) {
+            const targetSub = filterVal.replace('sub:', '').toLowerCase();
+            products = products.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
+        }
+
+        // Apply price sorting
+        if (filterVal === 'price-asc') {
+            products.sort((a, b) => Number(a.price) - Number(b.price));
+        } else if (filterVal === 'price-desc') {
+            products.sort((a, b) => Number(b.price) - Number(a.price));
+        }
+
+        if (products.length === 0) {
+            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-filter" style="margin-right:8px;"></i>No products match filter for "${query}"</div>`;
+            dropdown.classList.add('active');
+            return;
+        }
+
         dropdown.innerHTML = '';
-        data.products.slice(0, 8).forEach(product => {
+        products.slice(0, 8).forEach(product => {
             const item = document.createElement('div');
             item.className = 'search-result-item';
             item.setAttribute('data-product-id', product._id);
@@ -1104,8 +1209,8 @@ async function performSearch(query) {
             dropdown.appendChild(item);
         });
 
-        if (data.products.length > 8) {
-            dropdown.innerHTML += `<div class="search-no-results" style="color: #e60050; font-weight:600;">+ ${data.products.length - 8} more results</div>`;
+        if (products.length > 8) {
+            dropdown.innerHTML += `<div class="search-no-results" style="color: #e60050; font-weight:600;">+ ${products.length - 8} more results</div>`;
         }
 
         dropdown.classList.add('active');

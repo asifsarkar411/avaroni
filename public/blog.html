@@ -188,15 +188,36 @@
     <!-- Search Bar -->
     <div class="search-bar-container">
         <div class="search-bar-inner">
-            <i class="fas fa-search search-bar-icon"></i>
-            <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
-            <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+            <div class="search-input-wrap">
+                <i class="fas fa-search search-bar-icon"></i>
+                <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="search-filter-divider"></div>
+            <div class="search-filter-wrapper">
+                <i class="fas fa-sliders-h search-filter-icon"></i>
+                <select id="global-filter-select" class="search-filter-select" title="Filter & Sort Products">
+                    <option value="all">Filter & Sort</option>
+                    <optgroup label="Price">
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                    </optgroup>
+                    <optgroup label="Subcategories" id="filter-subcategories-group">
+                    </optgroup>
+                </select>
+            </div>
         </div>
         <div id="search-results-dropdown" class="search-results-dropdown"></div>
     </div>
 
     <div id="sidebar" class="sidebar">
-        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span>আভরণী</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        </div>
         <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
         <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
         <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>

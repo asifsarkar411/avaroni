@@ -413,10 +413,49 @@ body {
     top: 0;
     right: -280px; /* Hidden off-screen to the right */
     background-color: #c93f8b;
-    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15);
     overflow-x: hidden;
     transition: right 0.3s ease-in-out; /* Smooth sliding animation */
-    padding-top: 80px;
+    padding-top: 15px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    margin-bottom: 5px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #ffffff;
+    border-bottom: none !important;
+    padding: 0 !important;
+}
+
+.sidebar-brand:hover {
+    background-color: transparent !important;
+}
+
+.sidebar-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-brand span {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
 }
 
 .sidebar a {
@@ -445,17 +484,22 @@ body {
 
 /* The X Close Button */
 .sidebar .close-btn {
-    position: absolute;
-    top: 15px;
-    right: 25px;
-    font-size: 36px;
+    position: relative;
+    top: auto;
+    right: auto;
+    font-size: 32px;
     border-bottom: none; /* Removes the underline from the X */
     padding: 0;
+    color: #ffffff;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.2s, color 0.2s;
 }
 
 .sidebar .close-btn:hover {
     background-color: transparent;
-    color: #e60050;
+    color: #ffb6d8;
+    transform: scale(1.1);
 }
 
 
@@ -649,13 +693,13 @@ body {
 }
 
 /* =========================================
-   Search Bar
+   Search Bar & Filter Styling
 ========================================= */
 .search-bar-container {
     position: relative;
-    max-width: 600px;
+    max-width: 680px;
     margin: 20px auto 10px;
-    padding: 0 20px;
+    padding: 0 15px;
 }
 .search-bar-inner {
     display: flex;
@@ -663,7 +707,7 @@ body {
     background: #fff;
     border: 2px solid #ffb6d8;
     border-radius: 50px;
-    padding: 10px 20px;
+    padding: 8px 18px;
     box-shadow: 0 4px 15px rgba(230, 0, 80, 0.08);
     transition: all 0.3s;
 }
@@ -671,12 +715,19 @@ body {
     border-color: #e60050;
     box-shadow: 0 4px 20px rgba(230, 0, 80, 0.15);
 }
+.search-input-wrap {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
 .search-bar-icon {
     color: #e60050;
-    font-size: 18px;
-    margin-right: 12px;
+    font-size: 16px;
+    margin-right: 10px;
+    flex-shrink: 0;
 }
-.search-bar-inner input {
+.search-input-wrap input {
     flex: 1;
     border: none;
     outline: none;
@@ -684,8 +735,9 @@ body {
     color: #333;
     background: transparent;
     font-family: inherit;
+    min-width: 0;
 }
-.search-bar-inner input::placeholder {
+.search-input-wrap input::placeholder {
     color: #aaa;
 }
 .search-clear-btn {
@@ -695,10 +747,71 @@ body {
     cursor: pointer;
     font-size: 16px;
     padding: 4px;
+    margin-right: 6px;
     transition: color 0.2s;
+    flex-shrink: 0;
 }
 .search-clear-btn:hover {
     color: #e60050;
+}
+.search-filter-divider {
+    width: 1px;
+    height: 24px;
+    background-color: #ffb6d8;
+    margin: 0 8px;
+    flex-shrink: 0;
+}
+.search-filter-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+}
+.search-filter-icon {
+    color: #e60050;
+    font-size: 14px;
+    margin-right: 6px;
+    pointer-events: none;
+}
+.search-filter-select {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    padding: 4px 22px 4px 0;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23e60050' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right center;
+    max-width: 150px;
+}
+.search-filter-select:hover {
+    color: #e60050;
+}
+.search-filter-select optgroup {
+    font-weight: 700;
+    color: #e60050;
+}
+.search-filter-select option {
+    font-weight: 500;
+    color: #333;
+    padding: 6px;
+    background: #fff;
+}
+@media (max-width: 480px) {
+    .search-filter-select {
+        max-width: 110px;
+        font-size: 12px;
+    }
+    .search-filter-divider {
+        margin: 0 5px;
+    }
 }
 .search-results-dropdown {
     position: absolute;
