@@ -520,16 +520,16 @@ function loadSidebarCategories(categories) {
     sidebar.innerHTML = '';
 
     // Create sidebar header with website logo and close button
-    const headerDiv = document.createElement('div');
-    headerDiv.className = 'sidebar-header';
-    headerDiv.innerHTML = `
-        <a href="index.html" class="sidebar-brand">
-            <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
-            <span>আভরণী</span>
-        </a>
-        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
-    `;
-    sidebar.appendChild(headerDiv);
+const headerDiv = document.createElement('div');
+headerDiv.className = 'sidebar-header';
+headerDiv.innerHTML = `
+    <a href="index.html" class="sidebar-brand">
+        <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+        <span>আভরণী</span>
+    </a>
+    <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+`;
+sidebar.appendChild(headerDiv);
 
     // Re-attach close button event listener
     const closeBtn = headerDiv.querySelector('#close-sidebar-btn');
@@ -914,9 +914,13 @@ function initFooterAndWidgets() {
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 আভরণী. All Rights Reserved.</p>
-                <p>Crafted for elegance & beauty</p>
-            </div>
+    <p>&copy; 2026 আভরণী. All Rights Reserved.</p>
+    <p>
+        <a href="https://port-v-eno-m.vercel.app/" target="_blank" style="color: white; text-decoration: none;">
+            MADE BY SM FERDOUS AHMMED
+        </a>
+    </p>
+</div>
         `;
         document.body.appendChild(footer);
     }

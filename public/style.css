@@ -7,7 +7,7 @@
 }
 
 body {
-    background-color: #FAF8F5; /* Warm ivory/cream */
+    background-color: #ffffff; /* Warm ivory/cream */
     color: rgb(255, 182, 216); 
 }
 
@@ -16,7 +16,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #ffffff; /* Soft pink for ladies clothing theme */
+    background-color: #e8e6e6; /* Soft pink for ladies clothing theme */
     padding: 15px 30px;
     position: sticky;
     top: 0;
@@ -379,7 +379,7 @@ body {
     text-decoration: none;
     font-weight: bold;
     font-size: 24px;
-    color: #97213f;
+    color: #e873aa;
 }
 
 /* Control the size of your logo image */
@@ -1302,6 +1302,18 @@ body.no-scroll {
     animation: floatingPulse 2s infinite;
     opacity: 0.8;
 }
+.floating-phone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #2b00ff;
+    animation: floatingPulse 2s infinite;
+    opacity: 0.8;
+}
 @keyframes floatingPulse {
     0% { transform: scale(1); opacity: 0.8; }
     100% { transform: scale(1.4); opacity: 0; }
@@ -1580,4 +1592,72 @@ body.no-scroll {
 .social-icons .fa-facebook-f {
     color: #1877F2;
 }
+/* =========================================
+   Sidebar Header Layout
+   ========================================= */
 
+/* 1. Main Header Container (Aligns Brand and Close Button) */
+.sidebar-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100%;
+    padding: 10px 15px; /* Adds breathing room around the header */
+    box-sizing: border-box;
+}
+
+/* 2. Logo & Name Wrapper (Forces side-by-side) */
+.sidebar-brand {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important; 
+    align-items: center !important;
+    gap: 12px;
+    text-decoration: none !important;
+    white-space: nowrap !important; /* Strictly prevents text from dropping */
+}
+
+/* 3. The Logo Image */
+.sidebar-brand .sidebar-logo {
+    display: inline-block !important;
+    width: 40px !important; /* Adjust size if needed */
+    height: 40px !important;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 4. The Brand Name (Text) */
+.sidebar-brand span {
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important; /* Strips away invisible font spacing */
+    font-size: 22px; /* Adjust text size if needed */
+    color: #ffffff; /* Change this if your text needs a different color */
+}
+
+/* 5. The Close Button ('x') */
+.close-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    color: #ffffff; /* Change this if your 'x' needs a different color */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.developer-link {
+    color: white;
+    text-decoration: none; /* Removes the default underline */
+}
+
+/* Optional: Add a hover effect so people know it's clickable! */
+.developer-link:hover {
+    color: #ffb6d8; /* Changes to your theme color on hover */
+    text-decoration: underline;
+}
