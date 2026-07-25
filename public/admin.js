@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const addCardBtn = document.getElementById('add-card-btn');
     if (addCardBtn) addCardBtn.addEventListener('click', createNewCard);
 
+    // 2b. Initialize Mobile Sidebar Drawer Navigation
+    initMobileAdminSidebar();
+
     // 3. Tab Switching Logic
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(button => {
@@ -346,6 +349,60 @@ async function fetchAnalyticsCharts() {
 
     } catch (err) {
         console.error("Error loading analytics charts:", err);
+    }
+}
+
+function initMobileAdminSidebar() {
+    const toggleBtn = document.getElementById('admin-menu-toggle');
+    const closeBtn = document.getElementById('admin-sidebar-close');
+    const sidebar = document.getElementById('admin-sidebar') || document.querySelector('.admin-sidebar');
+    const overlay = document.getElementById('admin-sidebar-overlay');
+    const tabBtns = document.querySelectorAll('.sidebar-nav .tab-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    function openSidebarDrawer() {
+        if (sidebar) sidebar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+    }
+
+    function closeSidebarDrawer() {
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains('active')) {
+                closeSidebarDrawer();
+            } else {
+                openSidebarDrawer();
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSidebarDrawer);
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebarDrawer);
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.innerWidth <= 991) {
+                closeSidebarDrawer();
+            }
+        });
+    });
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 991) {
+                closeSidebarDrawer();
+            }
+        });
     }
 }
 

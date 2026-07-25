@@ -433,53 +433,170 @@
             color: var(--text-dark);
         }
 
-        /* Mobile Responsive adjustments */
+        /* Mobile Hamburger & Sidebar Drawer Styles */
+        .admin-menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--white);
+            font-size: 18px;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-menu-toggle:hover {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-sidebar-close {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--white);
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+            margin-left: auto;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+        .admin-sidebar-close:hover {
+            color: var(--primary);
+        }
+
+        .admin-sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            touch-action: none;
+        }
+        .admin-sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Responsive Media Queries */
         @media (max-width: 991px) {
+            .admin-menu-toggle {
+                display: flex;
+            }
+
+            .admin-sidebar-close {
+                display: block;
+            }
+
             .admin-sidebar {
-                width: 70px;
+                position: fixed;
+                top: 0;
+                left: -290px;
+                width: 280px;
+                height: 100vh;
+                z-index: 1050;
+                box-shadow: 4px 0 25px rgba(0, 0, 0, 0.25);
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
+
+            .admin-sidebar.active {
+                left: 0;
+            }
+
             .sidebar-brand span, .sidebar-footer button span, .tab-btn span {
-                display: none;
+                display: inline-block !important;
             }
+
             .tab-btn {
-                justify-content: center;
-                padding: 12px;
+                justify-content: flex-start !important;
+                padding: 12px 16px !important;
             }
+
             .sidebar-brand {
-                justify-content: center;
-                padding: 20px 0;
+                justify-content: space-between !important;
+                padding: 18px 16px !important;
+            }
+
+            .admin-main {
+                width: 100%;
+                height: 100vh;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr !important;
             }
         }
 
-        @media (max-width: 576px) {
-            .admin-layout {
-                flex-direction: column;
+        @media (max-width: 600px) {
+            .admin-topbar {
+                padding: 12px 15px;
             }
-            .admin-sidebar {
-                width: 100%;
-                height: auto;
+
+            #tab-title {
+                font-size: 16px;
             }
-            .sidebar-brand {
-                padding: 15px;
+
+            .admin-profile span {
+                display: none;
             }
-            .sidebar-nav {
-                flex-direction: row;
-                overflow-x: auto;
-                padding: 10px;
-                height: auto;
-            }
-            .tab-btn {
-                padding: 8px 12px;
-            }
-            body {
-                overflow: auto;
-            }
-            .admin-main {
-                height: auto;
-                overflow: visible;
-            }
+
             .admin-content {
+                padding: 12px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .panel-box {
                 padding: 15px;
+                border-radius: 8px;
+            }
+
+            /* Responsive tables */
+            .table-responsive {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin-top: 10px;
+            }
+
+            table {
+                min-width: 550px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr !important;
             }
         }
     </style>
@@ -488,10 +605,11 @@
 
     <div class="admin-layout">
         <!-- Sidebar Navigation -->
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="admin-sidebar">
             <div class="sidebar-brand">
                 <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
                 <span>আভরণী Admin</span>
+                <button id="admin-sidebar-close" class="admin-sidebar-close" aria-label="Close Sidebar">&times;</button>
             </div>
             <nav class="sidebar-nav">
                 <button class="tab-btn active" data-target="dashboard"><i class="fas fa-chart-line"></i> <span>Dashboard</span></button>
@@ -510,10 +628,17 @@
             </div>
         </aside>
 
+        <div id="admin-sidebar-overlay" class="admin-sidebar-overlay"></div>
+
         <!-- Main Body -->
         <main class="admin-main">
             <header class="admin-topbar">
-                <h1 id="tab-title">Dashboard Overview</h1>
+                <div class="topbar-left">
+                    <button id="admin-menu-toggle" class="admin-menu-toggle" aria-label="Toggle Sidebar Navigation">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="tab-title">Dashboard Overview</h1>
+                </div>
                 <div class="admin-profile">
                     <i class="fas fa-user-shield"></i>
                     <span>System Admin</span>
