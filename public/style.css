@@ -1538,7 +1538,7 @@ body.no-scroll {
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Keeps promo details/text perfectly sharp and legible */
+    object-fit: fill; /* Keeps promo details/text perfectly sharp and legible */
     background: transparent; /* Light soft pink backdrop matching ladies clothing theme */
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
