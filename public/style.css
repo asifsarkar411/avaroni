@@ -16,7 +16,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #ffb6d8; /* Soft pink for ladies clothing theme */
+    background-color: #a6b2b5; /* Soft pink for ladies clothing theme */
     padding: 15px 30px;
     position: sticky;
     top: 0;
@@ -1513,7 +1513,7 @@ body.no-scroll {
     margin: 0 20px;
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 0px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     background: transparent;
     display: flex;
@@ -1527,7 +1527,7 @@ body.no-scroll {
     width: 100%;
     height: 100%;
     object-fit: contain; /* Keeps promo details/text perfectly sharp and legible */
-    background: #ffb6d8; /* Light soft pink backdrop matching ladies clothing theme */
+    background: transparent; /* Light soft pink backdrop matching ladies clothing theme */
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
