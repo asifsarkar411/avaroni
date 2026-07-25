@@ -582,6 +582,15 @@ function loadSidebarCategories(categories) {
 
     // Re-add footer links
     footerLinks.forEach(link => sidebar.appendChild(link));
+
+    // Attach closeSidebar to all navigation links in sidebar
+    sidebar.querySelectorAll('a').forEach(a => {
+        if (!a.classList.contains('close-btn') && !a.id.includes('close-sidebar-btn')) {
+            a.addEventListener('click', () => {
+                closeSidebar();
+            });
+        }
+    });
 }
 
 // Payment Checkout Logic
@@ -696,15 +705,65 @@ if (paymentForm) {
 // UI / LAYOUT LOGIC
 // ==========================================
 
+function getOrCreateSidebarOverlay() {
+    let overlay = document.getElementById('sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'sidebar-overlay';
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+
+        // Clicking on backdrop closes the sidebar
+        overlay.addEventListener('click', () => {
+            closeSidebar();
+        });
+
+        // Disable touchmove on backdrop to block background touch scrolling
+        overlay.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+    }
+    return overlay;
+}
+
+function openSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar) return;
+
+    sidebar.style.right = "0px";
+    sidebar.classList.add("active");
+
+    const overlay = getOrCreateSidebarOverlay();
+    overlay.classList.add("active");
+
+    document.body.classList.add("no-scroll");
+    document.body.style.overflow = "hidden";
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar) return;
+
+    sidebar.style.right = "-280px";
+    sidebar.classList.remove("active");
+
+    const overlay = document.getElementById('sidebar-overlay');
+    if (overlay) {
+        overlay.classList.remove("active");
+    }
+
+    document.body.classList.remove("no-scroll");
+    document.body.style.overflow = "";
+}
+
 function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    // We ONLY change the 'right' property because your CSS perfectly handles the width (280px).
-    if (sidebar.style.right === "0px") {
-        sidebar.style.right = "-280px"; // Slide it completely off-screen to close
+    if (sidebar.style.right === "0px" || sidebar.classList.contains("active")) {
+        closeSidebar();
     } else {
-        sidebar.style.right = "0px";    // Slide it to the edge of the screen to open
+        openSidebar();
     }
 }
 
