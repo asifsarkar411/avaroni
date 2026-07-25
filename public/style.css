@@ -544,12 +544,15 @@ body.no-scroll {
     position: relative;
     width: 100%;
     max-width: 1200px;
-    height: 480px; /* Default height for large desktop screens */
+    height: auto;
+    aspect-ratio: 16 / 6.5;
+    max-height: 480px;
+    min-height: 150px;
     margin: 20px auto;
     overflow: hidden;
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    background: #f4f4f4;
+    background: #f8f9fa;
 }
 
 .slides {
@@ -567,33 +570,38 @@ body.no-scroll {
 .slide img {
     width: 100%;
     height: 100%;
-    object-fit: fill; /* Prevents stretching and cropping of banner images */
-    background: #ffffff; /* Dark premium backdrop to make colorful banners pop */
+    object-fit: cover; /* Prevents image stretching or distortion across all devices */
+    object-position: center;
+    background: #ffffff;
     display: block;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 991px) {
     .hero-slider {
-        height: 380px;
+        aspect-ratio: 16 / 7;
+        margin: 15px auto;
+        border-radius: 10px;
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .hero-slider {
-        height: 260px;
+        aspect-ratio: 16 / 8;
+        min-height: 140px;
         border-radius: 8px;
-        margin: 15px auto;
+        margin: 10px auto;
     }
     .slider-card-wrapper {
-        margin: 15px auto;
+        margin: 12px auto;
+        padding: 0 10px;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 400px) {
     .hero-slider {
-        height: 180px;
+        aspect-ratio: 16 / 9;
+        min-height: 120px;
         border-radius: 6px;
-        margin: 10px auto;
     }
 }
 
@@ -1525,9 +1533,9 @@ body.no-scroll {
     margin: 0 20px;
     position: relative;
     overflow: hidden;
-    border-radius: 0px;
+    border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    background: transparent;
+    background: #fdf2f7;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1538,8 +1546,9 @@ body.no-scroll {
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: fill; /* Keeps promo details/text perfectly sharp and legible */
-    background: transparent; /* Light soft pink backdrop matching ladies clothing theme */
+    object-fit: cover; /* Prevents text or graphics from distortion */
+    object-position: center;
+    background: transparent;
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
@@ -1555,26 +1564,25 @@ body.no-scroll {
     flex-shrink: 0;
 }
 
-/* Tablet: slider stays visible, slightly smaller */
-@media (max-width: 768px) {
-    .nav-promo-slider {
-        height: 38px;
-        margin: 0 10px;
-        border-radius: 6px;
-    }
-}
-
-/* Small phones: slider moves below the navbar as a full-width banner */
-@media (max-width: 480px) {
+/* Tablet & Mobile: slider wraps cleanly below header logo and nav items */
+@media (max-width: 991px) {
     .navbar {
         flex-wrap: wrap;
     }
     .nav-promo-slider {
         order: 3;
-        flex: none;
+        flex: 0 0 100%;
         width: 100%;
-        height: 42px;
+        height: 44px;
         margin: 8px 0 0 0;
+        border-radius: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-promo-slider {
+        height: 38px;
+        margin: 6px 0 0 0;
         border-radius: 6px;
     }
 }
