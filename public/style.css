@@ -8,7 +8,7 @@
 
 body {
     background-color: #FAF8F5; /* Warm ivory/cream */
-    color: #c93333; 
+    color: rgb(255, 182, 216); 
 }
 
 /* Navigation Bar */
@@ -40,7 +40,7 @@ body {
 }
 
 .nav-links a:hover {
-    color: #fff;
+    color: #fd00dbfd;
 }
 
 .cart-icon {
@@ -1566,3 +1566,18 @@ body.no-scroll {
         border-radius: 6px;
     }
 }
+/* WhatsApp Official Color */
+.social-icons .fa-whatsapp {
+    color: #25D366;
+}
+
+/* Phone Icon Color */
+.social-icons .fa-phone-alt {
+    color: #28a745; 
+}
+
+/* Facebook Official Color */
+.social-icons .fa-facebook-f {
+    color: #1877F2;
+}
+

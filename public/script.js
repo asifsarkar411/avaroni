@@ -890,15 +890,27 @@ function initFooterAndWidgets() {
                         <li><a href="return-product.html">Return Product</a></li>
                     </ul>
                 </div>
-                <div class="footer-section">
-                    <h3>Contact Us</h3>
-                    <p><i class="fas fa-phone" style="color: #ffb6d8; margin-right: 8px;"></i> 01743648510</p>
-                    <p><i class="fab fa-whatsapp" style="color: #ffb6d8; margin-right: 8px;"></i> 01743648510</p>
-                    <div class="social-icons">
-                        <a href="https://wa.me/8801743648510" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                        <a href="tel:+8801743648510"><i class="fas fa-phone-alt"></i></a>
-                        <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
-                    </div>
+<div class="footer-section">
+    <h3>Contact Us</h3>
+    <p><i class="fas fa-phone" style="color: #ffb6d8; margin-right: 8px;"></i> 01743648510</p>
+    <p><i class="fab fa-whatsapp" style="color: #ffb6d8; margin-right: 8px;"></i> 01743648510</p>
+    <div class="social-icons">
+        <!-- WhatsApp (Official Green) -->
+        <a href="https://wa.me/8801743648510" style="text-decoration: none;" target="_blank">
+            <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+        </a>
+        
+        <!-- Phone (Standard Green) -->
+        <a href="tel:+8801743648510" style="text-decoration: none;">
+            <i class="fas fa-phone-alt" style="color: #28a745;"></i>
+        </a>
+        
+        <!-- Facebook (Official Blue) -->
+        <a href="https://facebook.com" style="text-decoration: none;" target="_blank">
+            <i class="fab fa-facebook-f" style="color: #1877F2;"></i>
+        </a>
+    </div>
+</div>
                 </div>
             </div>
             <div class="footer-bottom">
