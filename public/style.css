@@ -1773,19 +1773,20 @@ body.no-scroll {
 }
 
 /* =========================================
-   HOMEPAGE CUSTOMER REVIEWS SLIDER
+   HOMEPAGE CUSTOMER REVIEWS BANNER SLIDER
 ========================================= */
 .reviews-slider-section {
-    padding: 50px 20px;
-    background: linear-gradient(135deg, #fdf8fa 0%, #ffffff 100%);
-    border-top: 1px solid #f0e4eb;
-    border-bottom: 1px solid #f0e4eb;
+    padding: 45px 20px;
+    background: linear-gradient(135deg, #fff5f8 0%, #ffffff 50%, #fff0f5 100%);
+    border-top: 1px solid #f0dbe5;
+    border-bottom: 1px solid #f0dbe5;
     margin: 40px 0 0 0;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .reviews-slider-container {
-    max-width: 1100px;
+    max-width: 1000px;
     margin: 0 auto;
     text-align: center;
 }
@@ -1794,69 +1795,64 @@ body.no-scroll {
     position: relative;
     width: 100%;
     overflow: hidden;
-    margin-top: 30px;
+    margin-top: 25px;
     padding: 10px 0;
 }
 
 .reviews-slides {
     display: flex;
-    gap: 20px;
+    width: 100%;
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .review-slide-card {
-    min-width: 300px;
-    max-width: 360px;
-    flex: 0 0 calc(33.333% - 14px);
+    min-width: 100%;
+    flex: 0 0 100%;
     background: #ffffff;
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f1f1;
-    text-align: left;
+    border-radius: 16px;
+    padding: 30px 40px;
+    box-shadow: 0 8px 25px rgba(230, 0, 80, 0.06);
+    border: 1.5px solid #ffe3ec;
+    text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.review-slide-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(230, 0, 80, 0.08);
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .review-stars {
     color: #ffc107;
-    font-size: 16px;
-    margin-bottom: 12px;
+    font-size: 22px;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
 }
 
 .review-comment {
-    font-size: 14px;
-    line-height: 1.6;
-    color: #444444;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #333333;
     font-style: italic;
-    margin-bottom: 16px;
-    flex-grow: 1;
+    margin-bottom: 20px;
+    max-width: 800px;
 }
 
 .review-author {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 4px;
-    border-top: 1px solid #f5f5f5;
-    padding-top: 12px;
 }
 
 .review-author strong {
-    font-size: 15px;
-    color: #1a1a1a;
+    font-size: 16px;
+    color: #111111;
 }
 
 .review-product-tag {
-    font-size: 12px;
+    font-size: 13px;
     color: #e60050;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 /* Star Rating Selector in Modal */
@@ -1872,21 +1868,16 @@ body.no-scroll {
     font-weight: 900;
 }
 
-@media (max-width: 991px) {
-    .review-slide-card {
-        flex: 0 0 calc(50% - 10px);
-        min-width: 270px;
-    }
-}
-
 @media (max-width: 600px) {
     .reviews-slider-section {
-        padding: 35px 15px;
+        padding: 30px 15px;
     }
     .review-slide-card {
-        flex: 0 0 100%;
-        min-width: 100%;
-        padding: 18px;
+        padding: 20px 18px;
+        border-radius: 12px;
+    }
+    .review-comment {
+        font-size: 14px;
     }
 }
 /* WhatsApp Official Color */
