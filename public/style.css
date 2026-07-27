@@ -1,14 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Outfit', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     image-rendering: -webkit-optimize-contrast; /* Sharp rendering across Webkit browsers */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-    background-color: #ffffff; /* Warm ivory/cream */
-    color: rgb(255, 182, 216); 
+    background-color: #ffffff;
+    color: #2c2c2c;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* =========================================
+   PROFESSIONAL E-COMMERCE TYPOGRAPHY (H1-H6)
+   ========================================= */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.5em;
+}
+
+h1, .h1 {
+    font-size: 2rem; /* 32px */
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+h2, .h2 {
+    font-size: 1.55rem; /* 25px */
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+h3, .h3 {
+    font-size: 1.2rem; /* 19.2px */
+    font-weight: 600;
+}
+
+h4, .h4 {
+    font-size: 1.05rem; /* 16.8px */
+    font-weight: 600;
+}
+
+h5, .h5 {
+    font-size: 0.95rem; /* 15.2px */
+    font-weight: 600;
+}
+
+h6, .h6 {
+    font-size: 0.85rem; /* 13.6px */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 /* Navigation Bar */
