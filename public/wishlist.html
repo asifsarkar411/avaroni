@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - আভরণী</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
+        <div class="nav-promo-slider" id="nav-promo-slider"></div>
+        <div class="nav-links">
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="fas fa-heart" style="color: #e60050;"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
+            <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- 3-Dot Sidebar Drawer -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span>আভরণী</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        </div>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar-container">
+        <div class="search-bar-inner">
+            <div class="search-input-wrap">
+                <i class="fas fa-search search-bar-icon"></i>
+                <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="search-filter-wrap">
+                <select id="global-filter-select" class="search-filter-select">
+                    <option value="all"><i class="fas fa-sliders-h"></i> All Products</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="page-title" style="text-align: center; margin: 25px 0;"><i class="fas fa-heart" style="color:#e60050;"></i> My Wishlist</h2>
+
+    <div class="wishlist-container" style="max-width: 1200px; margin: 0 auto; padding: 0 15px 40px;">
+        <div id="wishlist-grid" class="product-grid">
+            <!-- Wishlist items populated dynamically by script.js -->
+        </div>
+
+        <div id="wishlist-empty-state" style="display: none; text-align: center; padding: 60px 20px;">
+            <i class="far fa-heart" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
+            <h3 style="font-size: 20px; color: #555; margin-bottom: 10px;">Your wishlist is currently empty</h3>
+            <p style="color: #777; margin-bottom: 25px;">Explore our products and tap the heart icon to save your favorites!</p>
+            <a href="index.html" class="btn" style="display: inline-block; padding: 12px 28px; background: #e60050; color: white; border-radius: 25px; text-decoration: none; font-weight: 600;">Explore Products</a>
+        </div>
+    </div>
+
+    <!-- Dynamic Product Quick View Modal -->
+    <div id="product-modal" class="product-modal">
+        <div class="product-modal-content">
+            <span class="product-modal-close" id="product-modal-close">&times;</span>
+            <div class="product-modal-body">
+                <div class="product-modal-image">
+                    <img id="modal-product-img" src="" alt="Product Image">
+                </div>
+                <div class="product-modal-info">
+                    <h2 id="modal-product-name"></h2>
+                    <p class="product-modal-price" id="modal-product-price"></p>
+                    <p class="product-modal-description" id="modal-product-desc"></p>
+                    <div id="modal-product-stock" class="modal-stock-status"></div>
+                    
+                    <div class="product-modal-actions">
+                        <button id="modal-add-to-cart-btn" class="btn add-to-cart-btn">Add to Cart</button>
+                    </div>
+
+                    <div id="modal-related-products" class="related-products-section">
+                        <h3><i class="fas fa-sparkles"></i> Related Products</h3>
+                        <div id="related-products-grid" class="related-products-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Floating Contact Widget -->
+    <div class="quick-contact-widget">
+        <a href="https://wa.me/8801878893922" target="_blank" class="widget-btn whatsapp-btn" title="Chat on WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="tel:+8801878893922" class="widget-btn phone-btn" title="Call Us">
+            <i class="fas fa-phone-alt"></i>
+        </a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

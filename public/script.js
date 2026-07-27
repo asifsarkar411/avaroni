@@ -204,9 +204,16 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
             : `<div class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</div>`;
         const btnStatus = product.stockQuantity > 0 ? "" : "disabled style='background:grey;'";
 
+        const inWishlist = isInWishlist(product._id);
+        const heartClass = inWishlist ? "fas fa-heart" : "far fa-heart";
+        const activeClass = inWishlist ? "active" : "";
+
         container.innerHTML += `
             <div class="product-card" data-product-id="${product._id}">
                 <div class="product-image-wrap">
+                    <button class="wishlist-card-btn ${activeClass}" data-id="${product._id}" title="${inWishlist ? 'Remove from Wishlist' : 'Save to Wishlist'}">
+                        <i class="${heartClass}"></i>
+                    </button>
                     <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 </div>
                 <h3>${product.name}</h3>
@@ -937,6 +944,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Footer and floating widgets dynamically on all pages
     initFooterAndWidgets();
 
+    // Update Wishlist badge counter across all pages
+    updateWishlistBadge();
+
+    // Render Wishlist items if currently on wishlist.html
+    renderWishlistPage();
+
     // Load navbar promotional slider
     loadNavbarSliders();
 
@@ -1466,3 +1479,133 @@ async function loadNavbarSliders() {
         container.style.display = 'none';
     }
 }
+
+// ==========================================
+// WISHLIST MANAGEMENT & PAGE RENDERER
+// ==========================================
+function getWishlist() {
+    try {
+        return JSON.parse(localStorage.getItem('wishlist_items')) || [];
+    } catch(e) {
+        return [];
+    }
+}
+
+function updateWishlistBadge() {
+    const wishlist = getWishlist();
+    const badge = document.getElementById('wishlist-count');
+    if (badge) {
+        badge.innerText = wishlist.length;
+    }
+}
+
+function isInWishlist(productId) {
+    const wishlist = getWishlist();
+    return wishlist.some(item => (item._id === productId || item.id === productId));
+}
+
+function toggleWishlistProduct(product) {
+    let wishlist = getWishlist();
+    const pId = product._id || product.id;
+    const index = wishlist.findIndex(item => (item._id === pId || item.id === pId));
+    
+    if (index > -1) {
+        wishlist.splice(index, 1);
+    } else {
+        wishlist.push({
+            _id: pId,
+            id: pId,
+            name: product.name,
+            price: product.price,
+            imageUrl: product.imageUrl,
+            stockQuantity: product.stockQuantity !== undefined ? product.stockQuantity : 10
+        });
+    }
+    localStorage.setItem('wishlist_items', JSON.stringify(wishlist));
+    updateWishlistBadge();
+}
+
+function renderWishlistPage() {
+    const grid = document.getElementById('wishlist-grid');
+    const emptyState = document.getElementById('wishlist-empty-state');
+    if (!grid) return;
+
+    const wishlist = getWishlist();
+    grid.innerHTML = '';
+
+    if (wishlist.length === 0) {
+        grid.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    grid.style.display = 'grid';
+
+    wishlist.forEach(product => {
+        const fullImageUrl = formatImageUrl(product.imageUrl);
+        grid.innerHTML += `
+            <div class="product-card" data-product-id="${product._id || product.id}">
+                <div class="product-image-wrap">
+                    <button class="wishlist-card-btn active" data-id="${product._id || product.id}" title="Remove from Wishlist">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                </div>
+                <h3>${product.name}</h3>
+                <p class="price">৳${product.price}</p>
+                <button class="btn add-to-cart-btn" 
+                    data-id="${product._id || product.id}" 
+                    data-name="${(product.name || '').replace(/"/g, '&quot;')}" 
+                    data-price="${product.price}" 
+                    data-image="${fullImageUrl}">Add to Cart</button>
+            </div>
+        `;
+    });
+
+    bindAllProductZoomEffects();
+}
+
+// Attach Event Delegation for Wishlist Card Buttons
+document.addEventListener('click', (e) => {
+    const wishlistBtn = e.target.closest('.wishlist-card-btn');
+    if (wishlistBtn) {
+        e.stopPropagation();
+        e.preventDefault();
+        const pId = wishlistBtn.getAttribute('data-id');
+        
+        let product = (window.allProducts || []).find(p => (p._id === pId || p.id === pId));
+        if (!product) {
+            const card = wishlistBtn.closest('.product-card');
+            const nameEl = card ? card.querySelector('h3') : null;
+            const priceEl = card ? card.querySelector('.price') : null;
+            const imgEl = card ? card.querySelector('.product-image') : null;
+            
+            product = {
+                _id: pId,
+                id: pId,
+                name: nameEl ? nameEl.innerText : 'Product',
+                price: priceEl ? parseFloat(priceEl.innerText.replace(/[^\d.]/g, '')) || 0 : 0,
+                imageUrl: imgEl ? imgEl.src : './img/profile_image.jpg'
+            };
+        }
+
+        toggleWishlistProduct(product);
+
+        const inWishlist = isInWishlist(pId);
+        const icon = wishlistBtn.querySelector('i');
+        if (inWishlist) {
+            wishlistBtn.classList.add('active');
+            wishlistBtn.title = "Remove from Wishlist";
+            if (icon) icon.className = "fas fa-heart";
+        } else {
+            wishlistBtn.classList.remove('active');
+            wishlistBtn.title = "Save to Wishlist";
+            if (icon) icon.className = "far fa-heart";
+        }
+
+        if (document.getElementById('wishlist-grid')) {
+            renderWishlistPage();
+        }
+    }
+});
