@@ -1688,9 +1688,62 @@ let reviewsTimer = null;
 let currentReviewIndex = 0;
 
 async function loadPublishedReviewsSlider() {
-    const section = document.getElementById('reviews-slider-section');
+    // Check if current page is in the excluded list
+    const rawPath = window.location.pathname.toLowerCase();
+    const currentPage = rawPath.substring(rawPath.lastIndexOf('/') + 1) || 'index.html';
+
+    const excludedPages = [
+        'faq.html',
+        'sitemap.html',
+        'blog.html',
+        'return-policy.html',
+        'return-product.html',
+        'contact.html',
+        'about.html',
+        'admin.html',
+        'admin-login.html',
+        'payment.html',
+        'register.html',
+        'forgot-password.html',
+        'reset-password.html'
+    ];
+
+    const isExcluded = excludedPages.some(page => currentPage.includes(page));
+
+    let section = document.getElementById('reviews-slider-section');
+
+    if (isExcluded) {
+        if (section) section.style.display = 'none';
+        return;
+    }
+
+    // Create section dynamically if it doesn't exist on allowed pages
+    if (!section) {
+        section = document.createElement('section');
+        section.className = 'reviews-slider-section';
+        section.id = 'reviews-slider-section';
+        section.style.display = 'none';
+        section.innerHTML = `
+            <div class="reviews-slider-container">
+                <h2 class="section-title"><i class="fas fa-star" style="color:#ffc107;"></i> What Our Customers Say <i class="fas fa-star" style="color:#ffc107;"></i></h2>
+                <p class="section-subtitle">Real reviews from our valued shoppers</p>
+                <div class="reviews-slider-wrapper">
+                    <div class="reviews-slides" id="reviews-slides-container"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Position section right before .site-footer at the bottom of the page
+    const footer = document.querySelector('.site-footer');
+    if (footer) {
+        document.body.insertBefore(section, footer);
+    } else {
+        document.body.appendChild(section);
+    }
+
     const container = document.getElementById('reviews-slides-container');
-    if (!section || !container) return;
+    if (!container) return;
 
     try {
         const response = await fetch('/api/reviews/published');
@@ -1721,6 +1774,8 @@ async function loadPublishedReviewsSlider() {
         const totalSlides = data.reviews.length;
         if (totalSlides > 1) {
             currentReviewIndex = 0;
+
+            if (reviewsTimer) clearInterval(reviewsTimer);
 
             const nextReviewSlide = () => {
                 currentReviewIndex = (currentReviewIndex + 1) % totalSlides;
