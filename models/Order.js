@@ -13,6 +13,7 @@ const orderSchema = new mongoose.Schema({
     promoCode: { type: String, default: "" },
     shippingFee: { type: Number, default: 0 },
     paymentMethod: { type: String, default: 'bKash' },
+    status: { type: String, enum: ['Pending', 'Approved', 'Cancelled'], default: 'Pending' },
     orderDate: { type: Date, default: Date.now }
 });
 

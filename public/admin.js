@@ -664,36 +664,77 @@ async function fetchOrders() {
         tbody.innerHTML = '';
 
         if (!data.orders || data.orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No orders found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No orders found.</td></tr>';
             return;
         }
 
         data.orders.forEach(order => {
             const date = new Date(order.orderDate).toLocaleString();
-            const itemsList = order.cartItems.map(item => `${item.name} (x${item.quantity})`).join(', ');
+            const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
             
             // Fallback to "N/A" if orderNumber wasn't generated for older orders
             const displayOrderNum = order.orderNumber || 'N/A'; 
-            
+            const orderStatus = order.status || 'Pending';
+
+            let statusBadge = `<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending</span>`;
+            if (orderStatus === 'Approved') {
+                statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
+            } else if (orderStatus === 'Cancelled') {
+                statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
+            }
+
+            const approveBtnDisabled = orderStatus === 'Approved' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+            const cancelBtnDisabled = orderStatus === 'Cancelled' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
                     <td style="color: #007bff; font-weight: bold;">${displayOrderNum}</td> 
-                    
                     <td><strong>${order.customerName}</strong></td>
                     <td>${order.phone}<br>${order.email}</td>
                     <td>${order.address}</td>
                     <td><strong>${order.transactionId || 'N/A'}</strong></td>
                     <td style="color:#e60050; font-weight:bold;">৳${order.totalAmount}</td>
                     <td class="items-list">${itemsList}</td>
-                    <td>
-                        <button onclick="downloadInvoice('${order.orderNumber}')" class="btn" style="margin-top:0; padding: 6px 12px; font-size:12px; background:#e60050; color:white; border:none; border-radius:4px; cursor:pointer;"><i class="fas fa-file-invoice"></i> Invoice</button>
+                    <td>${statusBadge}</td>
+                    <td style="white-space: nowrap;">
+                        <button onclick="downloadInvoice('${order.orderNumber}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#e60050; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
                     </td>
                 </tr>
             `;
         });
-    } catch (error) { // <-- ADDED: Catch block and closing braces were missing here
+    } catch (error) {
         console.error("Error fetching orders:", error);
+    }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+    if (!confirm(`Are you sure you want to change order status to "${newStatus}"? An automated notification email will be sent to the customer.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || `Order status updated to ${newStatus}!`);
+            fetchCustomerOrders(); // Refresh order table
+        } else {
+            alert(data.message || "Failed to update order status.");
+        }
+    } catch (err) {
+        console.error("Error updating order status:", err);
+        alert("Failed to connect to server. Please try again.");
     }
 }
 

@@ -1119,6 +1119,91 @@ app.get('/api/admin/orders', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Update Order Status (Approve or Cancel) & Send Automated Email to Customer
+app.put('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['Approved', 'Cancelled', 'Pending'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status value." });
+        }
+
+        const order = await Order.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+
+        order.status = status;
+        await order.save();
+
+        // Send Email Notification to Customer on Approve or Cancel
+        if (status === 'Approved' || status === 'Cancelled') {
+            const isApproved = status === 'Approved';
+            const emailSubject = isApproved 
+                ? `Order Approved - ${order.orderNumber} | আভরণী` 
+                : `Order Cancelled - ${order.orderNumber} | আভরণী`;
+
+            const itemsListHtml = (order.cartItems || []).map(item => 
+                `<li style="margin-bottom: 5px;">${item.name} (x${item.quantity}) - ৳${item.price}</li>`
+            ).join('');
+
+            const emailBody = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
+                    <h2 style="color: ${isApproved ? '#28a745' : '#dc3545'}; text-align: center;">
+                        ${isApproved ? '🎉 Order Approved!' : '❌ Order Cancelled'}
+                    </h2>
+                    <p style="font-size: 15px;">Dear <strong>${order.customerName}</strong>,</p>
+                    <p style="font-size: 14px; line-height: 1.6;">
+                        ${isApproved 
+                            ? `We are happy to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>APPROVED</strong> and is currently being processed for dispatch!`
+                            : `We regret to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>CANCELLED</strong>. If you have questions or believe this is an error, please contact customer support.`
+                        }
+                    </p>
+                    
+                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 5px solid ${isApproved ? '#28a745' : '#dc3545'};">
+                        <p style="margin: 0;"><strong>Order Number:</strong> <span style="color: #e60050; font-weight: bold;">${order.orderNumber}</span></p>
+                        <p style="margin: 5px 0 0 0;"><strong>Status:</strong> <span style="color: ${isApproved ? '#28a745' : '#dc3545'}; font-weight: bold; text-transform: uppercase;">${status}</span></p>
+                        <p style="margin: 5px 0 0 0;"><strong>Payment Method:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'bKash'}</p>
+                    </div>
+
+                    <h3>Order Details:</h3>
+                    <ul style="list-style-type: none; padding-left: 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                        ${itemsListHtml}
+                    </ul>
+
+                    <h3 style="color: #333;">Total Amount: <span style="color: #e60050;">৳${order.totalAmount}</span></h3>
+
+                    <h4>Shipping Address:</h4>
+                    <p style="background-color: #f1f1f1; padding: 10px; border-radius: 4px;">${order.address}</p>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0 15px 0;">
+                    <p style="text-align: center; color: #888; font-size: 13px;">Thank you for shopping with <strong>আভরণী</strong>.</p>
+                </div>
+            `;
+
+            try {
+                await transporter.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: order.email,
+                    subject: emailSubject,
+                    html: emailBody
+                });
+                console.log(`Order status (${status}) email sent successfully to ${order.email}`);
+            } catch (mailErr) {
+                console.error("Failed to send order status update email:", mailErr);
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Order status updated to "${status}" and email sent to customer!`,
+            order 
+        });
+    } catch (error) {
+        console.error("Update Order Status Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update order status." });
+    }
+});
+
 // Get Order by Order Number (for invoice generation)
 app.get('/api/orders/:orderNumber', async (req, res) => {
     try {
