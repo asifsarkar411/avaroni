@@ -1047,9 +1047,9 @@ document.addEventListener('DOMContentLoaded', () => {
             changeQty(id, 1);
         }
 
-        // 4. Product Card Click -> Open product detail modal (Only if NOT clicking the Add to Cart button)
+        // 4. Product Card Click -> Open product detail modal (Only if NOT clicking the Add to Cart or Wishlist button)
         const productCard = e.target.closest('.product-card');
-        if (productCard && !e.target.closest('.add-to-cart-btn')) {
+        if (productCard && !e.target.closest('.add-to-cart-btn') && !e.target.closest('.wishlist-card-btn')) {
             const productId = productCard.getAttribute('data-product-id');
             if (productId && productId !== 'null' && productId !== 'undefined') {
                 openProductModal(productId);
