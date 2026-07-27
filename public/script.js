@@ -451,11 +451,12 @@ async function loadNavCategories() {
         const data = await response.json();
         if (!data.success || !data.categories) return;
 
-        // Preserve the cart icon and menu icon from the nav-links
+        // Preserve the wishlist icon, cart icon, and menu icon from the nav-links
+        const wishlistIcon = navLinksContainer.querySelector('.wishlist-icon');
         const cartIcon = navLinksContainer.querySelector('.cart-icon');
         const menuIcon = navLinksContainer.querySelector('.menu-icon');
 
-        // Clear existing category links (keep cart/menu)
+        // Clear existing category links (keep wishlist/cart/menu)
         navLinksContainer.innerHTML = '';
 
         data.categories.forEach(cat => {
@@ -500,7 +501,8 @@ async function loadNavCategories() {
             }
         });
 
-        // Re-append cart icon and menu icon
+        // Re-append wishlist icon, cart icon, and menu icon
+        if (wishlistIcon) navLinksContainer.appendChild(wishlistIcon);
         if (cartIcon) navLinksContainer.appendChild(cartIcon);
         if (menuIcon) navLinksContainer.appendChild(menuIcon);
 

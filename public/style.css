@@ -294,8 +294,8 @@ body {
         padding: 12px 20px;
     }
 
-    /* Hide text links on mobile as they are now inside the sidebar */
-    .nav-links a:not(.cart-icon) {
+    /* Hide category text links on mobile as they are inside sidebar (keep cart & wishlist icons) */
+    .nav-links a:not(.cart-icon):not(.wishlist-icon) {
         display: none;
     }
 
