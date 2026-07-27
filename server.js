@@ -1090,7 +1090,7 @@ app.get('/api/admin/analytics', verifyAdminToken, async (req, res) => {
         const orderStatusCounts = {
             Pending: 0,
             Processing: 0,
-            Completed: 0,
+            Approved: 0,
             Cancelled: 0
         };
 
@@ -1098,9 +1098,9 @@ app.get('/api/admin/analytics', verifyAdminToken, async (req, res) => {
             const rawStatus = (o.status || 'Pending').toLowerCase();
             if (rawStatus.includes('process')) {
                 orderStatusCounts.Processing++;
-            } else if (rawStatus.includes('deliver') || rawStatus.includes('complet')) {
-                orderStatusCounts.Completed++;
-            } else if (rawStatus.includes('cancel')) {
+            } else if (rawStatus.includes('approve') || rawStatus.includes('deliver') || rawStatus.includes('complet')) {
+                orderStatusCounts.Approved++;
+            } else if (rawStatus.includes('cancel') || rawStatus.includes('reject')) {
                 orderStatusCounts.Cancelled++;
             } else {
                 orderStatusCounts.Pending++;
@@ -1205,7 +1205,7 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
     }
     try {
         const { status } = req.body;
-        if (!['Approved', 'Cancelled', 'Pending'].includes(status)) {
+        if (!['Approved', 'Processing', 'Cancelled', 'Pending'].includes(status)) {
             return res.status(400).json({ success: false, message: "Invalid status value." });
         }
 

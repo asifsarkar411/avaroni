@@ -236,13 +236,25 @@ async function fetchAnalyticsCharts() {
         const ctx1 = document.getElementById('orderOverviewChart');
         if (ctx1) {
             destroyChart('orderOverviewChart');
+            const overviewData = analytics.orderOverview || {};
+            const labels = Object.keys(overviewData);
+            const values = Object.values(overviewData);
+            
+            const colorMap = {
+                'Pending': '#ffc107',
+                'Processing': '#17a2b8',
+                'Approved': '#28a745',
+                'Cancelled': '#dc3545'
+            };
+            const backgroundColors = labels.map(l => colorMap[l] || '#6c757d');
+
             chartInstances['orderOverviewChart'] = new Chart(ctx1, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(analytics.orderOverview),
+                    labels: labels,
                     datasets: [{
-                        data: Object.values(analytics.orderOverview),
-                        backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#dc3545'],
+                        data: values,
+                        backgroundColor: backgroundColors,
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -251,7 +263,16 @@ async function fetchAnalyticsCharts() {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const val = context.parsed || 0;
+                                    return ` ${label}: ${val} orders`;
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -679,12 +700,15 @@ async function fetchOrders() {
             const orderStatus = order.status || 'Pending';
 
             let statusBadge = `<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending</span>`;
-            if (orderStatus === 'Approved') {
+            if (orderStatus === 'Processing') {
+                statusBadge = `<span style="background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Processing</span>`;
+            } else if (orderStatus === 'Approved') {
                 statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
             } else if (orderStatus === 'Cancelled') {
                 statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
             }
 
+            const processBtnDisabled = orderStatus === 'Processing' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#17a2b8; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
             const approveBtnDisabled = orderStatus === 'Approved' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
             const cancelBtnDisabled = orderStatus === 'Cancelled' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
 
@@ -701,6 +725,7 @@ async function fetchOrders() {
                     <td>${statusBadge}</td>
                     <td style="white-space: nowrap;">
                         <button onclick="downloadInvoice('${order.orderNumber}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#e60050; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-spinner"></i> Process</button>
                         <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
                         <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
                     </td>
