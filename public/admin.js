@@ -728,7 +728,7 @@ async function updateOrderStatus(orderId, newStatus) {
         const data = await response.json();
         if (data.success) {
             alert(data.message || `Order status updated to ${newStatus}!`);
-            fetchCustomerOrders(); // Refresh order table
+            fetchOrders(); // Refresh order table
         } else {
             alert(data.message || "Failed to update order status.");
         }

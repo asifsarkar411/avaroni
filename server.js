@@ -1120,7 +1120,10 @@ app.get('/api/admin/orders', verifyAdminToken, async (req, res) => {
 });
 
 // Update Order Status (Approve or Cancel) & Send Automated Email to Customer
-app.put('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
+app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
+    if (req.method !== 'PUT' && req.method !== 'POST') {
+        return res.status(405).json({ success: false, message: "Method not allowed" });
+    }
     try {
         const { status } = req.body;
         if (!['Approved', 'Cancelled', 'Pending'].includes(status)) {
