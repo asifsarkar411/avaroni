@@ -1963,3 +1963,36 @@ body.no-scroll {
     color: #ffb6d8; /* Changes to your theme color on hover */
     text-decoration: underline;
 }
+
+/* Product Card Star Rating & Write Review Badge */
+.product-card-rating {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 6px 0 8px 0;
+    font-size: 13px;
+    padding: 0 4px;
+}
+
+.card-stars {
+    color: #ffc107;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.card-review-badge {
+    color: #e60050;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #ffe6ef;
+    padding: 3px 8px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.card-review-badge:hover {
+    background: #e60050;
+    color: #ffffff;
+}
+

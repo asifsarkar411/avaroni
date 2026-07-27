@@ -217,6 +217,10 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
                     <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 </div>
                 <h3>${product.name}</h3>
+                <div class="product-card-rating">
+                    <span class="card-stars">⭐⭐⭐⭐⭐</span>
+                    <span class="card-review-badge"><i class="fas fa-edit"></i> Write Review</span>
+                </div>
                 <p class="price">৳${product.price}</p>
                 ${stockText}
                 <button class="btn add-to-cart-btn" ${btnStatus} 
@@ -1401,6 +1405,9 @@ async function openProductModal(productId) {
             cartBtn.onclick = null;
         }
 
+        // Attach Star Rating & Review input section inside product detail modal
+        ensureModalReviewSection(modal, product);
+
         // Fill related products
         const relatedGrid = document.getElementById('related-products-grid');
         if (relatedGrid) {
@@ -1630,6 +1637,71 @@ document.addEventListener('click', (e) => {
 // ==========================================
 // STAR RATING & CUSTOMER REVIEW HANDLERS
 // ==========================================
+function ensureModalReviewSection(modalElement, product) {
+    let reviewSec = modalElement.querySelector('.product-modal-review-section');
+    if (!reviewSec) {
+        reviewSec = document.createElement('div');
+        reviewSec.className = 'product-modal-review-section';
+        reviewSec.innerHTML = `
+            <div class="review-modal-header" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2b0c5;">
+                <h4 style="font-size: 16px; color: #111; margin: 0 0 4px 0; display:flex; align-items:center; gap:8px;"><i class="fas fa-star" style="color:#ffc107;"></i> Rate & Review Product</h4>
+                <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">Share your star rating and honest opinion</p>
+            </div>
+            <form id="modal-review-form" onsubmit="handleModalReviewSubmit(event)">
+                <input type="hidden" id="review-modal-prod-id" value="${product._id || product.id || ''}">
+                <input type="hidden" id="review-modal-prod-name" value="${(product.name || '').replace(/"/g, '&quot;')}">
+                <input type="hidden" id="modal-review-rating-val" value="5">
+
+                <div class="review-form-field" style="margin-bottom: 10px;">
+                    <label style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Star Rating:</label>
+                    <div class="star-rating-selector" id="modal-star-selector" style="display:flex; gap:6px; font-size:22px; color:#ffc107; cursor:pointer;">
+                        <i class="fas fa-star" data-rating="1"></i>
+                        <i class="fas fa-star" data-rating="2"></i>
+                        <i class="fas fa-star" data-rating="3"></i>
+                        <i class="fas fa-star" data-rating="4"></i>
+                        <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                </div>
+
+                <div class="review-form-field" style="margin-bottom: 10px;">
+                    <label for="modal-review-name" style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Your Name:</label>
+                    <input type="text" id="modal-review-name" placeholder="Enter your full name" required class="review-input" style="width:100%; padding:9px 12px; border:1.5px solid #ffccd8; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;">
+                </div>
+
+                <div class="review-form-field" style="margin-bottom: 12px;">
+                    <label for="modal-review-comment" style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Review Comment:</label>
+                    <textarea id="modal-review-comment" placeholder="Write your review comments here..." required class="review-textarea" rows="3" style="width:100%; padding:9px 12px; border:1.5px solid #ffccd8; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box; font-family:inherit;"></textarea>
+                </div>
+
+                <button type="submit" class="btn submit-review-btn" style="background: linear-gradient(135deg, #e60050, #ff2e74); color:#fff; border:none; padding:9px 20px; font-size:13px; font-weight:700; border-radius:25px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 4px 12px rgba(230,0,80,0.25);">
+                    <i class="fas fa-paper-plane"></i> Submit Review
+                </button>
+            </form>
+        `;
+        const modalInfo = modalElement.querySelector('.product-modal-info');
+        if (modalInfo) {
+            modalInfo.appendChild(reviewSec);
+        } else {
+            const body = modalElement.querySelector('.product-modal-body') || modalElement.querySelector('.product-modal');
+            if (body) body.appendChild(reviewSec);
+        }
+    } else {
+        const prodIdEl = document.getElementById('review-modal-prod-id');
+        const prodNameEl = document.getElementById('review-modal-prod-name');
+        const ratingValEl = document.getElementById('modal-review-rating-val');
+        const nameEl = document.getElementById('modal-review-name');
+        const commentEl = document.getElementById('modal-review-comment');
+
+        if (prodIdEl) prodIdEl.value = product._id || product.id || '';
+        if (prodNameEl) prodNameEl.value = product.name || '';
+        if (ratingValEl) ratingValEl.value = '5';
+        if (nameEl) nameEl.value = '';
+        if (commentEl) commentEl.value = '';
+    }
+
+    initStarSelectorLogic();
+}
+
 function initStarSelectorLogic() {
     const selector = document.getElementById('modal-star-selector');
     if (!selector) return;
