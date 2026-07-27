@@ -1527,6 +1527,14 @@ function toggleWishlistProduct(product) {
     updateWishlistBadge();
 }
 
+function removeWishlistItem(productId) {
+    let wishlist = getWishlist();
+    wishlist = wishlist.filter(item => (item._id !== productId && item.id !== productId));
+    localStorage.setItem('wishlist_items', JSON.stringify(wishlist));
+    updateWishlistBadge();
+    renderWishlistPage();
+}
+
 function renderWishlistPage() {
     const grid = document.getElementById('wishlist-grid');
     const emptyState = document.getElementById('wishlist-empty-state');
@@ -1546,21 +1554,25 @@ function renderWishlistPage() {
 
     wishlist.forEach(product => {
         const fullImageUrl = formatImageUrl(product.imageUrl);
+        const pId = product._id || product.id;
         grid.innerHTML += `
-            <div class="product-card" data-product-id="${product._id || product.id}">
+            <div class="product-card" data-product-id="${pId}">
                 <div class="product-image-wrap">
-                    <button class="wishlist-card-btn active" data-id="${product._id || product.id}" title="Remove from Wishlist">
+                    <button class="wishlist-card-btn active" data-id="${pId}" title="Remove from Wishlist">
                         <i class="fas fa-heart"></i>
                     </button>
                     <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 </div>
                 <h3>${product.name}</h3>
                 <p class="price">৳${product.price}</p>
-                <button class="btn add-to-cart-btn" 
-                    data-id="${product._id || product.id}" 
-                    data-name="${(product.name || '').replace(/"/g, '&quot;')}" 
-                    data-price="${product.price}" 
-                    data-image="${fullImageUrl}">Add to Cart</button>
+                <div style="display: flex; gap: 6px; margin-top: 8px; width: 100%;">
+                    <button class="btn add-to-cart-btn" style="flex: 1; padding: 8px 5px; font-size: 12px; margin-top:0;" 
+                        data-id="${pId}" 
+                        data-name="${(product.name || '').replace(/"/g, '&quot;')}" 
+                        data-price="${product.price}" 
+                        data-image="${fullImageUrl}">Add to Cart</button>
+                    <button onclick="removeWishlistItem('${pId}')" class="btn" style="background: #ffffff; color: #dc3545; border: 1px solid #dc3545; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top:0; transition: all 0.2s;" title="Remove from Wishlist"><i class="fas fa-trash-alt"></i></button>
+                </div>
             </div>
         `;
     });
