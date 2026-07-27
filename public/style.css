@@ -557,70 +557,64 @@ body.no-scroll {
 }
 
 /* =========================================
-   Homepage Hero Slider
+   Homepage Hero Slider - Fits Picture Size Exactly
 ========================================= */
 .hero-slider {
     position: relative;
     width: 100%;
     max-width: 1200px;
     height: auto;
-    aspect-ratio: 16 / 6.5;
-    max-height: 480px;
-    min-height: 150px;
     margin: 20px auto;
     overflow: hidden;
     border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    background: #f8f9fa;
+    background: transparent;
+    box-shadow: none;
 }
 
 .slides {
     display: flex;
     width: 100%;
-    height: 100%;
+    height: auto;
+    align-items: flex-start;
     transition: transform 0.6s ease-in-out; /* Smooth slide animation */
 }
 
 .slide {
     min-width: 100%;
-    height: 100%;
+    width: 100%;
+    height: auto;
 }
 
 .slide img {
     width: 100%;
-    height: 100%;
-    object-fit: cover; /* Prevents image stretching or distortion across all devices */
-    object-position: center;
-    background: #ffffff;
+    height: auto;
     display: block;
+    border-radius: 12px;
+    background: transparent;
+    object-fit: contain;
 }
 
 @media (max-width: 991px) {
     .hero-slider {
-        aspect-ratio: 16 / 7;
         margin: 15px auto;
+        border-radius: 10px;
+    }
+    .slide img {
         border-radius: 10px;
     }
 }
 
 @media (max-width: 600px) {
     .hero-slider {
-        aspect-ratio: 16 / 8;
-        min-height: 140px;
-        border-radius: 8px;
         margin: 10px auto;
+        border-radius: 8px;
+    }
+    .slide img {
+        border-radius: 8px;
     }
     .slider-card-wrapper {
-        margin: 12px auto;
+        margin: 10px auto;
         padding: 0 10px;
-    }
-}
-
-@media (max-width: 400px) {
-    .hero-slider {
-        aspect-ratio: 16 / 9;
-        min-height: 120px;
-        border-radius: 6px;
     }
 }
 
@@ -1553,8 +1547,8 @@ body.no-scroll {
     position: relative;
     overflow: hidden;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    background: #fdf2f7;
+    box-shadow: none;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
