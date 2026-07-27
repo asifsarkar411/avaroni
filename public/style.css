@@ -78,11 +78,11 @@ body {
     margin: 0 auto;
 }
 
-/* Premium Product Card Redesign */
+/* Premium Product Card Redesign - Square Aspect Ratio */
 .product-card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 15px;
+    padding: 12px;
     text-align: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
     border: 1.5px solid #f1f1f1;
@@ -90,6 +90,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    height: 100%;
 }
 
 .product-card:hover {
@@ -101,18 +102,21 @@ body {
 .product-image-wrap {
     position: relative;
     width: 100%;
-    height: 220px;
+    aspect-ratio: 1 / 1; /* Forces 1:1 perfect square aspect ratio */
+    height: auto;
     overflow: hidden;
     border-radius: 8px;
-    margin-bottom: 12px;
-    background-color: #ffffff;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
     cursor: zoom-in;
 }
 
 .product-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    aspect-ratio: 1 / 1;
+    object-fit: cover; /* Edge-to-edge square fit without distortion */
+    object-position: center;
     display: block;
     border-radius: 8px;
     transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
@@ -121,12 +125,12 @@ body {
 }
 
 .product-card h3 {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: #2b2b2b;
     margin: 5px 0 8px;
-    line-height: 1.4;
-    height: 42px; /* Set 2 lines height */
+    line-height: 1.35;
+    height: 38px; /* Set 2 lines height */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -324,46 +328,61 @@ body {
 
 
 /* =========================================
-   PRODUCT IMAGE SIZING FIX
+   PRODUCT IMAGE SQUARE SIZING (All Screens)
    ========================================= */
 
-/* Desktop & Tablet Image Size */
+/* Desktop & Tablet Image Sizing */
+.product-image-wrap,
 .product-image {
     width: 100%;
-    height: 250px;
+    aspect-ratio: 1 / 1;
+    height: auto;
     object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 10px;
+    object-position: center;
 }
 
-/* 📱 Mobile Specific Fix (Screens smaller than 600px) */
+/* 📱 Mobile Specific Responsiveness (Screens <= 600px) */
 @media (max-width: 600px) {
-    /* Show 2 products side-by-side on mobile so they aren't huge */
-.product-grid {
-        /* On phones, this forces 2 products side-by-side so they don't look huge */
+    .product-grid {
         grid-template-columns: repeat(2, 1fr); 
         gap: 10px;
         padding: 10px;
     }
 
-    /* Shrink the image height for mobile phones */
-    .product-image {
-        height: 160px; 
+    .product-card {
+        padding: 10px;
+        border-radius: 10px;
     }
 
-    /* Shrink the text and buttons to fit the smaller cards */
+    .product-image-wrap,
+    .product-image {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        height: auto;
+    }
+
     .product-card h3 {
-        font-size: 14px; 
-        margin: 5px 0;
-        white-space: nowrap;
+        font-size: 13px; 
+        margin: 4px 0 6px;
+        line-height: 1.3;
+        height: 34px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis; /* Adds '...' if the name is too long */
+        white-space: normal;
+    }
+
+    .product-card .price {
+        font-size: 14px;
+        margin-bottom: 6px;
     }
 
     .product-card .btn {
-        padding: 8px 5px;
+        padding: 7px 4px;
         font-size: 12px; 
         width: 100%;
+        border-radius: 6px;
     }
 }
 
