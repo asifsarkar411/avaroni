@@ -929,8 +929,8 @@ function initFooterAndWidgets() {
             <div class="footer-bottom">
     <p>&copy; 2026 আভরণী. All Rights Reserved.</p>
     <p>
-        <a href="https://port-v-eno-m.vercel.app/" target="_blank" style="color: white; text-decoration: none;">
-            MADE BY SM FERDOUS AHMMED
+        <a href="https://port-v-eno-m.vercel.app/" target="_blank" style="color: white; text-decoration: underline">
+            DEVELOPED BY SM FERDOUS AHMMED
         </a>
     </p>
 </div>
