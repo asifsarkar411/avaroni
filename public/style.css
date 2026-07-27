@@ -1675,6 +1675,56 @@ body.no-scroll {
 .wishlist-card-btn.active i {
     font-weight: 900;
 }
+
+/* Wishlist Card Responsive Actions Container */
+.wishlist-card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    width: 100%;
+    align-items: center;
+}
+
+.wishlist-card-actions .add-to-cart-btn {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 12px;
+    margin-top: 0;
+}
+
+.btn-remove-wishlist {
+    background: #ffffff;
+    color: #dc3545;
+    border: 1.5px solid #dc3545;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-remove-wishlist:hover {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+@media (max-width: 576px) {
+    .wishlist-card-actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+    .wishlist-card-actions .add-to-cart-btn,
+    .btn-remove-wishlist {
+        width: 100%;
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+}
 .nav-promo-slider img {
     position: absolute;
     top: 0;
