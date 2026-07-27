@@ -1771,6 +1771,124 @@ body.no-scroll {
         border-radius: 6px;
     }
 }
+
+/* =========================================
+   HOMEPAGE CUSTOMER REVIEWS SLIDER
+========================================= */
+.reviews-slider-section {
+    padding: 50px 20px;
+    background: linear-gradient(135deg, #fdf8fa 0%, #ffffff 100%);
+    border-top: 1px solid #f0e4eb;
+    border-bottom: 1px solid #f0e4eb;
+    margin: 40px 0 0 0;
+    overflow: hidden;
+}
+
+.reviews-slider-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.reviews-slider-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    margin-top: 30px;
+    padding: 10px 0;
+}
+
+.reviews-slides {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.review-slide-card {
+    min-width: 300px;
+    max-width: 360px;
+    flex: 0 0 calc(33.333% - 14px);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f1f1;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.review-slide-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(230, 0, 80, 0.08);
+}
+
+.review-stars {
+    color: #ffc107;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.review-comment {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #444444;
+    font-style: italic;
+    margin-bottom: 16px;
+    flex-grow: 1;
+}
+
+.review-author {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid #f5f5f5;
+    padding-top: 12px;
+}
+
+.review-author strong {
+    font-size: 15px;
+    color: #1a1a1a;
+}
+
+.review-product-tag {
+    font-size: 12px;
+    color: #e60050;
+    font-weight: 500;
+}
+
+/* Star Rating Selector in Modal */
+.star-rating-selector i {
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+    padding: 0 2px;
+}
+
+.star-rating-selector i.active,
+.star-rating-selector i.hover {
+    color: #ffc107;
+    font-weight: 900;
+}
+
+@media (max-width: 991px) {
+    .review-slide-card {
+        flex: 0 0 calc(50% - 10px);
+        min-width: 270px;
+    }
+}
+
+@media (max-width: 600px) {
+    .reviews-slider-section {
+        padding: 35px 15px;
+    }
+    .review-slide-card {
+        flex: 0 0 100%;
+        min-width: 100%;
+        padding: 18px;
+    }
+}
 /* WhatsApp Official Color */
 .social-icons .fa-whatsapp {
     color: #25D366;

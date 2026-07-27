@@ -34,6 +34,7 @@ const PromoCode = require('./models/PromoCode'); // Promo Codes Model
 const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
 const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
+const Review = require('./models/Review');               // Customer Reviews Model
 
 const app = express();
 
@@ -831,6 +832,84 @@ app.get('/api/banner-cards', async (req, res) => {
     } catch (error) { 
         console.error("Get Banner Cards Error:", error);
         res.status(500).json({ success: false }); 
+    }
+});
+
+// ==========================================
+// 🌟 CUSTOMER REVIEWS & RATINGS API 🌟
+// ==========================================
+
+// Submit a new Customer Review (Public)
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { productId, productName, reviewerName, rating, comment } = req.body;
+        if (!reviewerName || !rating || !comment) {
+            return res.status(400).json({ success: false, message: "Please provide name, rating, and comment." });
+        }
+
+        const newReview = new Review({
+            productId: productId || '',
+            productName: productName || 'General Review',
+            reviewerName,
+            rating: Number(rating),
+            comment,
+            isPublished: false
+        });
+
+        await newReview.save();
+        res.status(201).json({ success: true, message: "Thank you! Your review has been submitted for admin approval." });
+    } catch (error) {
+        console.error("Submit Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to submit review." });
+    }
+});
+
+// Fetch Published Reviews (For Homepage Slider)
+app.get('/api/reviews/published', async (req, res) => {
+    try {
+        const reviews = await Review.find({ isPublished: true }).sort({ createdAt: -1 });
+        res.json({ success: true, reviews });
+    } catch (error) {
+        console.error("Get Published Reviews Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch reviews." });
+    }
+});
+
+// Fetch ALL Reviews (Admin Protected)
+app.get('/api/admin/reviews', verifyAdminToken, async (req, res) => {
+    try {
+        const reviews = await Review.find().sort({ createdAt: -1 });
+        res.json({ success: true, reviews });
+    } catch (error) {
+        console.error("Get Admin Reviews Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch reviews." });
+    }
+});
+
+// Toggle Publish Status of Review (Admin Protected)
+app.put('/api/admin/reviews/:id/publish', verifyAdminToken, async (req, res) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) return res.status(404).json({ success: false, message: "Review not found." });
+
+        review.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : !review.isPublished;
+        await review.save();
+
+        res.json({ success: true, message: `Review ${review.isPublished ? 'published to homepage!' : 'un-published.'}`, review });
+    } catch (error) {
+        console.error("Publish Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update review status." });
+    }
+});
+
+// Delete Review (Admin Protected)
+app.delete('/api/admin/reviews/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Review.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Review deleted successfully." });
+    } catch (error) {
+        console.error("Delete Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete review." });
     }
 });
 

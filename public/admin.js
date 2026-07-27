@@ -429,6 +429,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
+        if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
         titleElement.innerText = cleanTitle;
     }
 
@@ -443,6 +444,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
+    if (tabName === 'manage-reviews') fetchAdminReviews();
 }
 
 // ==========================================
@@ -1635,3 +1637,106 @@ async function handleEditProductSubmit(e) {
 // Expose modal handlers to global context
 window.openEditModal = openEditModal;
 window.closeEditModal = closeEditModal;
+
+// ==========================================
+// CUSTOMER REVIEWS MANAGEMENT
+// ==========================================
+async function fetchAdminReviews() {
+    const tbody = document.getElementById('reviews-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/reviews');
+        if (!response) return;
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!data.reviews || data.reviews.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No customer reviews submitted yet.</td></tr>';
+            return;
+        }
+
+        data.reviews.forEach(rev => {
+            const date = new Date(rev.createdAt).toLocaleString();
+            const stars = '⭐'.repeat(rev.rating);
+            const isPub = rev.isPublished;
+            
+            const statusBadge = isPub 
+                ? '<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Published</span>' 
+                : '<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending Approval</span>';
+
+            const publishBtn = isPub
+                ? `<button onclick="togglePublishReview('${rev._id}', false)" class="btn" style="background:#6c757d; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:4px;" title="Unpublish from Homepage"><i class="fas fa-eye-slash"></i> Unpublish</button>`
+                : `<button onclick="togglePublishReview('${rev._id}', true)" class="btn" style="background:#28a745; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:4px;" title="Post to Homepage Slider"><i class="fas fa-paper-plane"></i> Post to Slider</button>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${rev.productName || 'General'}</strong></td>
+                    <td>${rev.reviewerName}</td>
+                    <td style="font-size:14px;">${stars} (${rev.rating}/5)</td>
+                    <td style="max-width:250px; word-break:break-word;">${rev.comment}</td>
+                    <td>${statusBadge}</td>
+                    <td style="white-space:nowrap;">
+                        ${publishBtn}
+                        <button onclick="deleteAdminReview('${rev._id}')" class="btn" style="background:#dc3545; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px;" title="Delete Review"><i class="fas fa-trash"></i> Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching admin reviews:", err);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Failed to load reviews.</td></tr>';
+    }
+}
+
+async function togglePublishReview(reviewId, isPublished) {
+    const actionText = isPublished ? "post this review to the homepage slider" : "unpublish this review";
+    if (!confirm(`Are you sure you want to ${actionText}?`)) return;
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/reviews/${reviewId}/publish`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isPublished })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message);
+            fetchAdminReviews();
+        } else {
+            alert(data.message || "Failed to update review.");
+        }
+    } catch (err) {
+        console.error("Error toggling review status:", err);
+        alert("Failed to connect to server.");
+    }
+}
+
+async function deleteAdminReview(reviewId) {
+    if (!confirm("Are you sure you want to permanently delete this review?")) return;
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/reviews/${reviewId}`, {
+            method: 'DELETE'
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message);
+            fetchAdminReviews();
+        } else {
+            alert(data.message || "Failed to delete review.");
+        }
+    } catch (err) {
+        console.error("Error deleting review:", err);
+        alert("Failed to connect to server.");
+    }
+}
+
+window.togglePublishReview = togglePublishReview;
+window.deleteAdminReview = deleteAdminReview;

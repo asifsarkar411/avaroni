@@ -961,6 +961,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load new arrivals on homepage
     loadNewArrivals();
 
+    // Load published customer reviews slider on homepage
+    loadPublishedReviewsSlider();
+
     // Initialize search functionality
     initSearch();
 
@@ -1417,6 +1420,51 @@ async function openProductModal(productId) {
             }
         }
 
+        // Setup Write a Review & Rating form for this product
+        const modalInfo = document.querySelector('.product-modal-info');
+        if (modalInfo) {
+            let reviewBox = document.getElementById('product-review-form-box');
+            if (!reviewBox) {
+                reviewBox = document.createElement('div');
+                reviewBox.id = 'product-review-form-box';
+                reviewBox.className = 'product-review-form-box';
+                reviewBox.style.cssText = 'margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: left;';
+                modalInfo.appendChild(reviewBox);
+            }
+            reviewBox.innerHTML = `
+                <h4 style="margin-bottom: 8px; font-size: 14px; color: #333;"><i class="fas fa-star" style="color:#ffc107;"></i> Write a Review & Rating</h4>
+                <form id="modal-review-form">
+                    <input type="hidden" id="review-modal-prod-id" value="${product._id}">
+                    <input type="hidden" id="review-modal-prod-name" value="${product.name}">
+                    <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; font-weight: 600; color: #555;">Rating:</span>
+                        <span class="star-rating-selector" id="modal-star-selector" style="font-size: 20px; color: #ffc107; cursor: pointer;">
+                            <i class="fas fa-star" data-rating="1"></i>
+                            <i class="fas fa-star" data-rating="2"></i>
+                            <i class="fas fa-star" data-rating="3"></i>
+                            <i class="fas fa-star" data-rating="4"></i>
+                            <i class="fas fa-star" data-rating="5"></i>
+                        </span>
+                        <input type="hidden" id="modal-review-rating-val" value="5">
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <input type="text" id="modal-review-name" placeholder="Your Name" required style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <textarea id="modal-review-comment" placeholder="Write your review comment..." required rows="2" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; resize: vertical;"></textarea>
+                    </div>
+                    <button type="submit" class="btn" style="padding: 7px 15px; font-size: 12px; background: #e60050; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;"><i class="fas fa-paper-plane"></i> Submit Review for Approval</button>
+                </form>
+            `;
+
+            initStarSelectorLogic();
+
+            const revForm = document.getElementById('modal-review-form');
+            if (revForm) {
+                revForm.onsubmit = handleModalReviewSubmit;
+            }
+        }
+
     } catch (error) {
         console.error("Error loading product details:", error);
         alert("Failed to load product details.");
@@ -1623,3 +1671,107 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+
+// ==========================================
+// STAR RATING & CUSTOMER REVIEW HANDLERS
+// ==========================================
+function initStarSelectorLogic() {
+    const selector = document.getElementById('modal-star-selector');
+    if (!selector) return;
+    const stars = selector.querySelectorAll('i');
+    const valInput = document.getElementById('modal-review-rating-val');
+
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const rating = parseInt(star.getAttribute('data-rating'));
+            valInput.value = rating;
+            stars.forEach((s, idx) => {
+                if (idx < rating) {
+                    s.className = "fas fa-star";
+                } else {
+                    s.className = "far fa-star";
+                }
+            });
+        });
+    });
+}
+
+async function handleModalReviewSubmit(e) {
+    e.preventDefault();
+    const productId = document.getElementById('review-modal-prod-id').value;
+    const productName = document.getElementById('review-modal-prod-name').value;
+    const rating = document.getElementById('modal-review-rating-val').value;
+    const reviewerName = document.getElementById('modal-review-name').value.trim();
+    const comment = document.getElementById('modal-review-comment').value.trim();
+
+    if (!reviewerName || !comment) {
+        alert("Please enter your name and comment.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, productName, reviewerName, rating, comment })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || "Thank you! Your review has been submitted for admin approval.");
+            document.getElementById('modal-review-name').value = '';
+            document.getElementById('modal-review-comment').value = '';
+        } else {
+            alert(data.message || "Failed to submit review.");
+        }
+    } catch (err) {
+        console.error("Error submitting review:", err);
+        alert("Failed to submit review.");
+    }
+}
+
+async function loadPublishedReviewsSlider() {
+    const section = document.getElementById('reviews-slider-section');
+    const container = document.getElementById('reviews-slides-container');
+    if (!section || !container) return;
+
+    try {
+        const response = await fetch('/api/reviews/published');
+        const data = await response.json();
+
+        if (!data.success || !data.reviews || data.reviews.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        container.innerHTML = '';
+        data.reviews.forEach(rev => {
+            const stars = '⭐'.repeat(rev.rating);
+            container.innerHTML += `
+                <div class="review-slide-card">
+                    <div class="review-stars">${stars}</div>
+                    <p class="review-comment">"${(rev.comment || '').replace(/"/g, '&quot;')}"</p>
+                    <div class="review-author">
+                        <strong>${rev.reviewerName}</strong>
+                        <span class="review-product-tag"><i class="fas fa-shopping-bag"></i> ${rev.productName || 'Verified Buyer'}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        section.style.display = 'block';
+
+        // Auto-slider animation for reviews
+        if (data.reviews.length > 1) {
+            let currentIdx = 0;
+            const totalSlides = data.reviews.length;
+            setInterval(() => {
+                currentIdx = (currentIdx + 1) % totalSlides;
+                container.style.transform = `translateX(-${currentIdx * 100}%)`;
+            }, 5000);
+        }
+
+    } catch (err) {
+        console.error("Error loading published reviews slider:", err);
+        section.style.display = 'none';
+    }
+}
