@@ -1894,8 +1894,14 @@ async function loadPublishedReviewsSlider() {
 (function initFlashSaleBanner() {
     let tickInterval = null;
 
+    function adjustBannerSpacing(banner) {
+        const h = banner.offsetHeight;
+        document.body.style.paddingTop = h + 'px';
+        const navbar = document.querySelector('.navbar');
+        if (navbar) navbar.style.top = h + 'px';
+    }
+
     async function loadFlashSaleBanner() {
-        // Don't show on admin pages
         if (window.location.pathname.includes('admin')) return;
 
         try {
@@ -1907,9 +1913,8 @@ async function loadPublishedReviewsSlider() {
             if (!fs.isActive) return;
 
             const endTime = new Date(fs.endTime).getTime();
-            if (endTime <= Date.now()) return; // Already expired, don't show
+            if (endTime <= Date.now()) return;
 
-            // Build banner HTML
             const banner = document.createElement('div');
             banner.id = 'flash-sale-banner';
             banner.innerHTML = `
@@ -1938,32 +1943,15 @@ async function loadPublishedReviewsSlider() {
                     <a href="${escapeHTML(fs.buttonLink || '#')}" class="flash-shop-btn">
                         ${escapeHTML(fs.buttonText || 'Shop Now')} <i class="fas fa-arrow-right"></i>
                     </a>
-                    <button class="flash-close-btn" aria-label="Close sale banner" title="Dismiss">✕</button>
                 </div>
             `;
 
             document.body.prepend(banner);
             document.body.classList.add('has-flash-banner');
 
-            // Close button
-            banner.querySelector('.flash-close-btn').addEventListener('click', () => {
-                banner.style.animation = 'flashBannerSlideDown 0.35s cubic-bezier(0.16,1,0.3,1) reverse both';
-                setTimeout(() => {
-                    banner.remove();
-                    document.body.classList.remove('has-flash-banner');
-                }, 350);
-                if (tickInterval) clearInterval(tickInterval);
-                // Remember dismissal for 1 hour in sessionStorage
-                sessionStorage.setItem('flashSaleDismissed', Date.now().toString());
-            });
-
-            // Respect dismissal
-            const dismissed = sessionStorage.getItem('flashSaleDismissed');
-            if (dismissed && (Date.now() - parseInt(dismissed)) < 3600000) {
-                banner.remove();
-                document.body.classList.remove('has-flash-banner');
-                return;
-            }
+            // Dynamically measure banner height and push content down
+            requestAnimationFrame(() => adjustBannerSpacing(banner));
+            window.addEventListener('resize', () => adjustBannerSpacing(banner));
 
             // Tick countdown
             function tick() {
@@ -1974,10 +1962,12 @@ async function loadPublishedReviewsSlider() {
                     document.getElementById('fs-secs').textContent  = '00';
                     banner.classList.add('expired');
                     clearInterval(tickInterval);
-                    // Auto-hide 3 seconds after expiry
                     setTimeout(() => {
                         banner.remove();
                         document.body.classList.remove('has-flash-banner');
+                        document.body.style.paddingTop = '';
+                        const navbar = document.querySelector('.navbar');
+                        if (navbar) navbar.style.top = '';
                     }, 3000);
                     return;
                 }
@@ -1997,7 +1987,6 @@ async function loadPublishedReviewsSlider() {
         }
     }
 
-    // Run after DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', loadFlashSaleBanner);
     } else {
