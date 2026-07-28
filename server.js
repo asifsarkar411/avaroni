@@ -1607,10 +1607,45 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Track Order API (Public - Search by orderNumber or MongoDB _id)
+app.get('/api/orders/track/:orderId', async (req, res) => {
+    try {
+        const queryStr = (req.params.orderId || '').trim();
+        if (!queryStr) {
+            return res.status(400).json({ success: false, message: "Order ID is required." });
+        }
+
+        // Try exact match or regex match on orderNumber
+        let order = await Order.findOne({ 
+            orderNumber: new RegExp(`^${queryStr.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') 
+        });
+
+        // Fallback: search by Mongo ObjectId
+        if (!order && mongoose.Types.ObjectId.isValid(queryStr)) {
+            order = await Order.findById(queryStr);
+        }
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found. Please check your Order ID and try again." });
+        }
+
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error("Track Order Error:", error);
+        res.status(500).json({ success: false, message: "Server error tracking order." });
+    }
+});
+
 // Get Order by Order Number (for invoice generation)
 app.get('/api/orders/:orderNumber', async (req, res) => {
     try {
-        const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+        const queryStr = (req.params.orderNumber || '').trim();
+        let order = await Order.findOne({ 
+            orderNumber: new RegExp(`^${queryStr.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') 
+        });
+        if (!order && mongoose.Types.ObjectId.isValid(queryStr)) {
+            order = await Order.findById(queryStr);
+        }
         if (!order) return res.status(404).json({ success: false, message: "Order not found" });
         res.json({ success: true, order });
     } catch (error) {

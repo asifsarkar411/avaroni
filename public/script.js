@@ -591,6 +591,7 @@ sidebar.appendChild(headerDiv);
             a.innerHTML = `<i class="${iconClass}"></i> ${text}`;
             return a;
         };
+        footerLinks.push(createSidebarLink('track-order.html', 'fas fa-truck', 'Track Order'));
         footerLinks.push(createSidebarLink('faq.html', 'fas fa-question-circle', 'FAQ'));
         footerLinks.push(createSidebarLink('blog.html', 'fas fa-newspaper', 'Blog'));
         footerLinks.push(createSidebarLink('sitemap.html', 'fas fa-sitemap', 'Sitemap'));
