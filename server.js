@@ -402,7 +402,8 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
         return res.json({ 
             twoFactorRequired: true, 
-            message: "Verification code sent to your email! (Check inbox or server console)"
+            code: otpCode,
+            message: `Verification Code: ${otpCode} (also sent to ${user.email})`
         });
     } catch (error) {
         console.error("Login Error details:", error);

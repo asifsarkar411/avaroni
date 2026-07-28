@@ -110,9 +110,12 @@ if (loginForm) {
                     showToast(data.message || "Code sent to your email!", 'success');
                     if (otpGroup) otpGroup.style.display = 'block';
                     if (otpInput) {
+                        if (data.code) otpInput.value = data.code;
                         otpInput.required = true;
                         otpInput.focus();
                     }
+                    const submitBtn = loginForm.querySelector('button[type="submit"]');
+                    if (submitBtn) submitBtn.innerText = "Verify & Enter Dashboard";
                 } else {
                     showToast(data.message || "Invalid email or password", 'error');
                 }
