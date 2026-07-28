@@ -36,6 +36,7 @@ const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
 const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
 const Review = require('./models/Review');               // Customer Reviews Model
+const FlashSale = require('./models/FlashSale');           // Flash Sale Sticky Countdown Model
 
 // ==========================================
 // STARTUP ENVIRONMENT VARIABLE GUARD
@@ -689,6 +690,53 @@ app.post('/api/promocodes/validate', async (req, res) => {
     } catch (error) {
         console.error("Validate Promo Code Error:", error);
         res.status(500).json({ success: false, message: "Validation failed" });
+    }
+});
+
+// ==========================================
+// ⚡ FLASH SALE COUNTDOWN BANNER ROUTES
+// ==========================================
+
+// 1. Get Flash Sale Banner Config (Public)
+app.get('/api/flash-sale', async (req, res) => {
+    try {
+        const flashSale = await FlashSale.findOne().sort({ _id: -1 });
+        res.json({ success: true, flashSale });
+    } catch (error) {
+        console.error("Get Flash Sale Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load flash sale banner" });
+    }
+});
+
+// 2. Save / Update Flash Sale Banner Config (Admin)
+app.post('/api/admin/flash-sale', verifyAdminToken, async (req, res) => {
+    try {
+        const { title, subtitle, buttonText, buttonLink, endTime, isActive, bgColor, textColor, accentColor } = req.body;
+        
+        if (!endTime) {
+            return res.status(400).json({ success: false, message: "Countdown End Time is required." });
+        }
+
+        let flashSale = await FlashSale.findOne().sort({ _id: -1 });
+        if (!flashSale) {
+            flashSale = new FlashSale();
+        }
+
+        flashSale.title = title ? title.trim() : "⚡ Flash Sale Ends In:";
+        flashSale.subtitle = subtitle ? subtitle.trim() : "";
+        flashSale.buttonText = buttonText ? buttonText.trim() : "Shop Now";
+        flashSale.buttonLink = buttonLink ? buttonLink.trim() : "index.html#products";
+        flashSale.endTime = new Date(endTime);
+        flashSale.isActive = isActive !== undefined ? Boolean(isActive) : true;
+        flashSale.bgColor = bgColor || "#111111";
+        flashSale.textColor = textColor || "#ffffff";
+        flashSale.accentColor = accentColor || "#e60050";
+
+        await flashSale.save();
+        res.json({ success: true, message: "Flash sale countdown banner updated successfully!", flashSale });
+    } catch (error) {
+        console.error("Update Flash Sale Error:", error);
+        res.status(500).json({ success: false, message: "Failed to save flash sale banner config." });
     }
 });
 

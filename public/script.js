@@ -1886,3 +1886,121 @@ async function loadPublishedReviewsSlider() {
         section.style.display = 'none';
     }
 }
+
+// =============================================
+// ⚡ FLASH SALE STICKY COUNTDOWN BANNER
+// =============================================
+
+(function initFlashSaleBanner() {
+    let tickInterval = null;
+
+    async function loadFlashSaleBanner() {
+        // Don't show on admin pages
+        if (window.location.pathname.includes('admin')) return;
+
+        try {
+            const res = await fetch('/api/flash-sale');
+            const data = await res.json();
+            if (!data.success || !data.flashSale) return;
+
+            const fs = data.flashSale;
+            if (!fs.isActive) return;
+
+            const endTime = new Date(fs.endTime).getTime();
+            if (endTime <= Date.now()) return; // Already expired, don't show
+
+            // Build banner HTML
+            const banner = document.createElement('div');
+            banner.id = 'flash-sale-banner';
+            banner.innerHTML = `
+                <div class="flash-left">
+                    <span class="flash-icon">⚡</span>
+                    <span class="flash-title">${escapeHTML(fs.title)}</span>
+                    <div class="flash-timer" id="fs-timer">
+                        <div style="display:flex;flex-direction:column;align-items:center">
+                            <span class="timer-chip" id="fs-hours">00</span>
+                            <span class="timer-label">hrs</span>
+                        </div>
+                        <span class="colon">:</span>
+                        <div style="display:flex;flex-direction:column;align-items:center">
+                            <span class="timer-chip" id="fs-mins">00</span>
+                            <span class="timer-label">min</span>
+                        </div>
+                        <span class="colon">:</span>
+                        <div style="display:flex;flex-direction:column;align-items:center">
+                            <span class="timer-chip" id="fs-secs">00</span>
+                            <span class="timer-label">sec</span>
+                        </div>
+                    </div>
+                    ${fs.subtitle ? `<span class="flash-subtitle">— ${escapeHTML(fs.subtitle)}</span>` : ''}
+                </div>
+                <div class="flash-right">
+                    <a href="${escapeHTML(fs.buttonLink || '#')}" class="flash-shop-btn">
+                        ${escapeHTML(fs.buttonText || 'Shop Now')} <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <button class="flash-close-btn" aria-label="Close sale banner" title="Dismiss">✕</button>
+                </div>
+            `;
+
+            document.body.prepend(banner);
+            document.body.classList.add('has-flash-banner');
+
+            // Close button
+            banner.querySelector('.flash-close-btn').addEventListener('click', () => {
+                banner.style.animation = 'flashBannerSlideDown 0.35s cubic-bezier(0.16,1,0.3,1) reverse both';
+                setTimeout(() => {
+                    banner.remove();
+                    document.body.classList.remove('has-flash-banner');
+                }, 350);
+                if (tickInterval) clearInterval(tickInterval);
+                // Remember dismissal for 1 hour in sessionStorage
+                sessionStorage.setItem('flashSaleDismissed', Date.now().toString());
+            });
+
+            // Respect dismissal
+            const dismissed = sessionStorage.getItem('flashSaleDismissed');
+            if (dismissed && (Date.now() - parseInt(dismissed)) < 3600000) {
+                banner.remove();
+                document.body.classList.remove('has-flash-banner');
+                return;
+            }
+
+            // Tick countdown
+            function tick() {
+                const diff = new Date(fs.endTime).getTime() - Date.now();
+                if (diff <= 0) {
+                    document.getElementById('fs-hours').textContent = '00';
+                    document.getElementById('fs-mins').textContent  = '00';
+                    document.getElementById('fs-secs').textContent  = '00';
+                    banner.classList.add('expired');
+                    clearInterval(tickInterval);
+                    // Auto-hide 3 seconds after expiry
+                    setTimeout(() => {
+                        banner.remove();
+                        document.body.classList.remove('has-flash-banner');
+                    }, 3000);
+                    return;
+                }
+                const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+                const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                document.getElementById('fs-hours').textContent = h;
+                document.getElementById('fs-mins').textContent  = m;
+                document.getElementById('fs-secs').textContent  = s;
+            }
+
+            tick();
+            tickInterval = setInterval(tick, 1000);
+
+        } catch (err) {
+            console.warn('Flash sale banner: could not load config.', err);
+        }
+    }
+
+    // Run after DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadFlashSaleBanner);
+    } else {
+        loadFlashSaleBanner();
+    }
+})();

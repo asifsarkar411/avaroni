@@ -472,6 +472,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
+        if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
         titleElement.innerText = cleanTitle;
     }
@@ -488,6 +489,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-reviews') fetchAdminReviews();
+    if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'admin-settings') initSettingsTab();
 }
 
@@ -1969,3 +1971,160 @@ async function deleteUserAccess(userId) {
 }
 
 window.deleteUserAccess = deleteUserAccess;
+
+// ==========================================
+// ⚡ FLASH SALE COUNTDOWN BANNER — ADMIN TAB
+// ==========================================
+
+let flashSalePreviewInterval = null;
+
+async function initFlashSaleTab() {
+    // Load existing config from server
+    try {
+        const res = await fetch('/api/flash-sale');
+        const data = await res.json();
+        if (data.success && data.flashSale) {
+            const fs = data.flashSale;
+            document.getElementById('flash-title').value = fs.title || '';
+            document.getElementById('flash-subtitle').value = fs.subtitle || '';
+            document.getElementById('flash-button-text').value = fs.buttonText || '';
+            document.getElementById('flash-button-link').value = fs.buttonLink || '';
+            document.getElementById('flash-is-active').checked = !!fs.isActive;
+            updateFlashStatusLabel(!!fs.isActive);
+
+            // Convert stored UTC date to local datetime-local format
+            if (fs.endTime) {
+                const d = new Date(fs.endTime);
+                const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                    .toISOString().slice(0, 16);
+                document.getElementById('flash-end-time').value = local;
+            }
+            updateFlashPreview();
+        }
+    } catch (err) {
+        console.error('Flash sale load error:', err);
+    }
+
+    // Live-update preview whenever inputs change
+    ['flash-title','flash-subtitle','flash-button-text','flash-button-link','flash-end-time']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateFlashPreview);
+        });
+
+    const checkbox = document.getElementById('flash-is-active');
+    if (checkbox) {
+        checkbox.addEventListener('change', () => updateFlashStatusLabel(checkbox.checked));
+    }
+
+    // Start preview timer tick
+    if (flashSalePreviewInterval) clearInterval(flashSalePreviewInterval);
+    flashSalePreviewInterval = setInterval(updatePreviewTimerTick, 1000);
+
+    // Form submit
+    const form = document.getElementById('flash-sale-form');
+    if (form && !form.dataset.listenerAttached) {
+        form.dataset.listenerAttached = 'true';
+        form.addEventListener('submit', handleFlashSaleSubmit);
+    }
+}
+
+function updateFlashStatusLabel(active) {
+    const label = document.getElementById('flash-status-label');
+    if (!label) return;
+    if (active) {
+        label.textContent = 'Banner Active (Visible to Customers)';
+        label.style.color = '#28a745';
+    } else {
+        label.textContent = 'Banner Hidden (Inactive)';
+        label.style.color = '#999';
+    }
+}
+
+function updateFlashPreview() {
+    const title    = document.getElementById('flash-title')?.value || '⚡ Flash Sale Ends In:';
+    const subtitle = document.getElementById('flash-subtitle')?.value || '';
+    const btnText  = document.getElementById('flash-button-text')?.value || 'Shop Now';
+    const btnLink  = document.getElementById('flash-button-link')?.value || '#';
+
+    const previewTitle = document.getElementById('preview-title');
+    const previewSubtitle = document.getElementById('preview-subtitle');
+    const previewBtn = document.getElementById('preview-btn');
+
+    if (previewTitle) previewTitle.textContent = title;
+    if (previewSubtitle) {
+        previewSubtitle.textContent = subtitle;
+        previewSubtitle.style.display = subtitle ? 'inline' : 'none';
+    }
+    if (previewBtn) {
+        previewBtn.textContent = '';
+        previewBtn.innerHTML = btnText + ' <i class="fas fa-arrow-right" style="margin-left:5px;"></i>';
+        previewBtn.href = btnLink;
+    }
+    updatePreviewTimerTick();
+}
+
+function updatePreviewTimerTick() {
+    const endInput = document.getElementById('flash-end-time');
+    const timerEl = document.getElementById('preview-timer');
+    if (!endInput || !timerEl) return;
+
+    const endTime = endInput.value ? new Date(endInput.value).getTime() : 0;
+    const now = Date.now();
+    const diff = endTime - now;
+
+    if (!endInput.value || diff <= 0) {
+        timerEl.innerHTML = '<span style="color:#ff3b70;">00</span>h : <span style="color:#ff3b70;">00</span>m : <span style="color:#ff3b70;">00</span>s';
+        return;
+    }
+
+    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    timerEl.innerHTML = `<span style="color:#ff3b70;">${h}</span>h : <span style="color:#ff3b70;">${m}</span>m : <span style="color:#ff3b70;">${s}</span>s`;
+}
+
+async function handleFlashSaleSubmit(e) {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    const endTimeLocal = document.getElementById('flash-end-time').value;
+    if (!endTimeLocal) {
+        alert('Please set a Countdown End Date & Time.');
+        return;
+    }
+
+    const payload = {
+        title:       document.getElementById('flash-title').value.trim() || '⚡ Flash Sale Ends In:',
+        subtitle:    document.getElementById('flash-subtitle').value.trim(),
+        buttonText:  document.getElementById('flash-button-text').value.trim() || 'Shop Now',
+        buttonLink:  document.getElementById('flash-button-link').value.trim() || 'index.html#products',
+        endTime:     new Date(endTimeLocal).toISOString(),
+        isActive:    document.getElementById('flash-is-active').checked,
+        bgColor:     '#111111',
+        textColor:   '#ffffff',
+        accentColor: '#e60050'
+    };
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+
+    try {
+        const res = await fetch('/api/admin/flash-sale', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert('✅ Flash sale banner saved and published!');
+        } else {
+            alert('❌ ' + (data.message || 'Failed to save flash sale banner.'));
+        }
+    } catch (err) {
+        console.error('Flash sale save error:', err);
+        alert('Server connection error.');
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Publish Flash Sale Banner'; }
+    }
+}
