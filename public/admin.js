@@ -694,6 +694,9 @@ async function handleAddProduct(e) {
 // ORDER MANAGEMENT
 // ==========================================
 
+let allAdminOrders = [];
+let activeOrderFilterStatus = 'ALL';
+
 async function fetchOrders() {
     try {
         const response = await fetch('/api/admin/orders', {
@@ -704,66 +707,177 @@ async function fetchOrders() {
         if (!tbody) return;
         
         if (response.status === 401 || response.status === 403) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Unauthorized: Please log out and log back in.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:red;">Unauthorized: Please log out and log back in.</td></tr>';
             return;
         }
 
         const data = await response.json();
-        tbody.innerHTML = '';
+        allAdminOrders = data.orders || [];
 
-        if (!data.orders || data.orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No orders found.</td></tr>';
-            return;
-        }
+        // Update counts
+        updateOrderCounts(allAdminOrders);
 
-        data.orders.forEach(order => {
-            const date = new Date(order.orderDate).toLocaleString();
-            const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
-            
-            // Fallback to "N/A" if orderNumber wasn't generated for older orders
-            const displayOrderNum = order.orderNumber || 'N/A'; 
-            const orderStatus = order.status || 'Pending';
+        // Attach listeners once
+        initOrderFilterListeners();
 
-            let statusBadge = `<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending</span>`;
-            if (orderStatus === 'Processing') {
-                statusBadge = `<span style="background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Processing</span>`;
-            } else if (orderStatus === 'Approved') {
-                statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
-            } else if (orderStatus === 'Delivered') {
-                statusBadge = `<span style="background:#20c997; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Delivered</span>`;
-            } else if (orderStatus === 'Cancelled') {
-                statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
-            }
+        // Render filtered view
+        renderFilteredOrders();
 
-            const approveBtnDisabled = orderStatus === 'Approved' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-            const processBtnDisabled = orderStatus === 'Processing' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#17a2b8; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-            const deliverBtnDisabled = orderStatus === 'Delivered' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#20c997; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-            const cancelBtnDisabled = orderStatus === 'Cancelled' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${date}</td>
-                    <td style="color: #007bff; font-weight: bold;">${escapeHTML(displayOrderNum)}</td> 
-                    <td><strong>${escapeHTML(order.customerName)}</strong></td>
-                    <td>${escapeHTML(order.phone)}<br>${escapeHTML(order.email)}</td>
-                    <td>${escapeHTML(order.address)}</td>
-                    <td><strong>${escapeHTML(order.transactionId || 'N/A')}</strong></td>
-                    <td style="color:#111111; font-weight:bold;">৳${order.totalAmount}</td>
-                    <td class="items-list">${itemsList}</td>
-                    <td>${statusBadge}</td>
-                    <td style="white-space: nowrap;">
-                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-cog"></i> Process</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Delivered')" ${deliverBtnDisabled} title="Mark as Delivered"><i class="fas fa-box-open"></i> Delivered</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
-                    </td>
-                </tr>
-            `;
-        });
     } catch (error) {
         console.error("Error fetching orders:", error);
     }
+}
+
+function updateOrderCounts(orders) {
+    const counts = { ALL: orders.length, Pending: 0, Approved: 0, Processing: 0, Delivered: 0, Cancelled: 0 };
+    orders.forEach(o => {
+        const st = o.status || 'Pending';
+        if (counts[st] !== undefined) counts[st]++;
+    });
+
+    ['all','pending','approved','processing','delivered','cancelled'].forEach(key => {
+        const el = document.getElementById(`cnt-${key}`);
+        if (el) el.textContent = counts[key === 'all' ? 'ALL' : key.charAt(0).toUpperCase() + key.slice(1)];
+    });
+}
+
+function initOrderFilterListeners() {
+    const searchInput = document.getElementById('order-search-input');
+    if (searchInput && !searchInput.dataset.listener) {
+        searchInput.dataset.listener = 'true';
+        searchInput.addEventListener('input', () => renderFilteredOrders());
+    }
+
+    const filterBtns = document.querySelectorAll('.order-filter-btn');
+    filterBtns.forEach(btn => {
+        if (!btn.dataset.listener) {
+            btn.dataset.listener = 'true';
+            btn.addEventListener('click', (e) => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = b.dataset.origBg || '';
+                    b.style.color = b.dataset.origColor || '';
+                });
+                btn.classList.add('active');
+                activeOrderFilterStatus = btn.dataset.status || 'ALL';
+                renderFilteredOrders();
+            });
+        }
+    });
+}
+
+function renderFilteredOrders() {
+    const tbody = document.getElementById('orders-table-body');
+    const cardsContainer = document.getElementById('mobile-orders-cards');
+    const searchInput = document.getElementById('order-search-input');
+    const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+    let filtered = allAdminOrders;
+
+    if (activeOrderFilterStatus !== 'ALL') {
+        filtered = filtered.filter(o => (o.status || 'Pending').toLowerCase() === activeOrderFilterStatus.toLowerCase());
+    }
+
+    if (query) {
+        filtered = filtered.filter(o => {
+            const num = (o.orderNumber || '').toLowerCase();
+            const name = (o.customerName || '').toLowerCase();
+            const phone = (o.phone || '').toLowerCase();
+            const email = (o.email || '').toLowerCase();
+            const trx = (o.transactionId || '').toLowerCase();
+            return num.includes(query) || name.includes(query) || phone.includes(query) || email.includes(query) || trx.includes(query);
+        });
+    }
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (cardsContainer) cardsContainer.innerHTML = '';
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding: 20px;">No matching orders found.</td></tr>';
+        if (cardsContainer) cardsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">No matching orders found.</div>';
+        return;
+    }
+
+    filtered.forEach(order => {
+        const date = new Date(order.orderDate).toLocaleString();
+        const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
+        const displayOrderNum = order.orderNumber || 'N/A'; 
+        const orderStatus = order.status || 'Pending';
+
+        let statusBadge = `<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending</span>`;
+        if (orderStatus === 'Processing') {
+            statusBadge = `<span style="background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Processing</span>`;
+        } else if (orderStatus === 'Approved') {
+            statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
+        } else if (orderStatus === 'Delivered') {
+            statusBadge = `<span style="background:#20c997; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Delivered</span>`;
+        } else if (orderStatus === 'Cancelled') {
+            statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
+        }
+
+        const approveBtnDisabled = orderStatus === 'Approved' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+        const processBtnDisabled = orderStatus === 'Processing' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#17a2b8; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+        const deliverBtnDisabled = orderStatus === 'Delivered' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#20c997; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+        const cancelBtnDisabled = orderStatus === 'Cancelled' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+
+        // 1. Desktop Table Row
+        tbody.innerHTML += `
+            <tr>
+                <td>${date}</td>
+                <td style="color: #007bff; font-weight: bold;">${escapeHTML(displayOrderNum)}</td> 
+                <td><strong>${escapeHTML(order.customerName)}</strong></td>
+                <td>${escapeHTML(order.phone)}<br>${escapeHTML(order.email)}</td>
+                <td>${escapeHTML(order.address)}</td>
+                <td><strong>${escapeHTML(order.transactionId || 'N/A')}</strong></td>
+                <td style="color:#111111; font-weight:bold;">৳${order.totalAmount}</td>
+                <td class="items-list">${itemsList}</td>
+                <td>${statusBadge}</td>
+                <td style="white-space: nowrap;">
+                    <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
+                    <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
+                    <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-cog"></i> Process</button>
+                    <button onclick="updateOrderStatus('${order._id}', 'Delivered')" ${deliverBtnDisabled} title="Mark as Delivered"><i class="fas fa-box-open"></i> Delivered</button>
+                    <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
+                </td>
+            </tr>
+        `;
+
+        // 2. Mobile Responsive Card
+        if (cardsContainer) {
+            cardsContainer.innerHTML += `
+                <div class="mobile-order-card" style="background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <div>
+                            <span style="font-size: 11px; color: #888; text-transform: uppercase;">Order ID</span>
+                            <div style="font-weight: 800; color: #007bff; font-size: 15px;">${escapeHTML(displayOrderNum)}</div>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <div style="font-size: 13px; color: #555; margin-bottom: 8px;">
+                        <strong>${escapeHTML(order.customerName)}</strong> &bull; ${escapeHTML(order.phone)}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
+                        <i class="fas fa-map-marker-alt" style="color: #e60050;"></i> ${escapeHTML(order.address)}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 13px;">
+                        <span>Payment: <strong>${escapeHTML(order.paymentMethod === 'cod' ? 'COD' : 'bKash')}</strong> (TxID: ${escapeHTML(order.transactionId || 'N/A')})</span>
+                        <span style="font-size: 16px; font-weight: 800; color: #e60050;">৳${order.totalAmount}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #444; margin-bottom: 12px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
+                        <strong>Items:</strong> ${itemsList}
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:11px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer;" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve"><i class="fas fa-check"></i> Approve</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Process"><i class="fas fa-cog"></i> Process</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Delivered')" ${deliverBtnDisabled} title="Delivered"><i class="fas fa-box-open"></i> Delivered</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+    });
 }
 
 async function updateOrderStatus(orderId, newStatus) {

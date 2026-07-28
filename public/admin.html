@@ -782,13 +782,31 @@
                     </div>
                 </div>
 
-                <!-- 2. CUSTOMER ORDERS TAB -->
+                <!-- 2. CUSTOMER ORDERS TAB (DYNAMIC & RESPONSIVE FOR ALL DEVICES) -->
                 <div id="orders-tab" class="tab-content">
                     <div class="panel-box">
-                        <div class="panel-header">
-                            <h2>All Customer Orders</h2>
+                        <div class="panel-header" style="flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center;">
+                            <h2><i class="fas fa-shopping-bag" style="color: #e60050;"></i> All Customer Orders</h2>
+                            
+                            <!-- Search Input -->
+                            <div style="position: relative; width: 100%; max-width: 380px;">
+                                <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+                                <input type="text" id="order-search-input" placeholder="Search by Order ID, Name, Phone, Email, TrxID..." style="width: 100%; padding: 10px 14px 10px 38px; border-radius: 30px; border: 1.5px solid #ddd; outline: none; font-size: 14px; transition: border-color 0.2s;">
+                            </div>
                         </div>
-                        <div class="table-responsive">
+
+                        <!-- Status Filter Pills -->
+                        <div class="order-filter-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 15px 0 20px 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                            <button class="order-filter-btn active" data-status="ALL" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #111; background: #111; color: white; font-weight: 700; font-size: 13px; cursor: pointer;">All (<span id="cnt-all">0</span>)</button>
+                            <button class="order-filter-btn" data-status="Pending" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #ffeeba; background: #fff3cd; color: #856404; font-weight: 700; font-size: 13px; cursor: pointer;">Pending (<span id="cnt-pending">0</span>)</button>
+                            <button class="order-filter-btn" data-status="Approved" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #c3e6cb; background: #d4edda; color: #155724; font-weight: 700; font-size: 13px; cursor: pointer;">Approved (<span id="cnt-approved">0</span>)</button>
+                            <button class="order-filter-btn" data-status="Processing" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #b8daff; background: #d1ecf1; color: #0c5460; font-weight: 700; font-size: 13px; cursor: pointer;">Processing (<span id="cnt-processing">0</span>)</button>
+                            <button class="order-filter-btn" data-status="Delivered" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #b2f2bb; background: #e6fcf5; color: #0ca678; font-weight: 700; font-size: 13px; cursor: pointer;">Delivered (<span id="cnt-delivered">0</span>)</button>
+                            <button class="order-filter-btn" data-status="Cancelled" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #f5c6cb; background: #f8d7da; color: #721c24; font-weight: 700; font-size: 13px; cursor: pointer;">Cancelled (<span id="cnt-cancelled">0</span>)</button>
+                        </div>
+
+                        <!-- Desktop Table View -->
+                        <div class="table-responsive desktop-orders-table">
                             <table>
                                 <thead>
                                     <tr>
@@ -807,6 +825,10 @@
                                 <tbody id="orders-table-body">
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Mobile Responsive Order Cards View -->
+                        <div id="mobile-orders-cards" class="mobile-orders-grid" style="display: none;">
                         </div>
                     </div>
                 </div>

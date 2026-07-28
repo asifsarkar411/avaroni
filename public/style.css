@@ -2405,3 +2405,39 @@ body.no-scroll #flash-sale-banner,
 .sidebar.active ~ #flash-sale-banner {
     display: none !important;
 }
+
+/* =============================================
+   🛒 RESPONSIVE & DYNAMIC ADMIN CUSTOMER ORDERS
+   ============================================= */
+
+@media (max-width: 992px) {
+    .desktop-orders-table {
+        display: none !important;
+    }
+    #mobile-orders-cards {
+        display: block !important;
+    }
+}
+
+@media (min-width: 993px) {
+    .desktop-orders-table {
+        display: block !important;
+    }
+    #mobile-orders-cards {
+        display: none !important;
+    }
+}
+
+.order-filter-btn {
+    transition: all 0.2s ease;
+}
+
+.order-filter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.order-filter-btn.active {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transform: scale(1.03);
+}
