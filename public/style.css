@@ -615,6 +615,69 @@ body.no-scroll {
     width: 100%;
 }
 
+.slider-card-wrapper h2,
+.slider-card-heading {
+    font-size: 28px;
+    font-weight: 800;
+    text-align: center;
+    margin: 10px auto 20px auto;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    position: relative;
+    display: table;
+    background: linear-gradient(135deg, #111111 0%, #e60050 35%, #ff1a6e 65%, #111111 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: sliderHeadingGlow 4s ease-in-out infinite;
+    filter: drop-shadow(0 2px 8px rgba(230, 0, 80, 0.2));
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.slider-card-wrapper h2:hover,
+.slider-card-heading:hover {
+    transform: scale(1.04);
+    filter: drop-shadow(0 4px 15px rgba(230, 0, 80, 0.4));
+}
+
+.slider-card-wrapper h2::after,
+.slider-card-heading::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3.5px;
+    background: linear-gradient(90deg, transparent, #e60050, #ff1a6e, #ff6ec7, transparent);
+    margin: 10px auto 0 auto;
+    border-radius: 4px;
+    animation: underlinePulse 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes sliderHeadingGlow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes underlinePulse {
+    0% {
+        width: 40px;
+        opacity: 0.6;
+        box-shadow: 0 0 4px rgba(230, 0, 80, 0.4);
+    }
+    100% {
+        width: 100px;
+        opacity: 1;
+        box-shadow: 0 0 12px rgba(230, 0, 80, 0.8);
+    }
+}
+
 /* =========================================
    Homepage Hero Slider - Fits Picture Size Exactly
 ========================================= */

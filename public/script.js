@@ -817,7 +817,7 @@ async function loadHomepageSliders() {
             // Output the proper HTML structure that matches your CSS and animation logic
             container.innerHTML += `
                 <div class="slider-card-wrapper">
-                    ${card.heading ? `<h2 style="color: #c93f8b; margin-bottom: 15px; text-align: center;">${card.heading}</h2>` : ''}
+                    ${card.heading ? `<h2 class="slider-card-heading">${escapeHTML(card.heading)}</h2>` : ''}
                     
                     <div class="hero-slider">
                         <div class="slides">
