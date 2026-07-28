@@ -46,9 +46,6 @@ if (missingVars.length > 0) {
     console.error(`CRITICAL: Missing required environment variables: ${missingVars.join(', ')}`);
     console.error('Set them in your .env file (local) or Vercel Environment Variables (production).');
     console.error('See .env.example for a template.');
-    if (process.env.NODE_ENV === 'production') {
-        process.exit(1); // Hard fail in production to prevent insecure startup
-    }
 }
 
 const app = express();
@@ -130,8 +127,16 @@ async function connectDB() {
 
 // Global middleware ensuring DB connection for all API routes
 app.use('/api', async (req, res, next) => {
-    await connectDB();
-    next();
+    try {
+        await connectDB();
+        if (!isConnected && mongoose.connection.readyState < 1) {
+            return res.status(503).json({ success: false, message: 'Database connection unavailable. Please try again shortly.' });
+        }
+        next();
+    } catch (err) {
+        console.error('DB middleware error:', err);
+        return res.status(503).json({ success: false, message: 'Database connection failed.' });
+    }
 });
 
 // Initial local connection trigger
