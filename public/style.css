@@ -2441,3 +2441,18 @@ body.no-scroll #flash-sale-banner,
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     transform: scale(1.03);
 }
+
+/* Sticky Actions column in desktop order table */
+.desktop-orders-table table th:last-child,
+.desktop-orders-table table td:last-child {
+    position: sticky;
+    right: 0;
+    background: #ffffff;
+    z-index: 4;
+    box-shadow: -6px 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.desktop-orders-table table th:last-child {
+    background: #f8f9fa;
+    z-index: 5;
+}

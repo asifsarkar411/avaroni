@@ -696,6 +696,8 @@ async function handleAddProduct(e) {
 
 let allAdminOrders = [];
 let activeOrderFilterStatus = 'ALL';
+let currentOrdersPage = 1;
+let ordersPerPage = 10;
 
 async function fetchOrders() {
     try {
@@ -745,7 +747,20 @@ function initOrderFilterListeners() {
     const searchInput = document.getElementById('order-search-input');
     if (searchInput && !searchInput.dataset.listener) {
         searchInput.dataset.listener = 'true';
-        searchInput.addEventListener('input', () => renderFilteredOrders());
+        searchInput.addEventListener('input', () => {
+            currentOrdersPage = 1;
+            renderFilteredOrders();
+        });
+    }
+
+    const perPageSelect = document.getElementById('pag-per-page');
+    if (perPageSelect && !perPageSelect.dataset.listener) {
+        perPageSelect.dataset.listener = 'true';
+        perPageSelect.addEventListener('change', (e) => {
+            ordersPerPage = parseInt(e.target.value) || 10;
+            currentOrdersPage = 1;
+            renderFilteredOrders();
+        });
     }
 
     const filterBtns = document.querySelectorAll('.order-filter-btn');
@@ -755,11 +770,10 @@ function initOrderFilterListeners() {
             btn.addEventListener('click', (e) => {
                 filterBtns.forEach(b => {
                     b.classList.remove('active');
-                    b.style.background = b.dataset.origBg || '';
-                    b.style.color = b.dataset.origColor || '';
                 });
                 btn.classList.add('active');
                 activeOrderFilterStatus = btn.dataset.status || 'ALL';
+                currentOrdersPage = 1;
                 renderFilteredOrders();
             });
         }
@@ -789,17 +803,31 @@ function renderFilteredOrders() {
         });
     }
 
+    const totalOrders = filtered.length;
+    const totalPages = Math.ceil(totalOrders / ordersPerPage) || 1;
+
+    if (currentOrdersPage > totalPages) currentOrdersPage = totalPages;
+    if (currentOrdersPage < 1) currentOrdersPage = 1;
+
+    const startIndex = (currentOrdersPage - 1) * ordersPerPage;
+    const endIndex = Math.min(startIndex + ordersPerPage, totalOrders);
+
+    const pageOrders = filtered.slice(startIndex, endIndex);
+
+    // Update Pagination Controls UI
+    updatePaginationUI(startIndex + 1, endIndex, totalOrders, totalPages);
+
     if (!tbody) return;
     tbody.innerHTML = '';
     if (cardsContainer) cardsContainer.innerHTML = '';
 
-    if (filtered.length === 0) {
+    if (pageOrders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding: 20px;">No matching orders found.</td></tr>';
         if (cardsContainer) cardsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">No matching orders found.</div>';
         return;
     }
 
-    filtered.forEach(order => {
+    pageOrders.forEach(order => {
         const date = new Date(order.orderDate).toLocaleString();
         const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
         const displayOrderNum = order.orderNumber || 'N/A'; 
@@ -878,6 +906,61 @@ function renderFilteredOrders() {
             `;
         }
     });
+}
+
+function updatePaginationUI(start, end, total, totalPages) {
+    const startEl = document.getElementById('pag-start');
+    const endEl = document.getElementById('pag-end');
+    const totalEl = document.getElementById('pag-total');
+    const buttonsContainer = document.getElementById('pag-buttons');
+
+    if (startEl) startEl.textContent = total === 0 ? 0 : start;
+    if (endEl) endEl.textContent = end;
+    if (totalEl) totalEl.textContent = total;
+
+    if (!buttonsContainer) return;
+    buttonsContainer.innerHTML = '';
+
+    if (total <= ordersPerPage) return;
+
+    // Previous Button
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = currentOrdersPage === 1;
+    prevBtn.style.cssText = 'padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px;' + (currentOrdersPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : '');
+    prevBtn.onclick = () => {
+        if (currentOrdersPage > 1) {
+            currentOrdersPage--;
+            renderFilteredOrders();
+        }
+    };
+    buttonsContainer.appendChild(prevBtn);
+
+    // Page Number Buttons
+    for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        const isActive = i === currentOrdersPage;
+        pageBtn.style.cssText = `padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid ${isActive ? '#111' : '#ccc'}; background: ${isActive ? '#111' : '#fff'}; color: ${isActive ? '#fff' : '#333'};`;
+        pageBtn.onclick = () => {
+            currentOrdersPage = i;
+            renderFilteredOrders();
+        };
+        buttonsContainer.appendChild(pageBtn);
+    }
+
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = currentOrdersPage === totalPages;
+    nextBtn.style.cssText = 'padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px;' + (currentOrdersPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : '');
+    nextBtn.onclick = () => {
+        if (currentOrdersPage < totalPages) {
+            currentOrdersPage++;
+            renderFilteredOrders();
+        }
+    };
+    buttonsContainer.appendChild(nextBtn);
 }
 
 async function updateOrderStatus(orderId, newStatus) {

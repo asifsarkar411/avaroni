@@ -830,6 +830,28 @@
                         <!-- Mobile Responsive Order Cards View -->
                         <div id="mobile-orders-cards" class="mobile-orders-grid" style="display: none;">
                         </div>
+
+                        <!-- Pagination Controls -->
+                        <div id="orders-pagination-bar" class="orders-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <div style="font-size: 13px; color: #666;">
+                                Showing <span id="pag-start" style="font-weight: 700; color: #111;">0</span> to <span id="pag-end" style="font-weight: 700; color: #111;">0</span> of <span id="pag-total" style="font-weight: 700; color: #111;">0</span> orders
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <label style="font-size: 13px; color: #666;">Per page:
+                                    <select id="pag-per-page" style="padding: 5px 10px; border-radius: 6px; border: 1px solid #ccc; background: #fff; font-size: 13px; cursor: pointer;">
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </label>
+
+                                <div id="pag-buttons" style="display: flex; gap: 4px; align-items: center;">
+                                    <!-- Page buttons populated by admin.js -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

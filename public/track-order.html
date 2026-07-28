@@ -574,27 +574,22 @@
                 // Status badge & tracker timeline
                 const status = (order.status || 'Pending').toLowerCase();
                 const badge = document.getElementById('res-status-badge');
-                badge.textContent = order.status || 'Pending';
-
-                badge.className = 'order-status-pill ';
-                // Status badge & tracker timeline
-                const status = (order.status || 'Pending').toLowerCase();
-                const badge = document.getElementById('res-status-badge');
-                badge.textContent = (order.status || 'Pending').toUpperCase();
-
-                badge.className = 'order-status-pill ';
-                if (status === 'approved') {
-                    badge.classList.add('status-approved');
-                } else if (status === 'processing') {
-                    badge.style.background = '#17a2b8';
-                    badge.style.color = '#ffffff';
-                } else if (status === 'delivered') {
-                    badge.style.background = '#20c997';
-                    badge.style.color = '#ffffff';
-                } else if (status === 'cancelled') {
-                    badge.classList.add('status-cancelled');
-                } else {
-                    badge.classList.add('status-pending');
+                if (badge) {
+                    badge.textContent = (order.status || 'Pending').toUpperCase();
+                    badge.className = 'order-status-pill ';
+                    if (status === 'approved') {
+                        badge.classList.add('status-approved');
+                    } else if (status === 'processing') {
+                        badge.style.background = '#17a2b8';
+                        badge.style.color = '#ffffff';
+                    } else if (status === 'delivered') {
+                        badge.style.background = '#20c997';
+                        badge.style.color = '#ffffff';
+                    } else if (status === 'cancelled') {
+                        badge.classList.add('status-cancelled');
+                    } else {
+                        badge.classList.add('status-pending');
+                    }
                 }
 
                 // Remove old cancelled banner if exists
