@@ -12,6 +12,17 @@ function formatImageUrl(url) {
     return clean;
 }
 
+// Global HTML Escaper function to prevent XSS attacks
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Check if user is logged in
     if (!localStorage.getItem('adminToken')) {
@@ -715,16 +726,16 @@ async function fetchOrders() {
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
-                    <td style="color: #007bff; font-weight: bold;">${displayOrderNum}</td> 
-                    <td><strong>${order.customerName}</strong></td>
-                    <td>${order.phone}<br>${order.email}</td>
-                    <td>${order.address}</td>
-                    <td><strong>${order.transactionId || 'N/A'}</strong></td>
-                    <td style="color:#e60050; font-weight:bold;">৳${order.totalAmount}</td>
+                    <td style="color: #007bff; font-weight: bold;">${escapeHTML(displayOrderNum)}</td> 
+                    <td><strong>${escapeHTML(order.customerName)}</strong></td>
+                    <td>${escapeHTML(order.phone)}<br>${escapeHTML(order.email)}</td>
+                    <td>${escapeHTML(order.address)}</td>
+                    <td><strong>${escapeHTML(order.transactionId || 'N/A')}</strong></td>
+                    <td style="color:#111111; font-weight:bold;">৳${order.totalAmount}</td>
                     <td class="items-list">${itemsList}</td>
                     <td>${statusBadge}</td>
                     <td style="white-space: nowrap;">
-                        <button onclick="downloadInvoice('${order.orderNumber}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#e60050; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
                         <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-spinner"></i> Process</button>
                         <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
                         <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
@@ -1698,10 +1709,10 @@ async function fetchAdminReviews() {
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
-                    <td><strong>${rev.productName || 'General'}</strong></td>
-                    <td>${rev.reviewerName}</td>
+                    <td><strong>${escapeHTML(rev.productName || 'General')}</strong></td>
+                    <td>${escapeHTML(rev.reviewerName)}</td>
                     <td style="font-size:14px;">${stars} (${rev.rating}/5)</td>
-                    <td style="max-width:250px; word-break:break-word;">${rev.comment}</td>
+                    <td style="max-width:250px; word-break:break-word;">${escapeHTML(rev.comment)}</td>
                     <td>${statusBadge}</td>
                     <td style="white-space:nowrap;">
                         ${publishBtn}

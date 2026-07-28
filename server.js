@@ -44,7 +44,24 @@ const app = express();
 app.use(compression()); // Enable Gzip compression to reduce network payload sizes
 
 app.use(helmet({
-    contentSecurityPolicy: false, 
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
+            imgSrc: ["'self'", "data:", "blob:", "https:"],
+            connectSrc: ["'self'", "https:"],
+            frameAncestors: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"]
+        }
+    },
+    crossOriginEmbedderPolicy: false,
+    xFrameOptions: { action: "sameorigin" },
+    xContentTypeOptions: true,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 })); 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -740,84 +757,160 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // Place an Order & Send Email Confirmation
-// 🌟 FIX: Array of routes catches BOTH /api/orders and /api/checkout just in case!
+// 🌟 FIX: Server-Side Total Recalculation & Tamper-Proof Order Placement
 app.post(['/api/orders', '/api/checkout'], async (req, res) => {
     try {
-        const { name, email, phone, address, paymentMethod, trxId, cartItems, totalAmount, discountAmount, promoCode, shippingFee } = req.body;
+        const { name, email, phone, address, paymentMethod, trxId, cartItems, promoCode, shippingFee } = req.body;
 
-        // 1. Generate Random Order Number
+        if (!name || !phone || !address) {
+            return res.status(400).json({ success: false, message: "Name, phone number, and delivery address are required." });
+        }
+
+        if (!Array.isArray(cartItems) || cartItems.length === 0) {
+            return res.status(400).json({ success: false, message: "Your shopping cart is empty." });
+        }
+
+        // 1. Recalculate Subtotal from Database Prices (Prevent Price Tampering)
+        let serverSubtotal = 0;
+        const verifiedCartItems = [];
+        const productsToUpdate = [];
+
+        for (let item of cartItems) {
+            const productId = item.id || item._id;
+            if (!productId) {
+                return res.status(400).json({ success: false, message: "Invalid product in cart." });
+            }
+
+            const dbProduct = await Product.findById(productId);
+            if (!dbProduct) {
+                return res.status(400).json({ success: false, message: `Product "${item.name || 'Item'}" no longer exists.` });
+            }
+
+            const requestedQty = Math.max(1, parseInt(item.quantity) || 1);
+            if (dbProduct.stockQuantity < requestedQty) {
+                return res.status(400).json({ success: false, message: `Insufficient stock for "${dbProduct.name}". Only ${dbProduct.stockQuantity} remaining.` });
+            }
+
+            const dbPrice = Number(dbProduct.price) || 0;
+            const itemTotal = dbPrice * requestedQty;
+            serverSubtotal += itemTotal;
+
+            verifiedCartItems.push({
+                id: dbProduct._id,
+                name: dbProduct.name,
+                price: dbPrice,
+                quantity: requestedQty,
+                image: formatImageUrl(dbProduct.imageUrl)
+            });
+
+            productsToUpdate.push({ dbProduct, requestedQty });
+        }
+
+        // 2. Validate & Recalculate Promo Code Discount on Server
+        let serverDiscount = 0;
+        let appliedPromoCode = '';
+
+        if (promoCode && typeof promoCode === 'string' && promoCode.trim()) {
+            const cleanCode = promoCode.trim();
+            const promo = await PromoCode.findOne({ 
+                code: { $regex: new RegExp(`^${cleanCode}$`, 'i') }, 
+                isActive: true 
+            });
+
+            if (promo) {
+                appliedPromoCode = promo.code;
+                if (promo.discountType === 'percentage') {
+                    serverDiscount = serverSubtotal * (Number(promo.discountValue) / 100);
+                } else if (promo.discountType === 'fixed') {
+                    serverDiscount = Number(promo.discountValue);
+                }
+                serverDiscount = Math.min(serverSubtotal, Math.max(0, serverDiscount));
+            }
+        }
+
+        // 3. Recalculate Shipping Fee on Server
+        const requestedShipping = Number(shippingFee);
+        const serverShippingFee = (requestedShipping === 80) ? 80 : 150;
+
+        // 4. Calculate Final Server Total
+        const serverTotalAmount = Math.max(0, Math.round(serverSubtotal - serverDiscount)) + serverShippingFee;
+
+        // 5. Generate Random Order Number
         const orderNumber = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
 
-        // 2. Save Order to Database
+        // 6. Save Order with Server-Calculated Totals
         const newOrder = new Order({ 
             orderNumber,
             customerName: name, 
-            email, 
+            email: email || '', 
             phone, 
             address, 
-            paymentMethod,
-            transactionId: trxId, 
-            cartItems, 
-            totalAmount,
-            discountAmount: discountAmount || 0,
-            promoCode: promoCode || '',
-            shippingFee: shippingFee || 0,
+            paymentMethod: paymentMethod || 'cod',
+            transactionId: trxId || '', 
+            cartItems: verifiedCartItems, 
+            totalAmount: serverTotalAmount,
+            discountAmount: Math.round(serverDiscount),
+            promoCode: appliedPromoCode,
+            shippingFee: serverShippingFee,
             orderDate: new Date()
         });
         await newOrder.save(); 
 
-        // 3. Update Product Inventory Stock
-        for (let item of cartItems) {
-            const productId = item.id || item._id; // 🌟 FIX: Safety fallback for frontend object changes
-            if (!productId) continue;
+        // 7. Deduct Verified Product Inventory Stock
+        for (let { dbProduct, requestedQty } of productsToUpdate) {
+            dbProduct.stockQuantity -= requestedQty;
+            if (dbProduct.stockQuantity <= 0) dbProduct.isAvailable = false; 
+            await dbProduct.save();
+        }
 
-            const product = await Product.findById(productId).catch(() => null);
-            if (product) {
-                product.stockQuantity -= item.quantity;
-                if (product.stockQuantity <= 0) product.isAvailable = false; 
-                await product.save();
+        // 8. Prepare & Send Confirmation Email
+        if (email) {
+            try {
+                const itemsListHtml = verifiedCartItems.map(item => 
+                    `<li style="margin-bottom: 5px;">${item.name} (x${item.quantity}) - ৳${item.price}</li>`
+                ).join('');
+
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: email, 
+                    subject: `Order Confirmation - ${orderNumber} | আভরণী`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+                            <h2 style="color: #111111; text-align: center;">Thank you for your order, ${name}!</h2>
+                            <p style="text-align: center; font-size: 16px;">Your order has been successfully placed and is being processed.</p>
+                            
+                            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                                <p style="margin: 0;"><strong>Order Number:</strong> <span style="font-size: 18px; color: #111111;">${orderNumber}</span></p>
+                                <p style="margin: 5px 0 0 0;"><strong>Payment Method:</strong> ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'bKash'}</p>
+                            </div>
+                            
+                            <h3>Order Details:</h3>
+                            <ul style="list-style-type: none; padding-left: 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                ${itemsListHtml}
+                            </ul>
+                            
+                            <h3 style="color: #333;">Total Amount: <span style="color: #111111;">৳${serverTotalAmount}</span></h3>
+                            
+                            <h4>Shipping Address:</h4>
+                            <p style="background-color: #f1f1f1; padding: 10px; border-radius: 4px;">${address}</p>
+                            
+                            <p style="text-align: center; margin-top: 30px; font-size: 14px; color: #777;">Thanks for shopping with আভরণী!</p>
+                        </div>
+                    `
+                };
+                await transporter.sendMail(mailOptions);
+            } catch (emailErr) {
+                console.warn("Order email notification warning:", emailErr);
             }
         }
 
-        // 4. Prepare Email Content
-        const itemsListHtml = cartItems.map(item => 
-            `<li style="margin-bottom: 5px;">${item.name} (x${item.quantity}) - ৳${item.price}</li>`
-        ).join('');
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email, 
-            subject: `Order Confirmation - ${orderNumber} | আভরণী`,
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
-                    <h2 style="color: #e60050; text-align: center;">Thank you for your order, ${name}!</h2>
-                    <p style="text-align: center; font-size: 16px;">Your order has been successfully placed and is being processed.</p>
-                    
-                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                        <p style="margin: 0;"><strong>Order Number:</strong> <span style="font-size: 18px; color: #e60050;">${orderNumber}</span></p>
-                        <p style="margin: 5px 0 0 0;"><strong>Payment Method:</strong> ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'bKash'}</p>
-                    </div>
-                    
-                    <h3>Order Details:</h3>
-                    <ul style="list-style-type: none; padding-left: 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                        ${itemsListHtml}
-                    </ul>
-                    
-                    <h3 style="color: #333;">Total Amount: <span style="color: #e60050;">৳${totalAmount}</span></h3>
-                    
-                    <h4>Shipping Address:</h4>
-                    <p style="background-color: #f1f1f1; padding: 10px; border-radius: 4px;">${address}</p>
-                    
-                    <p style="text-align: center; margin-top: 30px; font-size: 14px; color: #777;">Thanks for shopping with আভরণী!</p>
-                </div>
-            `
-        };
-
-        // 5. Send Confirmation Email
-        await transporter.sendMail(mailOptions);
-
-        // 6. Return Success Response
-        res.status(201).json({ success: true, message: 'Order placed and email sent!', orderNumber });
+        // 9. Return Success Response
+        res.status(201).json({ 
+            success: true, 
+            message: 'Order placed successfully!', 
+            orderNumber,
+            totalAmount: serverTotalAmount 
+        });
     } catch (error) { 
         console.error("Checkout Error:", error);
         res.status(500).json({ success: false, message: "Failed to process order" }); 

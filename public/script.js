@@ -16,6 +16,17 @@ function formatImageUrl(url) {
     return clean;
 }
 
+// Global HTML Escaper function to prevent XSS attacks
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // ==========================================
 // 🔍 INTERACTIVE HIGH-RES PRODUCT IMAGE ZOOM
 // ==========================================
@@ -326,18 +337,18 @@ function renderCart() {
         if (cartContainer) {
             cartContainer.innerHTML += `
                 <div class="cart-item">
-                    <img src="${item.image}" alt="${item.name}">
+                    <img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}">
                     <div class="cart-item-info">
-                        <h4>${item.name}</h4>
-                        <span class="cart-item-unit-price">৳${item.price} each</span>
+                        <h4>${escapeHTML(item.name)}</h4>
+                        <span class="cart-item-unit-price">৳${escapeHTML(item.price)} each</span>
                     </div>
                     <div class="cart-item-qty">
-                        <button class="qty-btn qty-decrease" data-id="${item.id}">-</button>
-                        <span>${item.quantity}</span>
-                        <button class="qty-btn qty-increase" data-id="${item.id}">+</button>
+                        <button class="qty-btn qty-decrease" data-id="${escapeHTML(item.id)}">-</button>
+                        <span>${escapeHTML(item.quantity)}</span>
+                        <button class="qty-btn qty-increase" data-id="${escapeHTML(item.id)}">+</button>
                     </div>
                     <strong class="cart-item-total">৳${itemTotal}</strong>
-                    <button class="cart-remove-btn remove-btn" data-id="${item.id}" title="Remove item"><i class="fas fa-trash"></i></button>
+                    <button class="cart-remove-btn remove-btn" data-id="${escapeHTML(item.id)}" title="Remove item"><i class="fas fa-trash"></i></button>
                 </div>
             `;
         }
@@ -1824,14 +1835,14 @@ async function loadPublishedReviewsSlider() {
 
         container.innerHTML = '';
         data.reviews.forEach(rev => {
-            const stars = '⭐'.repeat(rev.rating);
+            const stars = '⭐'.repeat(rev.rating || 5);
             container.innerHTML += `
                 <div class="review-slide-card">
                     <div class="review-stars">${stars}</div>
-                    <p class="review-comment">"${(rev.comment || '').replace(/"/g, '&quot;')}"</p>
+                    <p class="review-comment">"${escapeHTML(rev.comment)}"</p>
                     <div class="review-author">
-                        <strong>${rev.reviewerName}</strong>
-                        <span class="review-product-tag"><i class="fas fa-shopping-bag"></i> ${rev.productName || 'Verified Buyer'}</span>
+                        <strong>${escapeHTML(rev.reviewerName)}</strong>
+                        <span class="review-product-tag"><i class="fas fa-shopping-bag"></i> ${escapeHTML(rev.productName || 'Verified Buyer')}</span>
                     </div>
                 </div>
             `;
