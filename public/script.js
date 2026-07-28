@@ -1903,10 +1903,20 @@ async function loadPublishedReviewsSlider() {
     let tickInterval = null;
 
     function adjustBannerSpacing(banner) {
-        const h = banner.offsetHeight;
-        document.body.style.paddingTop = h + 'px';
+        if (!banner) return;
+        const isMobile = window.innerWidth <= 600;
         const navbar = document.querySelector('.navbar');
-        if (navbar) navbar.style.top = h + 'px';
+        
+        if (isMobile) {
+            // On mobile: Banner is position:relative (not fixed on nav), navbar stays at top: 0
+            document.body.style.paddingTop = '0px';
+            if (navbar) navbar.style.top = '0px';
+        } else {
+            // On desktop: Banner is fixed at top, push navbar down by banner height
+            const h = banner.offsetHeight;
+            document.body.style.paddingTop = h + 'px';
+            if (navbar) navbar.style.top = h + 'px';
+        }
     }
 
     async function loadFlashSaleBanner() {

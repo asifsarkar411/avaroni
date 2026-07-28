@@ -2321,15 +2321,81 @@ body.no-scroll {
 }
 #flash-sale-banner.expired .flash-timer .colon { animation: none; opacity: 0.3; }
 
-/* Responsive */
+/* Responsive Rules for Small Devices (Single Row, Compact Size, Non-Fixed) */
 @media (max-width: 600px) {
     #flash-sale-banner {
-        padding: 8px 12px;
-        gap: 8px;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        padding: 5px 8px !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        box-shadow: 0 2px 10px rgba(255, 0, 100, 0.25) !important;
+        overflow: hidden !important;
     }
-    #flash-sale-banner .flash-subtitle { display: none; }
-    #flash-sale-banner .flash-title { font-size: 12px; }
-    #flash-sale-banner .flash-timer { font-size: 13px; }
-    #flash-sale-banner .flash-timer .timer-chip { font-size: 13px; min-width: 30px; padding: 2px 5px; }
-    #flash-sale-banner .flash-shop-btn { font-size: 12px; padding: 6px 12px; }
+
+    #flash-sale-banner .flash-left {
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    #flash-sale-banner .flash-icon {
+        font-size: 13px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #flash-sale-banner .flash-title {
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 115px !important;
+        flex-shrink: 1 !important;
+    }
+
+    #flash-sale-banner .flash-timer {
+        font-size: 11px !important;
+        gap: 2px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #flash-sale-banner .flash-timer .timer-chip {
+        font-size: 11px !important;
+        min-width: 22px !important;
+        padding: 1px 3px !important;
+        border-radius: 4px !important;
+    }
+
+    #flash-sale-banner .flash-timer .timer-label {
+        font-size: 7px !important;
+        margin-top: 0px !important;
+    }
+
+    #flash-sale-banner .flash-timer .colon {
+        font-size: 11px !important;
+        margin: 0 !important;
+    }
+
+    #flash-sale-banner .flash-subtitle {
+        display: none !important;
+    }
+
+    #flash-sale-banner .flash-right {
+        gap: 4px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #flash-sale-banner .flash-shop-btn {
+        font-size: 10px !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
+    }
+
+    #flash-sale-banner .flash-shop-btn i {
+        font-size: 9px !important;
+    }
 }
