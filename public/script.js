@@ -708,7 +708,7 @@ if (paymentForm) {
                 cart = [];
                 renderCart(); 
             } else {
-                alert("There was an error saving your order. Please try again.");
+                alert(data.message || "There was an error saving your order. Please try again.");
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Confirm & Place Order';
             }

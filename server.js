@@ -23,6 +23,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const multer = require('multer');
 const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 
 // --- MODELS ---
 const User = require('./models/User');           // Secure Login User Model
@@ -35,6 +36,20 @@ const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
 const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
 const Review = require('./models/Review');               // Customer Reviews Model
+
+// ==========================================
+// STARTUP ENVIRONMENT VARIABLE GUARD
+// ==========================================
+const REQUIRED_ENV_VARS = ['MONGO_URI', 'JWT_SECRET'];
+const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+    console.error(`CRITICAL: Missing required environment variables: ${missingVars.join(', ')}`);
+    console.error('Set them in your .env file (local) or Vercel Environment Variables (production).');
+    console.error('See .env.example for a template.');
+    if (process.env.NODE_ENV === 'production') {
+        process.exit(1); // Hard fail in production to prevent insecure startup
+    }
+}
 
 const app = express();
 
@@ -302,8 +317,25 @@ const upload = multer({
 // 🔐 AUTHENTICATION ROUTES (Secure Login)
 // ==========================================
 
+// Rate limiters to prevent brute-force attacks
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,                   // 10 attempts per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many attempts. Please try again after 15 minutes.' }
+});
+
+const registerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5,                    // 5 registrations per hour per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many accounts created. Please try again later.' }
+});
+
 // 1. REGISTER
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', registerLimiter, async (req, res) => {
     try {
         const username = sanitize(req.body.username);
         const email = sanitize(req.body.email);
@@ -322,7 +354,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // 2. LOGIN (Password Check & 2FA Trigger)
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const rawEmail = sanitize(req.body.email || '');
         const password = req.body.password || ''; 
@@ -430,8 +462,12 @@ app.post('/api/verify-2fa', async (req, res) => {
         user.loginCount = (user.loginCount || 0) + 1;
         await user.save();
 
-        // Create JWT
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'supersecretkey', { expiresIn: '10d' });
+        // Create JWT (JWT_SECRET must be set in environment variables)
+        if (!process.env.JWT_SECRET) {
+            console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+            return res.status(500).json({ success: false, message: 'Server configuration error.' });
+        }
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '10d' });
 
         res.json({
             success: true,
@@ -448,7 +484,7 @@ app.post('/api/verify-2fa', async (req, res) => {
 });
 
 // 4. FORGOT / RESET PASSWORD
-app.post('/api/forgot-password', async (req, res) => {
+app.post('/api/forgot-password', authLimiter, async (req, res) => {
     try {
         const user = await User.findOne({ email: sanitize(req.body.email) });
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -474,7 +510,7 @@ app.post('/api/forgot-password', async (req, res) => {
     }
 });
 
-app.post('/api/reset-password', async (req, res) => {
+app.post('/api/reset-password', authLimiter, async (req, res) => {
     try {
         const user = await User.findOne({ resetPasswordToken: sanitize(req.body.token), resetPasswordExpires: { $gt: Date.now() } });
         if (!user) return res.status(400).json({ message: "Invalid or expired token" });
@@ -501,7 +537,7 @@ function verifyAdminToken(req, res, next) {
     if (!authHeader) return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
 
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey', (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) return res.status(403).json({ success: false, message: "Unauthorized: Invalid or expired token" });
         req.user = decoded; 
         next(); // Token is valid! Allow the action.
@@ -758,6 +794,21 @@ app.get('/api/products/:id', async (req, res) => {
 
 // Place an Order & Send Email Confirmation
 // 🌟 FIX: Server-Side Total Recalculation & Tamper-Proof Order Placement
+
+// Helper to normalize image URLs for order records
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
 app.post(['/api/orders', '/api/checkout'], async (req, res) => {
     try {
         const { name, email, phone, address, paymentMethod, trxId, cartItems, promoCode, shippingFee } = req.body;
