@@ -217,10 +217,6 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
                     <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 </div>
                 <h3>${product.name}</h3>
-                <div class="product-card-rating">
-                    <span class="card-stars">⭐⭐⭐⭐⭐</span>
-                    <span class="card-review-badge"><i class="fas fa-edit"></i> Write Review</span>
-                </div>
                 <p class="price">৳${product.price}</p>
                 ${stockText}
                 <button class="btn add-to-cart-btn" ${btnStatus} 
@@ -308,7 +304,7 @@ function renderCart() {
     let subtotal = 0;
 
     if (cart.length === 0) {
-        if (cartContainer) cartContainer.innerHTML = '<p style="text-align:center; padding: 30px; color: #888;">Your cart is empty. <a href="index.html" style="color:#e60050;">Start shopping!</a></p>';
+        if (cartContainer) cartContainer.innerHTML = '<p style="text-align:center; padding: 30px; color: #888;">Your cart is empty. <a href="index.html" style="color:#111111; font-weight:700;">Start shopping!</a></p>';
         if (totalElement) totalElement.innerText = '0';
         if (subtotalElement) subtotalElement.innerText = '0';
         if (shippingElement) shippingElement.innerText = '0';
@@ -692,7 +688,7 @@ if (paymentForm) {
                         <p style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
                         <p>Your order number is: <strong>${data.orderNumber || 'N/A'}</strong></p>
                         <br>
-                        <button onclick="downloadInvoice('${data.orderNumber}')" class="btn" style="padding: 10px 20px; background-color: #e60050; color: white; border-radius: 4px; margin-right: 10px; cursor: pointer;"><i class="fas fa-file-download"></i> Download Invoice</button>
+                        <button onclick="downloadInvoice('${data.orderNumber}')" class="btn" style="padding: 10px 20px; background-color: #111111; color: white; border-radius: 4px; margin-right: 10px; cursor: pointer;"><i class="fas fa-file-download"></i> Download Invoice</button>
                         <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
                     `;
                 }
@@ -1307,7 +1303,7 @@ async function performSearch(query) {
         });
 
         if (products.length > 8) {
-            dropdown.innerHTML += `<div class="search-no-results" style="color: #e60050; font-weight:600;">+ ${products.length - 8} more results</div>`;
+            dropdown.innerHTML += `<div class="search-no-results" style="color: #111111; font-weight:600;">+ ${products.length - 8} more results</div>`;
         }
 
         dropdown.classList.add('active');
@@ -1670,10 +1666,10 @@ function ensureModalReviewSection(modalElement, product) {
 
                 <div class="review-form-field" style="margin-bottom: 12px;">
                     <label for="modal-review-comment" style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Review Comment:</label>
-                    <textarea id="modal-review-comment" placeholder="Write your review comments here..." required class="review-textarea" rows="3" style="width:100%; padding:9px 12px; border:1.5px solid #ffccd8; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box; font-family:inherit;"></textarea>
+                    <textarea id="modal-review-comment" placeholder="Write your review comments here..." required class="review-textarea" rows="3" style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.15); border-radius:8px; font-size:13px; outline:none; box-sizing:border-box; font-family:inherit;"></textarea>
                 </div>
 
-                <button type="submit" class="btn submit-review-btn" style="background: linear-gradient(135deg, #e60050, #ff2e74); color:#fff; border:none; padding:9px 20px; font-size:13px; font-weight:700; border-radius:25px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 4px 12px rgba(230,0,80,0.25);">
+                <button type="submit" class="btn submit-review-btn" style="background: #111111; color:#fff; border:none; padding:9px 20px; font-size:13px; font-weight:700; border-radius:25px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
                     <i class="fas fa-paper-plane"></i> Submit Review
                 </button>
             </form>
