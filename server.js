@@ -378,10 +378,10 @@ app.post('/api/login', authLimiter, async (req, res) => {
         user.failedLoginAttempts = 0;
         user.lockUntil = undefined;
 
-        // Generate 2FA Code
+        // Generate 2FA Code (Valid for 15 minutes)
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         user.twoFactorCode = otpCode;
-        user.twoFactorExpires = Date.now() + 600000; // 10 minutes
+        user.twoFactorExpires = new Date(Date.now() + 900000); // 15 minutes
         await user.save();
 
         console.log(`🔑 [ADMIN OTP CODE FOR ${user.email}]: ${otpCode}`);
@@ -391,8 +391,8 @@ app.post('/api/login', authLimiter, async (req, res) => {
             transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: user.email,
-                subject: 'Your Admin Verification Code',
-                text: `Your admin login code is: ${otpCode}\n\nIt expires in 10 minutes.`
+                subject: 'Your Admin Verification Code - AVARONI',
+                text: `Your admin login verification code is: ${otpCode}\n\nIt is valid for 15 minutes.`
             }, (mailErr) => {
                 if (mailErr) {
                     console.warn("⚠️ SMTP Email Warning (code logged to console):", mailErr.message);
@@ -419,16 +419,34 @@ function getJwtSecret() {
 app.post('/api/verify-2fa', async (req, res) => {
     try {
         const rawEmail = sanitize(req.body.email || '');
-        const code = sanitize(req.body.code || '').toString().trim();
+        const rawCode = sanitize(req.body.code || '').toString();
+        // Strip spaces, tabs, dashes so copy-pasted '123 456' or '123-456' works natively
+        const cleanCode = rawCode.replace(/[\s-]+/g, '').trim();
         const email = rawEmail.trim().toLowerCase();
         
+        if (!email || !cleanCode) {
+            return res.status(400).json({ message: "Email and 6-digit verification code are required." });
+        }
+
         const user = await User.findOne({ 
-            email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i'),
-            twoFactorCode: code,
-            twoFactorExpires: { $gt: Date.now() } 
+            email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i')
         });
 
-        if (!user) return res.status(400).json({ message: "Invalid or expired verification code." });
+        if (!user) {
+            return res.status(400).json({ message: "User account not found." });
+        }
+
+        if (!user.twoFactorCode) {
+            return res.status(400).json({ message: "No verification code active. Please log in again to generate a new code." });
+        }
+
+        if (user.twoFactorCode.toString().trim() !== cleanCode) {
+            return res.status(400).json({ message: "Invalid verification code. Please check the 6-digit code sent to your email." });
+        }
+
+        if (user.twoFactorExpires && new Date(user.twoFactorExpires).getTime() < Date.now()) {
+            return res.status(400).json({ message: "Verification code has expired. Please log in again to request a new code." });
+        }
 
         const currentIp = req.ip || req.socket.remoteAddress || 'Unknown IP';
         if (!Array.isArray(user.knownIps)) user.knownIps = [];
