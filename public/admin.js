@@ -729,12 +729,15 @@ async function fetchOrders() {
                 statusBadge = `<span style="background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Processing</span>`;
             } else if (orderStatus === 'Approved') {
                 statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
+            } else if (orderStatus === 'Delivered') {
+                statusBadge = `<span style="background:#20c997; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Delivered</span>`;
             } else if (orderStatus === 'Cancelled') {
                 statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
             }
 
-            const processBtnDisabled = orderStatus === 'Processing' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#17a2b8; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
             const approveBtnDisabled = orderStatus === 'Approved' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+            const processBtnDisabled = orderStatus === 'Processing' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#17a2b8; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+            const deliverBtnDisabled = orderStatus === 'Delivered' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#20c997; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
             const cancelBtnDisabled = orderStatus === 'Cancelled' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
 
             tbody.innerHTML += `
@@ -750,8 +753,9 @@ async function fetchOrders() {
                     <td>${statusBadge}</td>
                     <td style="white-space: nowrap;">
                         <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-spinner"></i> Process</button>
                         <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-cog"></i> Process</button>
+                        <button onclick="updateOrderStatus('${order._id}', 'Delivered')" ${deliverBtnDisabled} title="Mark as Delivered"><i class="fas fa-box-open"></i> Delivered</button>
                         <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
                     </td>
                 </tr>

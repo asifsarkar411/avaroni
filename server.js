@@ -1526,7 +1526,7 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
     }
     try {
         const { status } = req.body;
-        if (!['Approved', 'Processing', 'Cancelled', 'Pending'].includes(status)) {
+        if (!['Approved', 'Processing', 'Delivered', 'Cancelled', 'Pending'].includes(status)) {
             return res.status(400).json({ success: false, message: "Invalid status value." });
         }
 
@@ -1538,12 +1538,34 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
         order.status = status;
         await order.save();
 
-        // Send Email Notification to Customer on Approve or Cancel
-        if (status === 'Approved' || status === 'Cancelled') {
-            const isApproved = status === 'Approved';
-            const emailSubject = isApproved 
-                ? `Order Approved - ${order.orderNumber} | আভরণী` 
-                : `Order Cancelled - ${order.orderNumber} | আভরণী`;
+        // Send Email Notification to Customer for Status Updates
+        if (['Approved', 'Processing', 'Delivered', 'Cancelled'].includes(status)) {
+            let emailSubject = `Order ${status} - ${order.orderNumber} | আভরণী`;
+            let statusHeading = `🎉 Order ${status}!`;
+            let statusColor = '#28a745';
+            let statusMessage = `Your order <strong>${order.orderNumber}</strong> status has been updated to <strong>${status}</strong>.`;
+
+            if (status === 'Approved') {
+                emailSubject = `Order Approved - ${order.orderNumber} | আভরণী`;
+                statusHeading = `🎉 Order Approved!`;
+                statusColor = '#28a745';
+                statusMessage = `We are happy to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>APPROVED</strong> and is currently being processed for dispatch!`;
+            } else if (status === 'Processing') {
+                emailSubject = `Order Processing - ${order.orderNumber} | আভরণী`;
+                statusHeading = `⚙️ Order Processing!`;
+                statusColor = '#17a2b8';
+                statusMessage = `Your order <strong>${order.orderNumber}</strong> is currently <strong>IN PROCESSING / DISPATCH</strong>. Our courier team is preparing your package.`;
+            } else if (status === 'Delivered') {
+                emailSubject = `Order Delivered - ${order.orderNumber} | আভরণী`;
+                statusHeading = `📦 Order Delivered Successfully!`;
+                statusColor = '#20c997';
+                statusMessage = `Your order <strong>${order.orderNumber}</strong> has been <strong>DELIVERED SUCCESSFULLY</strong>. Thank you for shopping with আভরণী!`;
+            } else if (status === 'Cancelled') {
+                emailSubject = `Order Cancelled - ${order.orderNumber} | আভরণী`;
+                statusHeading = `❌ Order Cancelled`;
+                statusColor = '#dc3545';
+                statusMessage = `We regret to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>CANCELLED</strong>. If you have questions or believe this is an error, please contact customer support.`;
+            }
 
             const itemsListHtml = (order.cartItems || []).map(item => 
                 `<li style="margin-bottom: 5px;">${item.name} (x${item.quantity}) - ৳${item.price}</li>`
@@ -1551,20 +1573,15 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
 
             const emailBody = `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
-                    <h2 style="color: ${isApproved ? '#28a745' : '#dc3545'}; text-align: center;">
-                        ${isApproved ? '🎉 Order Approved!' : '❌ Order Cancelled'}
+                    <h2 style="color: ${statusColor}; text-align: center;">
+                        ${statusHeading}
                     </h2>
                     <p style="font-size: 15px;">Dear <strong>${order.customerName}</strong>,</p>
-                    <p style="font-size: 14px; line-height: 1.6;">
-                        ${isApproved 
-                            ? `We are happy to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>APPROVED</strong> and is currently being processed for dispatch!`
-                            : `We regret to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>CANCELLED</strong>. If you have questions or believe this is an error, please contact customer support.`
-                        }
-                    </p>
+                    <p style="font-size: 14px; line-height: 1.6;">${statusMessage}</p>
                     
-                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 5px solid ${isApproved ? '#28a745' : '#dc3545'};">
+                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 5px solid ${statusColor};">
                         <p style="margin: 0;"><strong>Order Number:</strong> <span style="color: #e60050; font-weight: bold;">${order.orderNumber}</span></p>
-                        <p style="margin: 5px 0 0 0;"><strong>Status:</strong> <span style="color: ${isApproved ? '#28a745' : '#dc3545'}; font-weight: bold; text-transform: uppercase;">${status}</span></p>
+                        <p style="margin: 5px 0 0 0;"><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold; text-transform: uppercase;">${status}</span></p>
                         <p style="margin: 5px 0 0 0;"><strong>Payment Method:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'bKash'}</p>
                     </div>
 
@@ -1584,13 +1601,15 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
             `;
 
             try {
-                await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: order.email,
-                    subject: emailSubject,
-                    html: emailBody
-                });
-                console.log(`Order status (${status}) email sent successfully to ${order.email}`);
+                if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                    await transporter.sendMail({
+                        from: process.env.EMAIL_USER,
+                        to: order.email,
+                        subject: emailSubject,
+                        html: emailBody
+                    });
+                    console.log(`Order status (${status}) email sent successfully to ${order.email}`);
+                }
             } catch (mailErr) {
                 console.error("Failed to send order status update email:", mailErr);
             }
@@ -1598,7 +1617,7 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `Order status updated to "${status}" and email sent to customer!`,
+            message: `Order status updated to "${status}" successfully!`,
             order 
         });
     } catch (error) {

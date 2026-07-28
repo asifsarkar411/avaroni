@@ -577,13 +577,29 @@
                 badge.textContent = order.status || 'Pending';
 
                 badge.className = 'order-status-pill ';
-                if (status === 'approved' || status === 'processing') {
+                // Status badge & tracker timeline
+                const status = (order.status || 'Pending').toLowerCase();
+                const badge = document.getElementById('res-status-badge');
+                badge.textContent = (order.status || 'Pending').toUpperCase();
+
+                badge.className = 'order-status-pill ';
+                if (status === 'approved') {
                     badge.classList.add('status-approved');
+                } else if (status === 'processing') {
+                    badge.style.background = '#17a2b8';
+                    badge.style.color = '#ffffff';
+                } else if (status === 'delivered') {
+                    badge.style.background = '#20c997';
+                    badge.style.color = '#ffffff';
                 } else if (status === 'cancelled') {
                     badge.classList.add('status-cancelled');
                 } else {
                     badge.classList.add('status-pending');
                 }
+
+                // Remove old cancelled banner if exists
+                const oldCancelBanner = document.getElementById('res-cancelled-alert');
+                if (oldCancelBanner) oldCancelBanner.remove();
 
                 // Timeline updates
                 const stepPlaced = document.getElementById('step-placed');
@@ -592,27 +608,46 @@
                 const stepDelivered = document.getElementById('step-delivered');
                 const progressFill = document.getElementById('timeline-fill');
 
-                // Reset classes
-                [stepApproved, stepShipped, stepDelivered].forEach(s => {
+                // Reset classes & styles
+                [stepPlaced, stepApproved, stepShipped, stepDelivered].forEach(s => {
                     s.classList.remove('active', 'completed');
                 });
+                progressFill.style.background = 'linear-gradient(90deg, #111111, #e60050)';
 
-                if (status === 'approved' || status === 'processing') {
+                if (status === 'approved') {
+                    stepPlaced.classList.add('active', 'completed');
                     stepApproved.classList.add('active', 'completed');
-                    stepShipped.classList.add('active');
+                    progressFill.style.width = '33%';
+                } else if (status === 'processing') {
+                    stepPlaced.classList.add('active', 'completed');
+                    stepApproved.classList.add('active', 'completed');
+                    stepShipped.classList.add('active', 'completed');
                     progressFill.style.width = '66%';
                 } else if (status === 'delivered') {
+                    stepPlaced.classList.add('active', 'completed');
                     stepApproved.classList.add('active', 'completed');
                     stepShipped.classList.add('active', 'completed');
                     stepDelivered.classList.add('active', 'completed');
                     progressFill.style.width = '100%';
+                    progressFill.style.background = '#20c997';
                 } else if (status === 'cancelled') {
                     progressFill.style.width = '0%';
                     progressFill.style.background = '#dc3545';
+                    
+                    // Show clear Cancellation Notice Alert
+                    const cancelBanner = document.createElement('div');
+                    cancelBanner.id = 'res-cancelled-alert';
+                    cancelBanner.style.cssText = 'background: #f8d7da; border: 1.5px solid #f5c6cb; color: #721c24; padding: 16px 20px; border-radius: 12px; margin: 20px 0; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;';
+                    cancelBanner.innerHTML = `<i class="fas fa-times-circle" style="font-size: 22px;"></i> Order Cancelled — This order was cancelled by the store administration. Please contact support if you need assistance.`;
+                    
+                    const statusHeader = document.querySelector('.status-header');
+                    if (statusHeader && statusHeader.parentNode) {
+                        statusHeader.parentNode.insertBefore(cancelBanner, statusHeader.nextSibling);
+                    }
                 } else {
                     // Pending
                     stepPlaced.classList.add('active', 'completed');
-                    progressFill.style.width = '33%';
+                    progressFill.style.width = '15%';
                 }
 
                 // Details
