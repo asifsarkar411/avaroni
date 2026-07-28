@@ -1049,6 +1049,131 @@ app.get('/api/user-data', verifyAdminToken, async (req, res) => {
     res.json({ success: true, user });
 });
 
+// ==========================================
+// ⚙️ ADMIN SETTINGS & USER MANAGEMENT ROUTES
+// ==========================================
+
+// 1. Change Admin Email
+app.put('/api/admin/settings/email', verifyAdminToken, async (req, res) => {
+    try {
+        const { currentPassword, newEmail } = req.body;
+        if (!currentPassword || !newEmail || !newEmail.trim()) {
+            return res.status(400).json({ success: false, message: "Current password and new email address are required." });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User account not found." });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Incorrect current password." });
+        }
+
+        const cleanEmail = sanitize(newEmail.trim().toLowerCase());
+        const existing = await User.findOne({ email: cleanEmail, _id: { $ne: user._id } });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "This email address is already in use by another user." });
+        }
+
+        user.email = cleanEmail;
+        await user.save();
+        res.json({ success: true, message: "Email updated successfully!", email: cleanEmail });
+    } catch (error) {
+        console.error("Change Email Error:", error);
+        res.status(500).json({ success: false, message: "Server error changing email." });
+    }
+});
+
+// 2. Change Admin Password
+app.put('/api/admin/settings/password', verifyAdminToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: "Current password and new password are required." });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: "New password must be at least 8 characters long." });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User account not found." });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Incorrect current password." });
+        }
+
+        user.password = newPassword; // Automatically hashed by pre('save') hook
+        await user.save();
+        res.json({ success: true, message: "Password updated successfully!" });
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Server error changing password." });
+    }
+});
+
+// 3. Get All Admin Users
+app.get('/api/admin/users', verifyAdminToken, async (req, res) => {
+    try {
+        const users = await User.find().select('-password -twoFactorCode').sort({ _id: -1 });
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error("Get Users Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch user accounts." });
+    }
+});
+
+// 4. Create Access for Another User
+app.post('/api/admin/users', verifyAdminToken, async (req, res) => {
+    try {
+        const username = sanitize(req.body.username || '').trim();
+        const email = sanitize(req.body.email || '').trim().toLowerCase();
+        const password = req.body.password || '';
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: "Username, email, and password are required." });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
+        }
+
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "An account with this email already exists." });
+        }
+
+        const newUser = new User({ username, email, password });
+        await newUser.save();
+        res.status(201).json({ success: true, message: `Access granted for user "${username}" (${email}).` });
+    } catch (error) {
+        console.error("Create User Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create user account." });
+    }
+});
+
+// 5. Delete Sub-User Access
+app.delete('/api/admin/users/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const targetId = req.params.id;
+        if (targetId === req.user.id.toString()) {
+            return res.status(400).json({ success: false, message: "You cannot delete your own logged-in account." });
+        }
+
+        const totalAdmins = await User.countDocuments();
+        if (totalAdmins <= 1) {
+            return res.status(400).json({ success: false, message: "Cannot delete the sole remaining administrator account." });
+        }
+
+        await User.findByIdAndDelete(targetId);
+        res.json({ success: true, message: "User access revoked successfully." });
+    } catch (error) {
+        console.error("Delete User Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete user." });
+    }
+});
+
 // Get ALL products (Including hidden)
 app.get('/api/admin/products', verifyAdminToken, async (req, res) => {
     try { 

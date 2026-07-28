@@ -97,6 +97,16 @@ document.addEventListener("DOMContentLoaded", () => {
             populateEditSubcategories(e.target.value);
         });
     }
+
+    // 10. Settings & User Forms Submit
+    const changeEmailForm = document.getElementById('change-email-form');
+    if (changeEmailForm) changeEmailForm.addEventListener('submit', handleChangeEmail);
+
+    const changePassForm = document.getElementById('change-password-form');
+    if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
+
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) createUserForm.addEventListener('submit', handleCreateUser);
 });
 
 // Helper to convert & compress image file to optimized Base64
@@ -462,6 +472,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
+        if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
         titleElement.innerText = cleanTitle;
     }
 
@@ -477,6 +488,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-reviews') fetchAdminReviews();
+    if (tabName === 'admin-settings') initSettingsTab();
 }
 
 // ==========================================
@@ -1776,3 +1788,184 @@ async function deleteAdminReview(reviewId) {
 
 window.togglePublishReview = togglePublishReview;
 window.deleteAdminReview = deleteAdminReview;
+
+// ==========================================
+// ⚙️ ADMIN SETTINGS & USER ACCESS MANAGEMENT
+// ==========================================
+
+async function initSettingsTab() {
+    try {
+        const response = await fetchWithAuth('/api/user-data');
+        if (response && response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+                const currentEmailInput = document.getElementById('setting-current-email');
+                if (currentEmailInput) currentEmailInput.value = data.user.email || '';
+            }
+        }
+    } catch (err) {
+        console.error("Error loading user profile data:", err);
+    }
+    fetchAdminUsers();
+}
+
+async function handleChangeEmail(e) {
+    e.preventDefault();
+    const currentPassword = document.getElementById('setting-email-confirm-pass').value;
+    const newEmail = document.getElementById('setting-new-email').value.trim();
+
+    if (!currentPassword || !newEmail) {
+        alert("Please fill in both your current password and new email.");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/email', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newEmail })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || "Email updated successfully!");
+            document.getElementById('change-email-form').reset();
+            const currentEmailInput = document.getElementById('setting-current-email');
+            if (currentEmailInput) currentEmailInput.value = data.email;
+        } else {
+            alert(data.message || "Failed to update email.");
+        }
+    } catch (err) {
+        console.error("Change Email Error:", err);
+        alert("Failed to connect to server.");
+    }
+}
+
+async function handleChangePassword(e) {
+    e.preventDefault();
+    const currentPassword = document.getElementById('setting-current-pass').value;
+    const newPassword = document.getElementById('setting-new-pass').value;
+    const confirmPassword = document.getElementById('setting-confirm-new-pass').value;
+
+    if (newPassword !== confirmPassword) {
+        alert("New password and confirm password do not match!");
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        alert("New password must be at least 8 characters long.");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || "Password updated successfully!");
+            document.getElementById('change-password-form').reset();
+        } else {
+            alert(data.message || "Failed to update password.");
+        }
+    } catch (err) {
+        console.error("Change Password Error:", err);
+        alert("Failed to connect to server.");
+    }
+}
+
+async function fetchAdminUsers() {
+    const tbody = document.getElementById('users-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/users');
+        if (!response) return;
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.users || data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No user accounts found.</td></tr>';
+            return;
+        }
+
+        data.users.forEach(user => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHTML(user.username)}</strong></td>
+                    <td>${escapeHTML(user.email)}</td>
+                    <td>${escapeHTML(user.loginCount || 0)} times</td>
+                    <td><span style="background:#e6f9ed; color:#28a745; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">Administrator</span></td>
+                    <td>
+                        <button onclick="deleteUserAccess('${escapeHTML(user._id)}')" class="btn" style="background:#dc3545; color:white; width:auto; padding:5px 10px; font-size:12px;" title="Revoke User Access"><i class="fas fa-trash-alt"></i> Revoke Access</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching admin users:", err);
+    }
+}
+
+async function handleCreateUser(e) {
+    e.preventDefault();
+    const username = document.getElementById('new-user-name').value.trim();
+    const email = document.getElementById('new-user-email').value.trim();
+    const password = document.getElementById('new-user-pass').value;
+
+    if (!username || !email || !password) {
+        alert("Please enter a username, email, and initial password.");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || "User access granted successfully!");
+            document.getElementById('create-user-form').reset();
+            fetchAdminUsers();
+        } else {
+            alert(data.message || "Failed to create user account.");
+        }
+    } catch (err) {
+        console.error("Create User Error:", err);
+        alert("Failed to connect to server.");
+    }
+}
+
+async function deleteUserAccess(userId) {
+    if (!confirm("Are you sure you want to revoke access for this user account?")) return;
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/users/${userId}`, {
+            method: 'DELETE'
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || "User access revoked.");
+            fetchAdminUsers();
+        } else {
+            alert(data.message || "Failed to revoke access.");
+        }
+    } catch (err) {
+        console.error("Delete User Error:", err);
+        alert("Failed to connect to server.");
+    }
+}
+
+window.deleteUserAccess = deleteUserAccess;
