@@ -844,10 +844,15 @@ function renderFilteredOrders() {
             statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
         }
 
-        const approveBtnDisabled = orderStatus === 'Approved' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-        const processBtnDisabled = orderStatus === 'Processing' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#17a2b8; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-        const deliverBtnDisabled = orderStatus === 'Delivered' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#20c997; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
-        const cancelBtnDisabled = orderStatus === 'Cancelled' ? 'disabled style="margin-top:0; padding:6px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:not-allowed; opacity:0.6; margin-right:4px;"' : 'style="margin-top:0; padding:6px 10px; font-size:12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;"';
+        const statusSelectHtml = `
+            <select onchange="handleOrderStatusDropdownChange(this, '${order._id}', '${orderStatus}')" class="order-status-select ${orderStatus.toLowerCase()}-select">
+                <option value="Pending" ${orderStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                <option value="Approved" ${orderStatus === 'Approved' ? 'selected' : ''}>✅ Approved</option>
+                <option value="Processing" ${orderStatus === 'Processing' ? 'selected' : ''}>⚙️ Processing</option>
+                <option value="Delivered" ${orderStatus === 'Delivered' ? 'selected' : ''}>📦 Delivered</option>
+                <option value="Cancelled" ${orderStatus === 'Cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+            </select>
+        `;
 
         // 1. Desktop Table Row
         tbody.innerHTML += `
@@ -862,11 +867,10 @@ function renderFilteredOrders() {
                 <td class="items-list">${itemsList}</td>
                 <td>${statusBadge}</td>
                 <td style="white-space: nowrap;">
-                    <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:12px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:4px;" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
-                    <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve Order & Send Email"><i class="fas fa-check"></i> Approve</button>
-                    <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Mark as Processing"><i class="fas fa-cog"></i> Process</button>
-                    <button onclick="updateOrderStatus('${order._id}', 'Delivered')" ${deliverBtnDisabled} title="Mark as Delivered"><i class="fas fa-box-open"></i> Delivered</button>
-                    <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel Order & Send Email"><i class="fas fa-times"></i> Cancel</button>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Download Tax Invoice"><i class="fas fa-file-invoice"></i> Invoice</button>
+                        ${statusSelectHtml}
+                    </div>
                 </td>
             </tr>
         `;
@@ -895,12 +899,9 @@ function renderFilteredOrders() {
                     <div style="font-size: 12px; color: #444; margin-bottom: 12px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
                         <strong>Items:</strong> ${itemsList}
                     </div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
-                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn" style="margin-top:0; padding: 6px 10px; font-size:11px; background:#111111; color:white; border:none; border-radius:4px; cursor:pointer;" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Approved')" ${approveBtnDisabled} title="Approve"><i class="fas fa-check"></i> Approve</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Processing')" ${processBtnDisabled} title="Process"><i class="fas fa-cog"></i> Process</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Delivered')" ${deliverBtnDisabled} title="Delivered"><i class="fas fa-box-open"></i> Delivered</button>
-                        <button onclick="updateOrderStatus('${order._id}', 'Cancelled')" ${cancelBtnDisabled} title="Cancel"><i class="fas fa-times"></i> Cancel</button>
+                    <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
+                        ${statusSelectHtml}
                     </div>
                 </div>
             `;
@@ -961,6 +962,40 @@ function updatePaginationUI(start, end, total, totalPages) {
         }
     };
     buttonsContainer.appendChild(nextBtn);
+}
+
+async function handleOrderStatusDropdownChange(selectEl, orderId, currentStatus) {
+    const newStatus = selectEl.value;
+    if (newStatus === currentStatus) return;
+
+    if (!confirm(`Are you sure you want to change order status from "${currentStatus}" to "${newStatus}"? An automated email notification will be sent to the customer.`)) {
+        selectEl.value = currentStatus;
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert(data.message || `Order status updated to "${newStatus}"!`);
+            fetchOrders();
+        } else {
+            alert(data.message || "Failed to update order status.");
+            selectEl.value = currentStatus;
+        }
+    } catch (err) {
+        console.error("Error updating order status:", err);
+        alert("Server connection error.");
+        selectEl.value = currentStatus;
+    }
 }
 
 async function updateOrderStatus(orderId, newStatus) {

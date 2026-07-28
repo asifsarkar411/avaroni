@@ -2456,3 +2456,102 @@ body.no-scroll #flash-sale-banner,
     background: #f8f9fa;
     z-index: 5;
 }
+
+/* =============================================
+   🧾 Admin Order Actions: Invoice Button & Status Dropdown
+   ============================================= */
+
+.btn-invoice-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #111111;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+}
+
+.btn-invoice-sm:hover {
+    background: #333333;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-invoice-sm i {
+    font-size: 13px;
+}
+
+/* Status Dropdown Select */
+.order-status-select {
+    padding: 7px 30px 7px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+    border: 1.5px solid #ccc;
+    background: #ffffff;
+    cursor: pointer;
+    appearance: auto;
+    transition: all 0.2s ease;
+    min-width: 140px;
+    outline: none;
+}
+
+.order-status-select:hover {
+    border-color: #888;
+}
+
+.order-status-select:focus {
+    border-color: #111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+}
+
+/* Color-coded dropdown based on current status */
+.order-status-select.pending-select {
+    border-color: #ffc107;
+    background: #fffdf0;
+    color: #856404;
+}
+
+.order-status-select.approved-select {
+    border-color: #28a745;
+    background: #f0fff4;
+    color: #155724;
+}
+
+.order-status-select.processing-select {
+    border-color: #17a2b8;
+    background: #f0fafc;
+    color: #0c5460;
+}
+
+.order-status-select.delivered-select {
+    border-color: #20c997;
+    background: #f0fdf9;
+    color: #0d6e52;
+}
+
+.order-status-select.cancelled-select {
+    border-color: #dc3545;
+    background: #fff5f5;
+    color: #721c24;
+}
+
+@media (max-width: 600px) {
+    .order-status-select {
+        min-width: 120px;
+        font-size: 11px;
+        padding: 6px 8px;
+    }
+
+    .btn-invoice-sm {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
