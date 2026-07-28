@@ -161,55 +161,42 @@ async function seedCategories() {
 }
 
 // Helper function to handle image storage:
-// - On Vercel: store Base64 directly in MongoDB (already compressed ~250KB, files on /tmp aren't HTTP-accessible)
-// - On local dev: write file to disk and return the /uploads URL path
+// Always store Base64 Data URIs directly in MongoDB so images are self-contained
+// and render identically across Vercel production, localhost, and mobile without 404s.
 function saveBase64Image(base64Str) {
-    if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
-        return base64Str; // Return as-is if already a path or invalid
-    }
-
-    // On Vercel: /tmp is ephemeral and not served via HTTP — store Base64 directly in DB
-    if (process.env.VERCEL) {
-        return base64Str; // Return Base64 as-is; browser renders data: URLs natively
-    }
-
-    // On local dev: write to disk and return file URL
-    try {
-        const matches = base64Str.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-        if (!matches || matches.length !== 3) {
-            return base64Str;
-        }
-
-        const ext = matches[1].split('/')[1] || 'jpg';
-        const buffer = Buffer.from(matches[2], 'base64');
-        const filename = `${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}.${ext}`;
-        const uploadDir = path.join(__dirname, 'public/uploads');
-
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
-        const filePath = path.join(uploadDir, filename);
-        fs.writeFileSync(filePath, buffer);
-
-        return `/uploads/${filename}`;
-    } catch (err) {
-        console.error("Error converting base64 to file:", err.message);
-        return base64Str;
-    }
+    return base64Str || '';
 }
 
-// Serve uploaded files on local dev (Vercel uses DB-stored Base64 instead)
-if (!process.env.VERCEL) {
-    app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Convert local disk file paths (/uploads/xxx.jpeg) to Base64 if file exists on disk,
+// or fallback to placeholder image if missing on Vercel
+function convertDiskFileToBase64(imagePath) {
+    if (!imagePath || typeof imagePath !== 'string') return './img/profile_image.jpg';
+    if (imagePath.startsWith('data:image/')) return imagePath;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+
+    const relativePath = imagePath.replace(/^\//, '');
+    const localFilePath = path.join(__dirname, 'public', relativePath);
+
+    if (fs.existsSync(localFilePath)) {
+        try {
+            const fileBuffer = fs.readFileSync(localFilePath);
+            const ext = path.extname(localFilePath).toLowerCase().replace('.', '') || 'jpeg';
+            const mimeType = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : (ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : `image/${ext}`));
+            return `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+        } catch (e) {
+            console.error(`Error reading ${localFilePath}:`, e.message);
+        }
+    }
+    // Fallback if file is missing (e.g. on serverless Vercel filesystem)
+    return './img/profile_image.jpg';
 }
 
-// Database migration script to automatically clean up legacy base64 strings
+// Database migration script to clean up disk file paths and convert to self-contained Base64
 async function migrateBase64ToFiles() {
     try {
-        console.log("Checking for legacy Base64 images in database to migrate...");
+        console.log("Checking database image URLs for Vercel compatibility...");
 
-        // 1. Migrate & Normalize Products Image URLs
+        // 1. Products
         const allProducts = await Product.find();
         let prodMigratedCount = 0;
         for (const prod of allProducts) {
@@ -217,44 +204,39 @@ async function migrateBase64ToFiles() {
                 prod.imageUrl = './img/profile_image.jpg';
                 await prod.save();
                 prodMigratedCount++;
-            } else {
-                let clean = prod.imageUrl.trim().replace(/\\/g, '/');
-                if (clean.startsWith('data:image/')) {
-                    clean = saveBase64Image(clean);
-                } else if (clean.startsWith('uploads/')) {
-                    clean = '/' + clean;
-                }
-                if (clean !== prod.imageUrl) {
-                    prod.imageUrl = clean;
-                    await prod.save();
-                    prodMigratedCount++;
-                }
+            } else if (prod.imageUrl.startsWith('/uploads/') || prod.imageUrl.startsWith('uploads/')) {
+                prod.imageUrl = convertDiskFileToBase64(prod.imageUrl);
+                await prod.save();
+                prodMigratedCount++;
             }
         }
         if (prodMigratedCount > 0) {
             console.log(`Normalized image URLs for ${prodMigratedCount} products.`);
         }
 
-        // 2. Migrate NavSliders
-        const sliders = await NavSlider.find({ imageUrl: /^data:image\// });
-        if (sliders.length > 0) {
-            console.log(`Found ${sliders.length} nav sliders with Base64 images. Migrating...`);
-            for (const slider of sliders) {
-                slider.imageUrl = saveBase64Image(slider.imageUrl);
+        // 2. NavSliders
+        const sliders = await NavSlider.find();
+        let sliderCount = 0;
+        for (const slider of sliders) {
+            if (slider.imageUrl && (slider.imageUrl.startsWith('/uploads/') || slider.imageUrl.startsWith('uploads/'))) {
+                slider.imageUrl = convertDiskFileToBase64(slider.imageUrl);
                 await slider.save();
+                sliderCount++;
             }
-            console.log("Nav slider images migration complete!");
+        }
+        if (sliderCount > 0) {
+            console.log(`Migrated ${sliderCount} nav slider images.`);
         }
 
-        // 3. Migrate BannerCards
+        // 3. BannerCards
         const cards = await BannerCard.find();
         let migratedCardsCount = 0;
         for (const card of cards) {
             if (!card || !Array.isArray(card.images)) continue;
             let updated = false;
             for (let i = 0; i < card.images.length; i++) {
-                if (card.images[i] && typeof card.images[i] === 'string' && card.images[i].startsWith('data:image/')) {
-                    card.images[i] = saveBase64Image(card.images[i]);
+                if (card.images[i] && (card.images[i].startsWith('/uploads/') || card.images[i].startsWith('uploads/'))) {
+                    card.images[i] = convertDiskFileToBase64(card.images[i]);
                     updated = true;
                 }
             }
@@ -268,7 +250,7 @@ async function migrateBase64ToFiles() {
             console.log(`Migrated images in ${migratedCardsCount} banner cards.`);
         }
 
-        console.log("Legacy image migration check finished.");
+        console.log("Image URL optimization check finished.");
     } catch (err) {
         console.error("Migration execution error:", err);
     }
@@ -1102,7 +1084,9 @@ app.post('/api/products', verifyAdminToken, async (req, res) => {
             });
             bodyData = req.body;
             if (req.file) {
-                imageUrl = `/uploads/${req.file.filename}`;
+                const mimeType = req.file.mimetype || 'image/jpeg';
+                const fileBuffer = fs.readFileSync(req.file.path);
+                imageUrl = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
             }
         } else {
             // JSON body with Base64 image — convert to high-res static file
@@ -1491,7 +1475,9 @@ app.post('/api/banner-cards/:cardId/images', verifyAdminToken, upload.single('im
         if (req.body.image) {
             imageUrl = saveBase64Image(req.body.image);
         } else if (req.file) {
-            imageUrl = `/uploads/${req.file.filename}`;
+            const mimeType = req.file.mimetype || 'image/jpeg';
+            const fileBuffer = fs.readFileSync(req.file.path);
+            imageUrl = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
         } else {
             return res.status(400).json({ success: false, message: "Image is required" });
         }
