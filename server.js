@@ -936,8 +936,14 @@ app.post(['/api/orders', '/api/checkout'], async (req, res) => {
         // 4. Calculate Final Server Total
         const serverTotalAmount = Math.max(0, Math.round(serverSubtotal - serverDiscount)) + serverShippingFee;
 
-        // 5. Generate Random Order Number
-        const orderNumber = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
+        // 5. Generate Sequential Order Number (ORD-00001, ORD-00002, ...)
+        let nextNum = 1;
+        const lastOrder = await Order.findOne({ orderNumber: /^ORD-\d+$/ }).sort({ _id: -1 });
+        if (lastOrder && lastOrder.orderNumber) {
+            const lastNum = parseInt(lastOrder.orderNumber.replace('ORD-', ''), 10);
+            if (!isNaN(lastNum)) nextNum = lastNum + 1;
+        }
+        const orderNumber = 'ORD-' + String(nextNum).padStart(5, '0');
 
         // 6. Save Order with Server-Calculated Totals
         const newOrder = new Order({ 
