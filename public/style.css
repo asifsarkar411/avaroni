@@ -2056,7 +2056,6 @@ body.no-scroll {
     }
 }
 
-
 /* =============================================
    ⚡ FLASH SALE STICKY COUNTDOWN BANNER
    ============================================= */
@@ -2067,7 +2066,10 @@ body.no-scroll {
     left: 0;
     width: 100%;
     z-index: 9999;
-    background: linear-gradient(135deg, #0d0d0d 0%, #1a0a00 50%, #0d0d0d 100%);
+    background: linear-gradient(270deg, #0a0a0a, #1a0015, #0d0022, #1a0015, #0a0a0a);
+    background-size: 400% 100%;
+    animation: flashBannerSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both,
+               bannerBgMove 8s ease infinite;
     color: #ffffff;
     padding: 10px 20px;
     display: flex;
@@ -2075,10 +2077,17 @@ body.no-scroll {
     justify-content: space-between;
     gap: 14px;
     flex-wrap: wrap;
-    box-shadow: 0 4px 24px rgba(230, 0, 80, 0.35);
-    border-bottom: 2px solid rgba(230, 0, 80, 0.6);
-    animation: flashBannerSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    box-shadow: 0 4px 30px rgba(255, 0, 100, 0.35), 0 1px 0 rgba(255, 60, 170, 0.3) inset;
+    border-bottom: 2px solid rgba(255, 0, 120, 0.5);
     font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow: hidden;
+}
+
+/* Moving background gradient */
+@keyframes bannerBgMove {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 @keyframes flashBannerSlideDown {
@@ -2096,23 +2105,35 @@ body.no-scroll {
     flex: 1;
 }
 
+/* Pulsing lightning icon */
 #flash-sale-banner .flash-icon {
     font-size: 22px;
-    animation: flashPulse 1.2s ease-in-out infinite;
-    filter: drop-shadow(0 0 6px rgba(255, 80, 0, 0.9));
+    animation: flashPulse 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(255, 200, 0, 0.95)) drop-shadow(0 0 20px rgba(255, 100, 0, 0.5));
 }
 
 @keyframes flashPulse {
-    0%, 100% { transform: scale(1);    opacity: 1; }
-    50%       { transform: scale(1.25); opacity: 0.8; }
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%      { transform: scale(1.3); opacity: 0.85; }
 }
 
+/* ✨ Animated gradient shimmer title */
 #flash-sale-banner .flash-title {
     font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    color: #ffffff;
+    font-weight: 800;
+    letter-spacing: 0.6px;
     white-space: nowrap;
+    background: linear-gradient(90deg, #ff6ec7, #ffd700, #ff3c7b, #00e5ff, #ffd700, #ff6ec7);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: titleShimmer 3s linear infinite;
+}
+
+@keyframes titleShimmer {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
 }
 
 /* Timer block */
@@ -2126,31 +2147,43 @@ body.no-scroll {
     letter-spacing: 1px;
 }
 
+/* Glowing neon timer chips */
 #flash-sale-banner .flash-timer .timer-chip {
-    background: rgba(230, 0, 80, 0.18);
-    border: 1.5px solid rgba(230, 0, 80, 0.55);
+    background: rgba(255, 0, 100, 0.12);
+    border: 1.5px solid rgba(255, 0, 120, 0.6);
     border-radius: 6px;
     padding: 2px 8px;
-    color: #ff3b70;
+    color: #ff2d7a;
     min-width: 38px;
     text-align: center;
     font-size: 15px;
     font-weight: 900;
-    transition: color 0.3s;
-    box-shadow: 0 0 8px rgba(230, 0, 80, 0.3);
+    box-shadow: 0 0 10px rgba(255, 0, 100, 0.35), 0 0 4px rgba(255, 0, 100, 0.2) inset;
+    animation: chipGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes chipGlow {
+    0%   { box-shadow: 0 0 8px rgba(255, 0, 100, 0.25), 0 0 3px rgba(255, 0, 100, 0.15) inset; border-color: rgba(255, 0, 120, 0.45); }
+    100% { box-shadow: 0 0 16px rgba(255, 0, 100, 0.55), 0 0 6px rgba(255, 0, 100, 0.3) inset;  border-color: rgba(255, 60, 170, 0.8); }
 }
 
 #flash-sale-banner .flash-timer .colon {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 100, 200, 0.7);
     font-size: 15px;
     margin: 0 1px;
     user-select: none;
+    animation: colonBlink 1s steps(1) infinite;
+}
+
+@keyframes colonBlink {
+    0%, 49%  { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
 }
 
 #flash-sale-banner .flash-timer .timer-label {
     font-size: 9px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 150, 220, 0.6);
     letter-spacing: 0.5px;
     display: block;
     font-weight: 600;
@@ -2158,11 +2191,23 @@ body.no-scroll {
     margin-top: 1px;
 }
 
+/* Animated glowing subtitle */
 #flash-sale-banner .flash-subtitle {
     font-size: 13px;
-    color: rgba(255, 220, 180, 0.92);
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
+    background: linear-gradient(90deg, #ffd700, #ffab40, #ff6d00, #ffab40, #ffd700);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: subtitleGlow 4s ease infinite;
+}
+
+@keyframes subtitleGlow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 #flash-sale-banner .flash-right {
@@ -2172,8 +2217,11 @@ body.no-scroll {
     flex-shrink: 0;
 }
 
+/* Vibrant animated CTA button */
 #flash-sale-banner .flash-shop-btn {
-    background: linear-gradient(135deg, #e60050, #ff1a6e);
+    background: linear-gradient(135deg, #ff0062, #ff3d8b, #e60050);
+    background-size: 200% 200%;
+    animation: btnShift 3s ease infinite;
     color: #ffffff;
     padding: 7px 18px;
     border-radius: 50px;
@@ -2183,16 +2231,22 @@ body.no-scroll {
     white-space: nowrap;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(230, 0, 80, 0.45);
+    box-shadow: 0 4px 18px rgba(255, 0, 98, 0.5), 0 0 8px rgba(255, 0, 98, 0.25) inset;
     transition: transform 0.2s, box-shadow 0.2s;
     display: inline-flex;
     align-items: center;
     gap: 6px;
 }
 
+@keyframes btnShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 #flash-sale-banner .flash-shop-btn:hover {
-    transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 6px 20px rgba(230, 0, 80, 0.6);
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 6px 24px rgba(255, 0, 98, 0.65), 0 0 12px rgba(255, 0, 98, 0.35) inset;
 }
 
 /* Expired / sold-out state */
@@ -2200,7 +2254,9 @@ body.no-scroll {
     color: rgba(255,255,255,0.4);
     border-color: rgba(255,255,255,0.15);
     box-shadow: none;
+    animation: none;
 }
+#flash-sale-banner.expired .flash-timer .colon { animation: none; opacity: 0.3; }
 
 /* Responsive */
 @media (max-width: 600px) {
