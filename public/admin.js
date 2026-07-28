@@ -552,11 +552,11 @@ async function fetchManageProducts() {
             tbody.innerHTML += `
                 <tr>
                     <td><img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="50" height="50" style="object-fit:cover; border-radius:4px;"></td>
-                    <td><strong>${prod.name}</strong></td>
-                    <td>${prod.category}</td>
-                    <td>${prod.size || '-'}</td>
-                    <td>${prod.colour || '-'}</td>
-                    <td>${prod.brand || '-'}</td>
+                    <td><strong>${escapeHTML(prod.name)}</strong></td>
+                    <td>${escapeHTML(prod.category)}</td>
+                    <td>${escapeHTML(prod.size || '-')}</td>
+                    <td>${escapeHTML(prod.colour || '-')}</td>
+                    <td>${escapeHTML(prod.brand || '-')}</td>
                     <td style="color:#0d6efd; font-weight:bold;">৳${prod.price}</td>
                     <td>${prod.stockQuantity} Left</td> 
                     <td>${prod.isAvailable ? '<span style="color:green; font-weight:bold;">Available</span>' : '<span style="color:red; font-weight:bold;">Unavailable</span>'}</td>
@@ -1001,8 +1001,8 @@ async function renderCategoriesTab() {
             cat.subcategories.forEach(sub => {
                 subListHtml += `
                     <span style="display: inline-flex; align-items: center; background: #ffe6eb; border: 1px solid #e60050; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #e60050;">
-                        ${sub}
-                        <i class="fas fa-times" onclick="deleteSubcategory('${cat._id}', '${sub}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
+                        ${escapeHTML(sub)}
+                        <i class="fas fa-times" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
                     </span>
                 `;
             });
@@ -1013,7 +1013,7 @@ async function renderCategoriesTab() {
         container.innerHTML += `
             <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #e60050; color: #333;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #333;">${cat.displayName} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 10px;">(Slug: ${cat.slug})</span></h3>
+                    <h3 style="margin: 0; color: #333;">${escapeHTML(cat.displayName)} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 10px;">(Slug: ${escapeHTML(cat.slug)})</span></h3>
                     <button class="btn" onclick="deleteCategory('${cat._id}')" style="margin-top:0; width:auto; padding: 5px 10px; font-size: 12px; background: #333; color: #fff;">Delete Category</button>
                 </div>
                 
@@ -1166,8 +1166,8 @@ async function fetchPromoCodes() {
 
             tbody.innerHTML += `
                 <tr>
-                    <td><strong>${promo.code}</strong></td>
-                    <td style="text-transform: capitalize;">${promo.discountType}</td>
+                    <td><strong>${escapeHTML(promo.code)}</strong></td>
+                    <td style="text-transform: capitalize;">${escapeHTML(promo.discountType)}</td>
                     <td>${valueDisplay}</td>
                     <td>${statusLabel}</td>
                     <td>
@@ -1393,10 +1393,10 @@ async function fetchReturnRequests() {
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
-                    <td style="color:#007bff; font-weight:bold;">${ret.orderNumber}</td>
-                    <td>${ret.email}</td>
-                    <td><strong>${ret.reason}</strong></td>
-                    <td style="font-size:13px; color:#555; max-width:250px; word-wrap:break-word;">${ret.details || '-'}</td>
+                    <td style="color:#007bff; font-weight:bold;">${escapeHTML(ret.orderNumber)}</td>
+                    <td>${escapeHTML(ret.email)}</td>
+                    <td><strong>${escapeHTML(ret.reason)}</strong></td>
+                    <td style="font-size:13px; color:#555; max-width:250px; word-wrap:break-word;">${escapeHTML(ret.details || '-')}</td>
                     <td>${statusBadge}</td>
                     <td>${actionButtons}</td>
                 </tr>
@@ -1480,9 +1480,9 @@ async function fetchContactMessages() {
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
-                    <td><strong>${msg.name}</strong></td>
-                    <td>${msg.email}</td>
-                    <td style="font-size:13px; color:#555; max-width:350px; word-wrap:break-word;">${msg.message}</td>
+                    <td><strong>${escapeHTML(msg.name)}</strong></td>
+                    <td>${escapeHTML(msg.email)}</td>
+                    <td style="font-size:13px; color:#555; max-width:350px; word-wrap:break-word;">${escapeHTML(msg.message)}</td>
                     <td>${statusBadge}</td>
                     <td>
                         ${markReadButton}

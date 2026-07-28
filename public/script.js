@@ -227,7 +227,7 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
                     </button>
                     <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 </div>
-                <h3>${product.name}</h3>
+                <h3>${escapeHTML(product.name)}</h3>
                 <p class="price">৳${product.price}</p>
                 ${stockText}
                 <button class="btn add-to-cart-btn" ${btnStatus} 
@@ -1286,7 +1286,7 @@ async function performSearch(query) {
         }
 
         if (products.length === 0) {
-            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-filter" style="margin-right:8px;"></i>No products match filter for "${query}"</div>`;
+            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-filter" style="margin-right:8px;"></i>No products match filter for "${escapeHTML(query)}"</div>`;
             dropdown.classList.add('active');
             return;
         }
@@ -1297,12 +1297,12 @@ async function performSearch(query) {
             item.className = 'search-result-item';
             item.setAttribute('data-product-id', product._id);
             item.innerHTML = `
-                <img src="${formatImageUrl(product.imageUrl)}" alt="${product.name}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                <img src="${formatImageUrl(product.imageUrl)}" alt="${escapeHTML(product.name)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 <div class="search-result-info">
-                    <h4>${product.name}</h4>
-                    <span>${product.category}${product.subcategory ? ' • ' + product.subcategory : ''}</span>
+                    <h4>${escapeHTML(product.name)}</h4>
+                    <span>${escapeHTML(product.category)}${product.subcategory ? ' • ' + escapeHTML(product.subcategory) : ''}</span>
                 </div>
-                <span class="search-result-price">৳${product.price}</span>
+                <span class="search-result-price">৳${escapeHTML(product.price)}</span>
             `;
             item.addEventListener('click', () => {
                 openProductModal(product._id);
@@ -1385,9 +1385,9 @@ async function openProductModal(productId) {
         const detailsEl = document.getElementById('modal-product-details');
         if (detailsEl) {
             let detailsHtml = '';
-            if (product.brand) detailsHtml += `<p style="margin: 5px 0;"><strong>Brand:</strong> ${product.brand}</p>`;
-            if (product.size) detailsHtml += `<p style="margin: 5px 0;"><strong>Size:</strong> ${product.size}</p>`;
-            if (product.colour) detailsHtml += `<p style="margin: 5px 0;"><strong>Colour:</strong> ${product.colour}</p>`;
+            if (product.brand) detailsHtml += `<p style="margin: 5px 0;"><strong>Brand:</strong> ${escapeHTML(product.brand)}</p>`;
+            if (product.size) detailsHtml += `<p style="margin: 5px 0;"><strong>Size:</strong> ${escapeHTML(product.size)}</p>`;
+            if (product.colour) detailsHtml += `<p style="margin: 5px 0;"><strong>Colour:</strong> ${escapeHTML(product.colour)}</p>`;
             
             if (detailsHtml) {
                 detailsEl.style.display = 'block';
