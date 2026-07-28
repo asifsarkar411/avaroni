@@ -583,15 +583,22 @@ sidebar.appendChild(headerDiv);
     hr.style.cssText = 'border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;';
     sidebar.appendChild(hr);
 
-    // If footer links were empty or missing FAQ/Blog/Sitemap, construct complete default quick links
-    if (footerLinks.length === 0) {
-        const createSidebarLink = (href, iconClass, text) => {
-            const a = document.createElement('a');
-            a.href = href;
-            a.innerHTML = `<i class="${iconClass}"></i> ${text}`;
-            return a;
-        };
-        footerLinks.push(createSidebarLink('track-order.html', 'fas fa-truck', 'Track Order'));
+    const createSidebarLink = (href, iconClass, text) => {
+        const a = document.createElement('a');
+        a.href = href;
+        a.innerHTML = `<i class="${iconClass}"></i> ${text}`;
+        return a;
+    };
+
+    // Guarantee Track Order link is always included at the top of quick links
+    const hasTrackOrder = footerLinks.some(link => link.getAttribute('href') === 'track-order.html');
+    if (!hasTrackOrder) {
+        footerLinks.unshift(createSidebarLink('track-order.html', 'fas fa-truck', 'Track Order'));
+    }
+
+    // If default quick links were missing, add remaining standard links
+    const hasFaq = footerLinks.some(link => link.getAttribute('href') === 'faq.html');
+    if (!hasFaq) {
         footerLinks.push(createSidebarLink('faq.html', 'fas fa-question-circle', 'FAQ'));
         footerLinks.push(createSidebarLink('blog.html', 'fas fa-newspaper', 'Blog'));
         footerLinks.push(createSidebarLink('sitemap.html', 'fas fa-sitemap', 'Sitemap'));
