@@ -766,6 +766,10 @@ function openSidebar() {
 
     document.body.classList.add("no-scroll");
     document.body.style.overflow = "hidden";
+
+    // Hide countdown banner when sidebar opens
+    const flashBanner = document.getElementById('flash-sale-banner');
+    if (flashBanner) flashBanner.style.display = 'none';
 }
 
 function closeSidebar() {
@@ -782,6 +786,10 @@ function closeSidebar() {
 
     document.body.classList.remove("no-scroll");
     document.body.style.overflow = "";
+
+    // Restore countdown banner when sidebar closes
+    const flashBanner = document.getElementById('flash-sale-banner');
+    if (flashBanner) flashBanner.style.display = '';
 }
 
 function toggleSidebar() {

@@ -2399,3 +2399,9 @@ body.no-scroll {
         font-size: 9px !important;
     }
 }
+
+/* Hide Flash Sale Banner when Sidebar is open */
+body.no-scroll #flash-sale-banner,
+.sidebar.active ~ #flash-sale-banner {
+    display: none !important;
+}
