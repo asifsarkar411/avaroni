@@ -581,6 +581,8 @@ if (paymentForm) {
         }
         
         const submitBtn = document.getElementById('submit-btn') || document.getElementById('place-order-btn') || document.getElementById('modal-confirm-btn');
+        const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
+        const trxIdInput = document.getElementById('trx-id') ? document.getElementById('trx-id').value.trim() : '';
 
         if (submitBtn) {
             submitBtn.disabled = true;
