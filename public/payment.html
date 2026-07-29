@@ -21,6 +21,318 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ── Payment Page Responsive Layout ── */
+        .payment-page-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+        }
+
+        .payment-page-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .checkout-card {
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .checkout-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .checkout-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111;
+            margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .checkout-card h3 i {
+            color: #555;
+            font-size: 18px;
+        }
+
+        .checkout-card input[type="text"],
+        .checkout-card input[type="email"],
+        .checkout-card input[type="tel"],
+        .checkout-card textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+            background: #fafafa;
+        }
+
+        .checkout-card input:focus,
+        .checkout-card textarea:focus {
+            border-color: #111;
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+            background: #fff;
+        }
+
+        .checkout-card textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Place Order Button */
+        .place-order-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #111111;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .place-order-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .place-order-btn:active {
+            transform: translateY(0);
+        }
+
+        .place-order-btn:disabled {
+            background: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Full-width across both columns */
+        .payment-full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ── Confirmation Modal ── */
+        .order-confirm-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .order-confirm-overlay.active {
+            display: flex;
+            animation: fadeInOverlay 0.25s ease;
+        }
+
+        .order-confirm-modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 36px 32px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .order-confirm-modal .modal-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #111;
+        }
+
+        .order-confirm-modal h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111;
+            margin: 0 0 10px;
+            border: none;
+            padding: 0;
+            display: block;
+        }
+
+        .order-confirm-modal p {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 24px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-actions button {
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #ddd;
+        }
+
+        .modal-btn-confirm {
+            background: #111;
+            color: #fff;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Payment method label highlight */
+        .pay-method-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1.5px solid #eee;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .pay-method-label:hover {
+            border-color: #bbb;
+        }
+
+        .pay-method-label.disabled-method {
+            color: gray;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .payment-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .payment-page-title {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            .payment-page-wrapper {
+                padding: 20px 14px 40px;
+            }
+
+            .checkout-card {
+                padding: 18px;
+            }
+
+            .place-order-btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .payment-page-wrapper {
+                max-width: 1200px;
+            }
+        }
+
+        /* Success message */
+        .success-container {
+            display: none;
+            text-align: center;
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            border-radius: 14px;
+            padding: 40px 30px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        .success-container h2 {
+            color: #16a34a;
+            font-size: 22px;
+            margin: 0 0 12px;
+        }
+
+        .success-container .home-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 28px;
+            background: #111;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+
+        .success-container .home-btn:hover {
+            background: #333;
+        }
+    </style>
 </head>
 <body>
    <nav class="navbar">
@@ -50,106 +362,134 @@
         <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
         <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
         <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
         <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
         <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
     </div>
 
-    <h2 class="page-title" style="text-align: center; margin-top: 20px;">Finalize Payment</h2>
+    <div class="payment-page-wrapper">
+        <h2 class="payment-page-title"><i class="fas fa-credit-card" style="margin-right: 8px;"></i>Finalize Payment</h2>
 
-    <div class="cart-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <form id="checkout-form" class="payment-form">
-            
-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff; color: #333;">
-                <h3>Order Summary</h3>
-                <div id="cart-items" style="margin-top: 10px; color: #333;"></div>
-                
-                <div id="delivery-location" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
-                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Delivery Location</label>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <label style="cursor: pointer; font-size: 13px; color: #333;">
-                            <input type="radio" name="deliveryLocation" value="inside" checked style="margin-right: 5px;"> Inside Dhaka (৳80)
-                        </label>
-                        <label style="cursor: pointer; font-size: 13px; color: #333;">
-                            <input type="radio" name="deliveryLocation" value="outside" style="margin-right: 5px;"> Outside Dhaka (৳150)
-                        </label>
+        <form id="checkout-form">
+            <div class="payment-grid">
+
+                <!-- LEFT COLUMN: Order Summary -->
+                <div class="checkout-card">
+                    <h3><i class="fas fa-shopping-bag"></i> Order Summary</h3>
+                    <div id="cart-items" style="margin-top: 4px; color: #333;"></div>
+                    
+                    <div id="delivery-location" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                        <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 8px;">Delivery Location</label>
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <label style="cursor: pointer; font-size: 13px; color: #333; display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="deliveryLocation" value="inside" checked> Inside Dhaka (৳80)
+                            </label>
+                            <label style="cursor: pointer; font-size: 13px; color: #333; display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="deliveryLocation" value="outside"> Outside Dhaka (৳150)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="promo-code-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                        <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Promo Code</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="promo-code-input" placeholder="Enter promo code" style="flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
+                            <button type="button" id="apply-promo-btn" style="padding: 10px 18px; background: #111; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: background 0.2s;">Apply</button>
+                        </div>
+                        <p id="promo-message" style="margin: 5px 0 0; font-size: 12px; color: #888;"></p>
+                    </div>
+
+                    <div style="margin-top: 15px; border-top: 2px solid #f0f0f0; padding-top: 12px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; color: #555;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Subtotal:</span>
+                            <span style="font-weight: 600;">৳<span id="cart-subtotal">0</span></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Delivery Charge:</span>
+                            <span style="font-weight: 600;">৳<span id="shipping-charge">0</span></span>
+                        </div>
+                        <div id="discount-row" style="display: none; justify-content: space-between; color: #16a34a; font-weight: 600;">
+                            <span>Promo Discount:</span>
+                            <span>-৳<span id="promo-discount">0</span></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 2px solid #111; padding-top: 10px; font-size: 20px; font-weight: 800; color: #111;">
+                            <span>Total:</span>
+                            <span>৳<span id="cart-total">0</span></span>
+                        </div>
                     </div>
                 </div>
 
-                <div id="promo-code-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
-                    <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Promo Code</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="promo-code-input" placeholder="Enter promo code" style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
-                        <button type="button" id="apply-promo-btn" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Apply</button>
+                <!-- RIGHT COLUMN: Shipping + Payment -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+
+                    <!-- Shipping Details -->
+                    <div class="checkout-card">
+                        <h3><i class="fas fa-truck"></i> Shipping Details</h3>
+                        <input type="text" id="name" placeholder="Full Name" required>
+                        <input type="email" id="email" placeholder="Email Address" required>
+                        <input type="tel" id="phone" placeholder="Phone Number" required>
+                        <textarea id="address" rows="3" placeholder="Proper Delivery Address" required></textarea>
                     </div>
-                    <p id="promo-message" style="margin: 5px 0 0; font-size: 12px; color: #888;"></p>
+
+                    <!-- Payment Method -->
+                    <div class="checkout-card">
+                        <h3><i class="fas fa-wallet"></i> Payment Method</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <label class="pay-method-label">
+                                <input type="radio" name="paymentMethod" value="cod" checked> 
+                                <strong>Cash on Delivery</strong>
+                            </label>
+                            <label class="pay-method-label">
+                                <input type="radio" name="paymentMethod" value="bkash"> 
+                                <strong>bKash</strong>
+                            </label>
+                            <label class="pay-method-label disabled-method">
+                                <input type="radio" name="paymentMethod" value="card" disabled> 
+                                <strong>Visa/Debit Card</strong> <span style="font-size: 11px;">(Unavailable)</span>
+                            </label>
+                        </div>
+
+                        <div id="cod-details" style="display: block; background: #f0f9ff; padding: 14px; border-radius: 8px; margin-top: 14px; border-left: 4px solid #0ea5e9; font-size: 13px;">
+                            <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address.</p>
+                        </div>
+
+                        <div id="bkash-details" style="display: none; background: #fdf2f8; padding: 14px; border-radius: 8px; margin-top: 14px; border-left: 4px solid #e2136e; text-align: center;">
+                            <p style="margin: 0 0 8px; font-size: 13px;">Please send your total bill via bKash to:</p>
+                            <h2 style="color: #e2136e; margin: 8px 0;">01628628300</h2>
+                            <p style="margin: 0 0 10px; font-size: 13px;">After sending, enter the Transaction ID below.</p>
+                            <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 8px; box-sizing: border-box; font-size: 14px;">
+                        </div>
+                    </div>
                 </div>
 
-                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; color: #555;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Subtotal:</span>
-                        <span>৳<span id="cart-subtotal">0</span></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Delivery Charge:</span>
-                        <span>৳<span id="shipping-charge">0</span></span>
-                    </div>
-                    <div id="discount-row" style="display: none; justify-content: space-between; color: green; font-weight: 600;">
-                        <span>Promo Discount:</span>
-                        <span>-৳<span id="promo-discount">0</span></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 8px; font-size: 18px; font-weight: bold; color: #333;">
-                        <span>Final Total:</span>
-                        <span>৳<span id="cart-total">0</span></span>
-                    </div>
+                <!-- Place Order Button (full width) -->
+                <div class="payment-full-width">
+                    <button type="button" id="place-order-btn" class="place-order-btn">
+                        <i class="fas fa-lock"></i> Place Order
+                    </button>
                 </div>
+
             </div>
-
-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
-                <h3>Step 1: Shipping Details</h3>
-                <input type="text" id="name" placeholder="Full Name" required style="width: 100%; margin-top: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                <input type="email" id="email" placeholder="Email Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                <input type="tel" id="phone" placeholder="Phone Number" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                <textarea id="address" rows="4" placeholder="Proper Delivery Address" required style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box;"></textarea>
-            </div>
-
-            <div class="checkout-step" style="border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #fff;">
-                <h3>Step 2: Select Payment Method</h3>
-                
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="paymentMethod" value="cod" checked> 
-                        <strong>Cash on Delivery</strong>
-                    </label>
-                    <label style="cursor: pointer;">
-                        <input type="radio" name="paymentMethod" value="bkash"> 
-                        <strong>bKash</strong>
-                    </label>
-                    <label style="color: gray; cursor: not-allowed;">
-                        <input type="radio" name="paymentMethod" value="card" disabled> 
-                        <strong>Visa/Debit Card</strong> (Unavailable right now)
-                    </label>
-                </div>
-
-                <div id="cod-details" style="display: block; background: #e6f7ff; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #0096ff;">
-                    <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address.</p>
-                </div>
-
-                <div id="bkash-details" style="display: none; background: #ffe6eb; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #e2136e; text-align: center;">
-                    <p>Please send your total bill via bKash to:</p>
-                    <h2 style="color: #e2136e; margin: 10px 0;">01628628300</h2>
-                    <p>After sending the money, enter the Transaction ID below.</p>
-                    <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; margin-top: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 4px; box-sizing: border-box;">
-                </div>
-            </div>
-
-            <button type="submit" class="btn" id="submit-btn" style="width: 100%; padding: 15px; font-size: 16px; cursor: pointer; background-color: #e60050; color: white; border: none; border-radius: 4px;">Confirm & Place Order</button>
         </form>
 
-        <div id="success-message" style="display: none; text-align: center; color: #28a745; margin-top: 30px; background: #e6ffe6; padding: 30px; border: 1px solid green; border-radius: 8px;">
+        <!-- Success Message -->
+        <div id="success-message" class="success-container">
             <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
-            <p id="success-details" style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
-            <br>
-            <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
+            <p id="success-details" style="color: #333; margin: 12px 0;">Thank you for your purchase. We will process your order soon.</p>
+            <a href="index.html" class="home-btn"><i class="fas fa-home"></i> Return to Home</a>
+        </div>
+    </div>
+
+    <!-- ── Confirmation Modal ── -->
+    <div id="order-confirm-overlay" class="order-confirm-overlay">
+        <div class="order-confirm-modal">
+            <div class="modal-icon"><i class="fas fa-clipboard-check"></i></div>
+            <h3>Confirm Your Order</h3>
+            <p>Are you sure you want to place this order? A confirmation email will be sent to you after the order is placed.</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn-cancel" id="modal-cancel-btn">Cancel</button>
+                <button type="button" class="modal-btn-confirm" id="modal-confirm-btn"><i class="fas fa-check"></i> Confirm Order</button>
+            </div>
         </div>
     </div>
 
@@ -218,6 +558,55 @@
                 msg.style.color = '#e60050';
                 msg.textContent = 'Could not validate. Try again.';
             }
+        });
+
+        // ── Place Order → Show Confirmation Modal ──
+        const placeOrderBtn = document.getElementById('place-order-btn');
+        const overlay = document.getElementById('order-confirm-overlay');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const checkoutForm = document.getElementById('checkout-form');
+
+        placeOrderBtn.addEventListener('click', () => {
+            // Validate form fields first
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+
+            if (!name || !email || !phone || !address) {
+                alert('Please fill in all shipping details before placing your order.');
+                return;
+            }
+
+            // Check bKash TrxID if bkash selected
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            if (paymentMethod === 'bkash') {
+                const trxId = document.getElementById('trx-id').value.trim();
+                if (!trxId) {
+                    alert('Please enter your bKash Transaction ID.');
+                    return;
+                }
+            }
+
+            // Show confirmation modal
+            overlay.classList.add('active');
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            overlay.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+            }
+        });
+
+        modalConfirmBtn.addEventListener('click', () => {
+            overlay.classList.remove('active');
+            // Trigger the actual form submission
+            checkoutForm.requestSubmit();
         });
 
         // Run initial calculation immediately on page load

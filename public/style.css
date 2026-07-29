@@ -514,14 +514,22 @@ body.no-scroll {
     position: fixed;
     z-index: 2000;
     top: 0;
-    right: -280px;
+    right: 0;
     background: rgba(17, 17, 17, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow: -4px 0 25px rgba(0, 0, 0, 0.2);
     overflow-x: hidden;
-    transition: right 0.3s ease-in-out;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
     padding-top: 15px;
+}
+
+.sidebar.active {
+    transform: translateX(0);
 }
 
 .sidebar-header {

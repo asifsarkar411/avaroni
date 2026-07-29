@@ -758,7 +758,6 @@ function openSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    sidebar.style.right = "0px";
     sidebar.classList.add("active");
 
     const overlay = getOrCreateSidebarOverlay();
@@ -776,7 +775,6 @@ function closeSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    sidebar.style.right = "-280px";
     sidebar.classList.remove("active");
 
     const overlay = document.getElementById('sidebar-overlay');
@@ -796,7 +794,7 @@ function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    if (sidebar.style.right === "0px" || sidebar.classList.contains("active")) {
+    if (sidebar.classList.contains("active")) {
         closeSidebar();
     } else {
         openSidebar();
