@@ -580,18 +580,12 @@ if (paymentForm) {
             return;
         }
         
-        const submitBtn = document.getElementById('submit-btn');
-        const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
-        
-        if (!selectedMethod) {
-            alert("Please select a payment method.");
-            return;
+        const submitBtn = document.getElementById('submit-btn') || document.getElementById('place-order-btn') || document.getElementById('modal-confirm-btn');
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Order...';
         }
-
-        const trxIdInput = document.getElementById('trx-id') ? document.getElementById('trx-id').value : '';
-
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'Processing Order...';
 
         let subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
         // Shipping fee is based on selected delivery location, not payment method
@@ -647,7 +641,7 @@ if (paymentForm) {
                     successDiv.innerHTML = `
                         <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
                         <p style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
-                        <p>Your order number is: <strong>${data.orderNumber || 'N/A'}</strong></p>
+                        <p>Your order number is: <strong style="font-size: 20px; color: #007bff;">${data.orderNumber || 'N/A'}</strong></p>
                         <br>
                         <button onclick="downloadInvoice('${data.orderNumber}')" class="btn" style="padding: 10px 20px; background-color: #111111; color: white; border-radius: 4px; margin-right: 10px; cursor: pointer;"><i class="fas fa-file-download"></i> Download Invoice</button>
                         <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
@@ -659,14 +653,18 @@ if (paymentForm) {
                 renderCart(); 
             } else {
                 alert(data.message || "There was an error saving your order. Please try again.");
-                submitBtn.disabled = false;
-                submitBtn.innerText = 'Confirm & Place Order';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                }
             }
         } catch (error) {
             console.error('Error:', error);
             alert("Could not connect to the server. Is your backend running?");
-            submitBtn.disabled = false;
-            submitBtn.innerText = 'Confirm & Place Order';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+            }
         }
     });
 }

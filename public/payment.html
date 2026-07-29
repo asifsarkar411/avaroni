@@ -483,9 +483,12 @@
     <!-- ── Confirmation Modal ── -->
     <div id="order-confirm-overlay" class="order-confirm-overlay">
         <div class="order-confirm-modal">
-            <div class="modal-icon"><i class="fas fa-clipboard-check"></i></div>
+            <div class="modal-icon"><i class="fas fa-shopping-bag"></i></div>
             <h3>Confirm Your Order</h3>
-            <p>Are you sure you want to place this order? A confirmation email will be sent to you after the order is placed.</p>
+            <div id="modal-summary-details" style="background: #f8f9fa; border: 1px solid #eee; border-radius: 10px; padding: 14px; margin: 15px 0; text-align: left; font-size: 13px; color: #444;">
+                <!-- Dynamically populated -->
+            </div>
+            <p style="font-size: 13px; color: #666; margin: 0 0 20px;">Are you sure you want to confirm and place this order?</p>
             <div class="modal-actions">
                 <button type="button" class="modal-btn-cancel" id="modal-cancel-btn">Cancel</button>
                 <button type="button" class="modal-btn-confirm" id="modal-confirm-btn"><i class="fas fa-check"></i> Confirm Order</button>
@@ -580,13 +583,31 @@
             }
 
             // Check bKash TrxID if bkash selected
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const paymentMethodRadio = document.querySelector('input[name="paymentMethod"]:checked');
+            const paymentMethod = paymentMethodRadio ? paymentMethodRadio.value : 'cod';
             if (paymentMethod === 'bkash') {
                 const trxId = document.getElementById('trx-id').value.trim();
                 if (!trxId) {
                     alert('Please enter your bKash Transaction ID.');
                     return;
                 }
+            }
+
+            // Populate modal order breakdown details
+            const totalText = document.getElementById('cart-total') ? document.getElementById('cart-total').textContent : '0';
+            const itemsCount = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart.length : 0;
+            const payMethodName = paymentMethod === 'bkash' ? 'bKash Mobile Banking' : 'Cash on Delivery';
+            const locRadio = document.querySelector('input[name="deliveryLocation"]:checked');
+            const locText = (locRadio && locRadio.value === 'inside') ? 'Inside Dhaka (৳80)' : 'Outside Dhaka (৳150)';
+
+            const summaryEl = document.getElementById('modal-summary-details');
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Total Items:</span><strong>${itemsCount} item(s)</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Delivery:</span><strong>${locText}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Payment Method:</span><strong>${payMethodName}</strong></div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ddd; padding-top:6px; font-weight:800; font-size:15px; color:#111;"><span>Total Payable:</span><span style="color:#28a745;">৳${totalText}</span></div>
+                `;
             }
 
             // Show confirmation modal
