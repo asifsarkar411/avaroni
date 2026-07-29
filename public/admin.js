@@ -1212,7 +1212,7 @@ async function populateAddProductCategories() {
 
     const subSelect = document.getElementById('prod-subcategory');
     if (subSelect) {
-        subSelect.innerHTML = `<option value="" disabled selected>Select Subcategory</option>`;
+        subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
     }
 }
 
@@ -1222,11 +1222,11 @@ function populateSubcategories(categorySlug) {
 
     const category = localCategories.find(c => c.slug === categorySlug);
     if (!category || !category.subcategories || category.subcategories.length === 0) {
-        subSelect.innerHTML = `<option value="" disabled selected>No subcategories found. Add them in Manage Categories tab.</option>`;
+        subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
         return;
     }
 
-    subSelect.innerHTML = `<option value="" disabled selected>Select Subcategory</option>`;
+    subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
     category.subcategories.forEach(sub => {
         subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
     });
@@ -1841,11 +1841,11 @@ function populateEditSubcategories(categorySlug, selectedSubcat = '') {
 
     const category = localCategories.find(c => c.slug === categorySlug);
     if (!category || !category.subcategories || category.subcategories.length === 0) {
-        subSelect.innerHTML = `<option value="" selected>No subcategories</option>`;
+        subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
         return;
     }
 
-    subSelect.innerHTML = `<option value="" ${!selectedSubcat ? 'selected' : ''}>Select Subcategory</option>`;
+    subSelect.innerHTML = `<option value="" ${!selectedSubcat ? 'selected' : ''}>None (Optional)</option>`;
     category.subcategories.forEach(sub => {
         const selected = sub === selectedSubcat ? 'selected' : '';
         subSelect.innerHTML += `<option value="${sub}" ${selected}>${sub}</option>`;
