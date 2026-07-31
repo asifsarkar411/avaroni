@@ -1965,6 +1965,8 @@ async function loadPublishedReviewsSlider() {
    // Array of Category Data (Replace icon paths with your own image URLs/paths)
 // Array linked to your exact backend categories and subcategories
 // Array matching your categories (Kurtis and Gowns removed)
+// Array matching your exact category configuration
+// Array matching your store categories
 const categoryData = [
     { name: "Sarees", icon: "./img/categories/saree.png", filter: "sarees" },
     { name: "Salwar Kameez", icon: "./img/categories/three-piece.png", filter: "salwar-kameez" },
@@ -1974,16 +1976,16 @@ const categoryData = [
     { name: "Footwear", icon: "./img/categories/footwear.png", filter: "footwear" }
 ];
 
-// Fallback image if a category image is missing (prevents broken layout)
+// Fallback image if local icon fails to load
 const FALLBACK_ICON = "./img/profile_image.jpg";
 
-// Render categories without inline 'onclick' or 'onerror' attributes (CSP safe)
+// Render category grid safely without inline onclick or onerror attributes
 function renderCategoryGrid() {
     const gridContainer = document.getElementById("category-grid");
     if (!gridContainer) return;
 
     gridContainer.innerHTML = categoryData.map(cat => `
-        <div class="category-card" data-filter="${cat.filter}">
+        <div class="category-card" data-filter="${cat.filter}" style="cursor: pointer;">
             <div class="category-icon-wrap">
                 <img src="${cat.icon}" alt="${cat.name}" loading="lazy" class="category-icon-img">
             </div>
@@ -1991,7 +1993,7 @@ function renderCategoryGrid() {
         </div>
     `).join("");
 
-    // Add broken image fallback handling via JS listeners (CSP safe)
+    // Safe fallback handling for missing category icons
     gridContainer.querySelectorAll('.category-icon-img').forEach(img => {
         img.addEventListener('error', function() {
             this.src = FALLBACK_ICON;
@@ -1999,7 +2001,25 @@ function renderCategoryGrid() {
     });
 }
 
-// Global Event Delegation listener for category clicks
+// Category filter action handler
+function filterByCategory(categoryFilter) {
+    const filterSelect = document.getElementById("global-filter-select");
+    const searchInput = document.getElementById("global-search-input");
+
+    if (filterSelect) {
+        const optionExists = Array.from(filterSelect.options).some(opt => opt.value === categoryFilter);
+
+        if (optionExists) {
+            filterSelect.value = categoryFilter;
+            filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (searchInput) {
+            searchInput.value = categoryFilter.replace(/-/g, " ");
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+}
+
+// Event delegation for category grid clicks
 document.addEventListener("DOMContentLoaded", () => {
     renderCategoryGrid();
 
@@ -2014,50 +2034,3 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-
-// Category Click Action Handler
-function filterByCategory(categoryFilter) {
-    const filterSelect = document.getElementById("global-filter-select");
-    const searchInput = document.getElementById("global-search-input");
-
-    if (filterSelect) {
-        // Check if option exists in select dropdown
-        const optionExists = Array.from(filterSelect.options).some(opt => opt.value === categoryFilter);
-
-        if (optionExists) {
-            filterSelect.value = categoryFilter;
-            filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        } else if (searchInput) {
-            // Fallback to global search input if filter option isn't present
-            searchInput.value = categoryFilter.replace(/-/g, " ");
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    }
-}
-
-// Function to render categories
-function renderCategoryGrid() {
-    const gridContainer = document.getElementById("category-grid");
-    if (!gridContainer) return;
-
-    gridContainer.innerHTML = categoryData.map(cat => `
-        <div class="category-card" onclick="filterByCategory('${cat.filter}')">
-            <div class="category-icon-wrap">
-                <img src="${cat.icon}" alt="${cat.name}" loading="lazy" onError="this.src='./img/profile_image.jpg';">
-            </div>
-            <p class="category-title">${cat.name}</p>
-        </div>
-    `).join("");
-}
-
-// Category click filter handler
-function filterByCategory(categoryFilter) {
-    const filterSelect = document.getElementById("global-filter-select");
-    if (filterSelect) {
-        filterSelect.value = categoryFilter;
-        filterSelect.dispatchEvent(new Event('change'));
-    }
-}
-
-// Call on page load
-document.addEventListener("DOMContentLoaded", renderCategoryGrid);

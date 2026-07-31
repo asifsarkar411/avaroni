@@ -2002,3 +2002,36 @@ if (!process.env.VERCEL) {
 
 // Export for Vercel serverless deployment
 module.exports = app;
+
+const express = require('express');
+const helmet = require('helmet');
+const path = require('path');
+
+const app = express();
+
+// Updated Helmet CSP configuration
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+                scriptSrcAttr: ["'none'"], // Enforce no inline onclick/onerror in HTML for best security
+                styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+                fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+                imgSrc: ["'self'", "data:", "blob:", "https:"],
+                connectSrc: ["'self'"]
+            }
+        }
+    })
+);
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ... Rest of your Express routes & API endpoints below ...
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
