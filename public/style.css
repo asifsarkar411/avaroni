@@ -72,15 +72,15 @@ h6, .h6 {
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    padding: 12px 25px;
+    padding: 10px 20px;
     position: sticky;
     top: 0;
     z-index: 100;
-    gap: 15px;
+    gap: 10px;
 }
 
 .logo {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
     color: #333;
     text-decoration: none;
@@ -93,14 +93,14 @@ h6, .h6 {
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
 }
 
 .wishlist-icon, .user-nav-btn, .menu-icon {
-    font-size: 22px !important;
-    width: 36px;
-    height: 36px;
+    font-size: 20px !important;
+    width: 34px;
+    height: 34px;
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
@@ -115,6 +115,30 @@ h6, .h6 {
 .wishlist-icon:hover, .user-nav-btn:hover, .menu-icon:hover {
     color: #000 !important;
     transform: scale(1.1);
+}
+
+/* Home Button (styled pill) */
+.nav-home-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: #111;
+    color: #fff !important;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.nav-home-btn:hover {
+    background: #333;
+    transform: scale(1.04);
+}
+.nav-home-btn i {
+    font-size: 13px;
 }
 
 .cart-icon {
@@ -367,21 +391,58 @@ h6, .h6 {
     .navbar {
         flex-direction: row;
         justify-content: space-between;
-        padding: 12px 20px;
+        padding: 8px 12px;
+        gap: 8px;
     }
 
-    /* Hide category text links on mobile as they are inside sidebar (keep cart, wishlist & user icons) */
-    .nav-links a:not(.cart-icon):not(.wishlist-icon):not(.user-nav-btn) {
+    .logo {
+        font-size: 18px;
+        gap: 5px;
+    }
+
+    .nav-logo {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    /* Hide category text links on mobile (keep icons, home button, wishlist & user) */
+    .nav-links a:not(.cart-icon):not(.wishlist-icon):not(.user-nav-btn):not(.nav-home-btn) {
         display: none;
     }
 
-    /* Align cart icon, wishlist icon, user icon, and menu button nicely on the right */
+    /* Compact icon sizing on mobile */
+    .wishlist-icon, .user-nav-btn, .menu-icon {
+        font-size: 18px !important;
+        width: 30px;
+        height: 30px;
+    }
+
+    .nav-home-btn {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+
+    /* Align icons on the right */
     .nav-links {
         margin-top: 0;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 8px;
     }
+
+    /* Nav promo slider responsive */
+    .nav-promo-slider {
+        position: relative !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 38px;
+        margin: 6px 0 0 0;
+        order: 3;
+        flex: 0 0 100%;
+    }
+
 
     /* Reduce padding on the product grid for smaller screens */
     .product-grid {
