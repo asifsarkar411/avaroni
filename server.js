@@ -725,6 +725,11 @@ app.get('/api/user/auth/me', async (req, res) => {
                 }
             });
         });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 // Get Logged In User Purchase History
 app.get('/api/user/orders', async (req, res) => {
     try {
