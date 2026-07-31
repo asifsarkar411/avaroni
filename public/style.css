@@ -875,9 +875,10 @@ body.no-scroll {
 ========================================= */
 .search-bar-container {
     position: relative;
-    max-width: 680px;
-    margin: 20px auto 10px;
-    padding: 0 15px;
+    flex: 1;
+    max-width: 600px;
+    margin: 0 15px;
+    padding: 0;
 }
 .search-bar-inner {
     display: flex;
@@ -1677,15 +1678,15 @@ body.no-scroll {
     }
 }
 
-/* Navbar Promotional Photo Slider */
+/* Promotional Photo Banner Slider (below navbar) */
 .nav-promo-slider {
-    flex: 1;
-    min-width: 0;
-    height: 48px;
-    margin: 0 20px;
+    max-width: 900px;
+    height: 90px;
+    margin: 15px auto 10px;
+    padding: 0 15px;
     position: relative;
     overflow: hidden;
-    border-radius: 0;
+    border-radius: 12px;
     box-shadow: none !important;
     background: transparent !important;
     border: none !important;
@@ -1850,26 +1851,27 @@ body.no-scroll {
     flex-shrink: 0;
 }
 
-/* Tablet & Mobile: slider wraps cleanly below header logo and nav items */
+/* Tablet & Mobile header responsiveness */
 @media (max-width: 991px) {
     .navbar {
         flex-wrap: wrap;
     }
-    .nav-promo-slider {
+    .search-bar-container {
         order: 3;
         flex: 0 0 100%;
         width: 100%;
-        height: 44px;
-        margin: 8px 0 0 0;
-        border-radius: 6px;
+        margin: 10px 0 0 0;
+    }
+    .nav-promo-slider {
+        height: 65px;
+        margin: 10px auto 5px;
     }
 }
 
 @media (max-width: 480px) {
     .nav-promo-slider {
-        height: 38px;
-        margin: 6px 0 0 0;
-        border-radius: 6px;
+        height: 55px;
+        margin: 8px auto 4px;
     }
 }
 
