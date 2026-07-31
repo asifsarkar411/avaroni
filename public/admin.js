@@ -91,6 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
         editProductForm.addEventListener('submit', handleEditProductSubmit);
     }
 
+    // 10. Edit Category Form Submit
+    const editCategoryForm = document.getElementById('edit-category-form');
+    if (editCategoryForm) {
+        editCategoryForm.addEventListener('submit', handleEditCategorySubmit);
+    }
+
     const editCategorySelect = document.getElementById('edit-prod-category');
     if (editCategorySelect) {
         editCategorySelect.addEventListener('change', (e) => {
@@ -1260,11 +1266,23 @@ async function renderCategoriesTab() {
             subListHtml = `<p style="margin: 0; color: #888; font-size: 13px; font-style: italic;">No subcategories added yet.</p>`;
         }
 
+        const iconSrc = cat.iconUrl || './img/profile_image.jpg';
+        const redirectText = cat.redirectUrl || `category.html?cat=${cat.slug}`;
+
         container.innerHTML += `
-            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #e60050; color: #333;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #333;">${escapeHTML(cat.displayName)} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 10px;">(Slug: ${escapeHTML(cat.slug)})</span></h3>
-                    <button class="btn" onclick="deleteCategory('${cat._id}')" style="margin-top:0; width:auto; padding: 5px 10px; font-size: 12px; background: #333; color: #fff;">Delete Category</button>
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #111111; color: #333;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <img src="${iconSrc}" alt="${escapeHTML(cat.displayName)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                        <div>
+                            <h3 style="margin: 0; color: #111;">${escapeHTML(cat.displayName)} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 6px;">(Slug: ${escapeHTML(cat.slug)})</span></h3>
+                            <p style="margin: 3px 0 0; font-size: 12px; color: #666;"><i class="fas fa-link"></i> Link: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">${escapeHTML(redirectText)}</code></p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" onclick="openEditCategoryModal('${cat._id}')" style="margin-top:0; width:auto; padding: 6px 14px; font-size: 12px; background: #0d6efd; color: #fff;"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn" onclick="deleteCategory('${cat._id}')" style="margin-top:0; width:auto; padding: 6px 14px; font-size: 12px; background: #dc3545; color: #fff;"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
@@ -1276,7 +1294,7 @@ async function renderCategoriesTab() {
 
                 <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                     <input type="text" id="new-sub-${cat._id}" placeholder="New Subcategory name" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
-                    <button class="btn" onclick="handleAddSubcategory('${cat._id}')" style="margin-top:0; width:auto; padding: 8px 15px; font-size: 13px; background: #e60050; color: #fff;">Add Subcategory</button>
+                    <button class="btn" onclick="handleAddSubcategory('${cat._id}')" style="margin-top:0; width:auto; padding: 8px 15px; font-size: 13px; background: #111111; color: #fff;">Add Subcategory</button>
                 </div>
             </div>
         `;
@@ -1285,9 +1303,31 @@ async function renderCategoriesTab() {
 
 async function handleAddCategory(e) {
     e.preventDefault();
-    const input = document.getElementById('new-cat-name');
-    const name = input.value.trim();
+    const nameInput = document.getElementById('new-cat-name');
+    const iconFileInput = document.getElementById('new-cat-icon-file');
+    const iconUrlInput = document.getElementById('new-cat-icon-url');
+    const redirectInput = document.getElementById('new-cat-redirect');
+
+    const name = nameInput.value.trim();
     if (!name) return;
+
+    let iconUrl = iconUrlInput ? iconUrlInput.value.trim() : '';
+
+    if (iconFileInput && iconFileInput.files && iconFileInput.files[0]) {
+        try {
+            iconUrl = await fileToBase64(iconFileInput.files[0]);
+        } catch (err) {
+            console.error("Error reading category icon image file:", err);
+        }
+    }
+
+    const redirectUrl = redirectInput ? redirectInput.value.trim() : '';
+
+    const submitBtn = document.getElementById('add-cat-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Creating...';
+    }
 
     try {
         const response = await fetchWithAuth('/api/admin/categories', {
@@ -1295,18 +1335,35 @@ async function handleAddCategory(e) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ displayName: name })
+            body: JSON.stringify({ 
+                displayName: name,
+                iconUrl,
+                redirectUrl
+            })
         });
+
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
+        }
+
         if (!response) return;
         const data = await response.json();
         if (data.success) {
             alert('Category added successfully!');
-            input.value = '';
+            nameInput.value = '';
+            if (iconFileInput) iconFileInput.value = '';
+            if (iconUrlInput) iconUrlInput.value = '';
+            if (redirectInput) redirectInput.value = '';
             renderCategoriesTab();
         } else {
             alert('Failed to add category: ' + (data.message || 'Unknown error'));
         }
     } catch (err) {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
+        }
         console.error("Error adding category:", err);
         alert('An error occurred connecting to the server.');
     }
@@ -1381,10 +1438,101 @@ async function deleteCategory(catId) {
     }
 }
 
+function openEditCategoryModal(catId) {
+    const cat = localCategories.find(c => c._id === catId);
+    if (!cat) return;
+
+    document.getElementById('edit-cat-id').value = cat._id;
+    document.getElementById('edit-cat-name').value = cat.displayName || '';
+    document.getElementById('edit-cat-icon-url').value = cat.iconUrl || '';
+    document.getElementById('edit-cat-redirect').value = cat.redirectUrl || '';
+    
+    const preview = document.getElementById('edit-cat-icon-preview');
+    if (preview) {
+        preview.src = cat.iconUrl || './img/profile_image.jpg';
+    }
+
+    const modal = document.getElementById('edit-category-modal');
+    if (modal) modal.style.display = 'block';
+}
+
+function closeEditCategoryModal() {
+    const modal = document.getElementById('edit-category-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleEditCategorySubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-cat-id').value;
+    const name = document.getElementById('edit-cat-name').value.trim();
+    const iconFileInput = document.getElementById('edit-cat-icon-file');
+    const iconUrlInput = document.getElementById('edit-cat-icon-url');
+    const redirectInput = document.getElementById('edit-cat-redirect');
+
+    if (!id || !name) return;
+
+    let iconUrl = iconUrlInput ? iconUrlInput.value.trim() : '';
+
+    if (iconFileInput && iconFileInput.files && iconFileInput.files[0]) {
+        try {
+            iconUrl = await fileToBase64(iconFileInput.files[0]);
+        } catch (err) {
+            console.error("Error reading edit category icon file:", err);
+        }
+    }
+
+    const redirectUrl = redirectInput ? redirectInput.value.trim() : '';
+
+    const saveBtn = document.getElementById('update-category-btn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+    }
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/categories/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                displayName: name,
+                iconUrl,
+                redirectUrl
+            })
+        });
+
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Category';
+        }
+
+        if (!response) return;
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Category updated successfully!');
+            closeEditCategoryModal();
+            renderCategoriesTab();
+        } else {
+            alert('Failed to update category: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Category';
+        }
+        console.error("Error updating category:", err);
+        alert('An error occurred connecting to the server.');
+    }
+}
+
 // Attach actions to global context
 window.deleteCategory = deleteCategory;
 window.deleteSubcategory = deleteSubcategory;
 window.handleAddSubcategory = handleAddSubcategory;
+window.openEditCategoryModal = openEditCategoryModal;
+window.closeEditCategoryModal = closeEditCategoryModal;
 
 // ==========================================
 // 🎟️ PROMO CODE MANAGEMENT

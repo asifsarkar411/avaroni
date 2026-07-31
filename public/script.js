@@ -1967,45 +1967,53 @@ async function loadPublishedReviewsSlider() {
 // Array matching your categories (Kurtis and Gowns removed)
 // Array matching your exact category configuration
 // Array matching your store categories
-const categoryData = [
-    { name: "Sarees", icon: "./img/categories/saree.png", filter: "sarees" },
-    { name: "Salwar Kameez", icon: "./img/categories/three-piece.png", filter: "salwar-kameez" },
-    { name: "Kids Wear", icon: "./img/categories/kids.jpg", filter: "kids-wear" },
-    { name: "Jewellery", icon: "./img/categories/jewellery.png", filter: "jewellery" },
-    { name: "Handbags", icon: "./img/categories/handbag.jpg", filter: "handbags" },
-    { name: "Footwear", icon: "./img/categories/footwear.png", filter: "footwear" }
-];
-
 // Fallback image if local icon fails to load
 const FALLBACK_ICON = "./img/profile_image.jpg";
 
-// Render category grid safely without inline onclick or onerror attributes
-function renderCategoryGrid() {
+// Default category data if database is empty
+const defaultCategoryData = [
+    { name: "Sarees", icon: "./img/categories/saree.png", redirectUrl: "category.html?cat=sarees" },
+    { name: "Salwar Kameez", icon: "./img/categories/three-piece.png", redirectUrl: "category.html?cat=salwar-kameez" },
+    { name: "Kids Wear", icon: "./img/categories/kids.jpg", redirectUrl: "kids.html" },
+    { name: "Jewellery", icon: "./img/categories/jewellery.png", redirectUrl: "ornament.html" },
+    { name: "Handbags", icon: "./img/categories/handbag.jpg", redirectUrl: "category.html?cat=handbags" },
+    { name: "Footwear", icon: "./img/categories/footwear.png", redirectUrl: "category.html?cat=footwear" }
+];
+
+// Dynamically Render Category Grid from DB (with custom uploaded icons & redirect links)
+async function renderCategoryGrid() {
     const gridContainer = document.getElementById("category-grid");
     if (!gridContainer) return;
 
-    gridContainer.innerHTML = categoryData.map(cat => `
-        <div class="category-card" data-filter="${cat.filter}" style="cursor: pointer;">
+    let categoriesToRender = defaultCategoryData;
+
+    try {
+        const response = await fetch('/api/categories', { cache: 'no-store' });
+        const data = await response.json();
+        if (data.success && data.categories && data.categories.length > 0) {
+            categoriesToRender = data.categories.map(cat => {
+                const targetUrl = cat.redirectUrl && cat.redirectUrl.trim() 
+                    ? cat.redirectUrl.trim() 
+                    : getCategoryPageUrl(cat.slug, cat.name || cat.displayName);
+                return {
+                    name: cat.displayName,
+                    icon: cat.iconUrl && cat.iconUrl.trim() ? cat.iconUrl : FALLBACK_ICON,
+                    redirectUrl: targetUrl
+                };
+            });
+        }
+    } catch (err) {
+        console.warn("Using default category icons (API fetch failed):", err);
+    }
+
+    gridContainer.innerHTML = categoriesToRender.map(cat => `
+        <div class="category-card" data-url="${escapeHTML(cat.redirectUrl)}" style="cursor: pointer;">
             <div class="category-icon-wrap">
-                <img src="${cat.icon}" alt="${cat.name}" loading="lazy" class="category-icon-img">
+                <img src="${escapeHTML(cat.icon)}" alt="${escapeHTML(cat.name)}" loading="lazy" class="category-icon-img" onerror="this.onerror=null; this.src='${FALLBACK_ICON}';">
             </div>
-            <p class="category-title">${cat.name}</p>
+            <p class="category-title">${escapeHTML(cat.name)}</p>
         </div>
     `).join("");
-
-    // Safe fallback handling for missing category icons
-    gridContainer.querySelectorAll('.category-icon-img').forEach(img => {
-        img.addEventListener('error', function() {
-            this.src = FALLBACK_ICON;
-        });
-    });
-}
-
-// Category filter action handler — navigates to the dedicated category page
-function filterByCategory(categorySlug) {
-    // Use the same routing logic as sidebar categories
-    const url = getCategoryPageUrl(categorySlug, categorySlug);
-    window.location.href = url;
 }
 
 // Event delegation for category grid clicks
@@ -2017,9 +2025,9 @@ document.addEventListener("DOMContentLoaded", () => {
         gridContainer.addEventListener("click", (event) => {
             const card = event.target.closest(".category-card");
             if (card) {
-                const categoryFilter = card.getAttribute("data-filter");
-                if (categoryFilter) {
-                    filterByCategory(categoryFilter);
+                const targetUrl = card.getAttribute("data-url");
+                if (targetUrl) {
+                    window.location.href = targetUrl;
                 }
             }
         });

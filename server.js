@@ -579,7 +579,7 @@ function generateCategorySlug(str) {
 // Add Category (Admin)
 app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
     try {
-        const { displayName, subcategories } = req.body;
+        const { displayName, subcategories, iconUrl, redirectUrl } = req.body;
         if (!displayName || !displayName.trim()) {
             return res.status(400).json({ success: false, message: "Category name is required" });
         }
@@ -598,6 +598,8 @@ app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
             name,
             displayName: cleanDisplayName,
             slug,
+            iconUrl: iconUrl || "",
+            redirectUrl: redirectUrl || "",
             subcategories: subcategories || []
         });
 
@@ -606,6 +608,29 @@ app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Add Category Error:", error);
         res.status(500).json({ success: false, message: "Failed to create category" });
+    }
+});
+
+// Update Category (Admin)
+app.put('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const { displayName, iconUrl, redirectUrl } = req.body;
+        const category = await Category.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ success: false, message: "Category not found" });
+        }
+
+        if (displayName && displayName.trim()) {
+            category.displayName = displayName.trim();
+        }
+        if (iconUrl !== undefined) category.iconUrl = iconUrl;
+        if (redirectUrl !== undefined) category.redirectUrl = redirectUrl.trim();
+
+        await category.save();
+        res.json({ success: true, category });
+    } catch (error) {
+        console.error("Update Category Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update category" });
     }
 });
 
