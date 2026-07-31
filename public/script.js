@@ -1964,53 +1964,76 @@ async function loadPublishedReviewsSlider() {
    ============================================= */
    // Array of Category Data (Replace icon paths with your own image URLs/paths)
 // Array linked to your exact backend categories and subcategories
+// Array matching your categories (Kurtis and Gowns removed)
 const categoryData = [
     { name: "Sarees", icon: "./img/categories/saree.png", filter: "sarees" },
     { name: "Salwar Kameez", icon: "./img/categories/three-piece.png", filter: "salwar-kameez" },
-    { name: "Kurtis & Tunics", icon: "./img/categories/kurtis.png", filter: "kurtis-tunics" },
-    { name: "Gowns", icon: "./img/categories/gown.png", filter: "gowns" },
     { name: "Kids Wear", icon: "./img/categories/kids.jpg", filter: "kids-wear" },
     { name: "Jewellery", icon: "./img/categories/jewellery.png", filter: "jewellery" },
     { name: "Handbags", icon: "./img/categories/handbag.jpg", filter: "handbags" },
     { name: "Footwear", icon: "./img/categories/footwear.png", filter: "footwear" }
 ];
 
-// Function to render categories
+// Fallback image if a category image is missing (prevents broken layout)
+const FALLBACK_ICON = "./img/profile_image.jpg";
+
+// Render categories without inline 'onclick' or 'onerror' attributes (CSP safe)
 function renderCategoryGrid() {
     const gridContainer = document.getElementById("category-grid");
     if (!gridContainer) return;
 
     gridContainer.innerHTML = categoryData.map(cat => `
-        <div class="category-card" onclick="filterByCategory('${cat.filter}')">
+        <div class="category-card" data-filter="${cat.filter}">
             <div class="category-icon-wrap">
-                <img src="${cat.icon}" alt="${cat.name}" loading="lazy" onError="this.src='./img/profile_image.jpg';">
+                <img src="${cat.icon}" alt="${cat.name}" loading="lazy" class="category-icon-img">
             </div>
             <p class="category-title">${cat.name}</p>
         </div>
     `).join("");
+
+    // Add broken image fallback handling via JS listeners (CSP safe)
+    gridContainer.querySelectorAll('.category-icon-img').forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = FALLBACK_ICON;
+        });
+    });
 }
 
-// Handler that connects directly to script.js filter/search functionality
+// Global Event Delegation listener for category clicks
+document.addEventListener("DOMContentLoaded", () => {
+    renderCategoryGrid();
+
+    const gridContainer = document.getElementById("category-grid");
+    if (gridContainer) {
+        gridContainer.addEventListener("click", (event) => {
+            const card = event.target.closest(".category-card");
+            if (card) {
+                const categoryFilter = card.getAttribute("data-filter");
+                filterByCategory(categoryFilter);
+            }
+        });
+    }
+});
+
+// Category Click Action Handler
 function filterByCategory(categoryFilter) {
     const filterSelect = document.getElementById("global-filter-select");
     const searchInput = document.getElementById("global-search-input");
 
     if (filterSelect) {
-        // Match selection to filter dropdown if value exists, or trigger search input
+        // Check if option exists in select dropdown
         const optionExists = Array.from(filterSelect.options).some(opt => opt.value === categoryFilter);
-        
+
         if (optionExists) {
             filterSelect.value = categoryFilter;
-            filterSelect.dispatchEvent(new Event('change'));
+            filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
         } else if (searchInput) {
-            searchInput.value = categoryFilter;
-            searchInput.dispatchEvent(new Event('input'));
+            // Fallback to global search input if filter option isn't present
+            searchInput.value = categoryFilter.replace(/-/g, " ");
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 }
-
-// Call on DOM content load
-document.addEventListener("DOMContentLoaded", renderCategoryGrid);
 
 // Function to render categories
 function renderCategoryGrid() {
