@@ -274,6 +274,7 @@ function addToCart(id, name, price, image, maxStock) {
     
     localStorage.setItem(cartKey, JSON.stringify(cart));
     updateCartBadge();
+    triggerCartBounce();
     window.location.href = 'cart.html';
 }
 
@@ -419,22 +420,61 @@ function removeFromCart(id) {
     updateCartBadge();
 }
 
-// Function to update cart badge indicators dynamically
+// Function to update cart badge — now uses floating cart card
 function updateCartBadge() {
-    const cartIcons = document.querySelectorAll('.cart-icon');
     let totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+    // Create floating cart card if it doesn't exist yet
+    let floatingCart = document.getElementById('floating-cart-card');
+    if (!floatingCart) {
+        floatingCart = document.createElement('a');
+        floatingCart.id = 'floating-cart-card';
+        floatingCart.className = 'floating-cart-card';
+        floatingCart.href = 'cart.html';
+        floatingCart.title = 'View Cart';
+        floatingCart.innerHTML = `
+            <div class="floating-cart-icon">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="floating-cart-badge" style="display:none;">0</span>
+            </div>
+            <span class="floating-cart-label">Cart</span>
+        `;
+        document.body.appendChild(floatingCart);
+    }
+
+    // Update badge count
+    const badge = floatingCart.querySelector('.floating-cart-badge');
+    if (badge) {
+        if (totalItems > 0) {
+            badge.style.display = 'block';
+            badge.innerText = totalItems;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Also update any legacy .cart-icon badges if they exist
+    const cartIcons = document.querySelectorAll('.cart-icon');
     cartIcons.forEach(icon => {
         const existingBadge = icon.querySelector('.cart-badge');
         if (existingBadge) existingBadge.remove();
-
         if (totalItems > 0) {
-            const badge = document.createElement('span');
-            badge.className = 'cart-badge';
-            badge.innerText = totalItems;
-            icon.appendChild(badge);
+            const b = document.createElement('span');
+            b.className = 'cart-badge';
+            b.innerText = totalItems;
+            icon.appendChild(b);
         }
     });
+}
+
+// Trigger bounce animation when item is added
+function triggerCartBounce() {
+    const floatingCart = document.getElementById('floating-cart-card');
+    if (!floatingCart) return;
+    floatingCart.classList.remove('cart-item-added');
+    void floatingCart.offsetWidth; // force reflow
+    floatingCart.classList.add('cart-item-added');
+    setTimeout(() => floatingCart.classList.remove('cart-item-added'), 600);
 }
 
 // ==========================================
