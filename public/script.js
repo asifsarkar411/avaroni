@@ -1963,14 +1963,54 @@ async function loadPublishedReviewsSlider() {
    new addition
    ============================================= */
    // Array of Category Data (Replace icon paths with your own image URLs/paths)
+// Array linked to your exact backend categories and subcategories
 const categoryData = [
-    { name: "Sarees", icon: "./img/categories/saree.png", filter: "saree" },
-    { name: "Three Piece", icon: "./img/categories/three-piece.png", filter: "three-piece" },
-    { name: "Kids Wear", icon: "./img/categories/kids.jpg", filter: "kids" },
+    { name: "Sarees", icon: "./img/categories/saree.png", filter: "sarees" },
+    { name: "Salwar Kameez", icon: "./img/categories/three-piece.png", filter: "salwar-kameez" },
+    { name: "Kurtis & Tunics", icon: "./img/categories/kurtis.png", filter: "kurtis-tunics" },
+    { name: "Gowns", icon: "./img/categories/gown.png", filter: "gowns" },
+    { name: "Kids Wear", icon: "./img/categories/kids.jpg", filter: "kids-wear" },
     { name: "Jewellery", icon: "./img/categories/jewellery.png", filter: "jewellery" },
-    { name: "Handbags", icon: "./img/categories/handbag.jpg", filter: "handbag" },
+    { name: "Handbags", icon: "./img/categories/handbag.jpg", filter: "handbags" },
     { name: "Footwear", icon: "./img/categories/footwear.png", filter: "footwear" }
 ];
+
+// Function to render categories
+function renderCategoryGrid() {
+    const gridContainer = document.getElementById("category-grid");
+    if (!gridContainer) return;
+
+    gridContainer.innerHTML = categoryData.map(cat => `
+        <div class="category-card" onclick="filterByCategory('${cat.filter}')">
+            <div class="category-icon-wrap">
+                <img src="${cat.icon}" alt="${cat.name}" loading="lazy" onError="this.src='./img/profile_image.jpg';">
+            </div>
+            <p class="category-title">${cat.name}</p>
+        </div>
+    `).join("");
+}
+
+// Handler that connects directly to script.js filter/search functionality
+function filterByCategory(categoryFilter) {
+    const filterSelect = document.getElementById("global-filter-select");
+    const searchInput = document.getElementById("global-search-input");
+
+    if (filterSelect) {
+        // Match selection to filter dropdown if value exists, or trigger search input
+        const optionExists = Array.from(filterSelect.options).some(opt => opt.value === categoryFilter);
+        
+        if (optionExists) {
+            filterSelect.value = categoryFilter;
+            filterSelect.dispatchEvent(new Event('change'));
+        } else if (searchInput) {
+            searchInput.value = categoryFilter;
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    }
+}
+
+// Call on DOM content load
+document.addEventListener("DOMContentLoaded", renderCategoryGrid);
 
 // Function to render categories
 function renderCategoryGrid() {
