@@ -68,14 +68,15 @@ h6, .h6 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    padding: 15px 30px;
+    padding: 12px 25px;
     position: sticky;
     top: 0;
     z-index: 100;
+    gap: 15px;
 }
 
 .logo {
@@ -83,19 +84,37 @@ h6, .h6 {
     font-weight: bold;
     color: #333;
     text-decoration: none;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.nav-links a {
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.wishlist-icon, .user-nav-btn, .menu-icon {
+    font-size: 22px !important;
+    width: 36px;
+    height: 36px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    color: #333 !important;
     text-decoration: none;
-    color: #333;
-    margin: 0 15px;
-    font-weight: 600;
-    font-size: 16px;
-    transition: 0.3s;
+    position: relative;
+    margin: 0 !important;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.nav-links a:hover {
-    color: #000000;
+.wishlist-icon:hover, .user-nav-btn:hover, .menu-icon:hover {
+    color: #000 !important;
+    transform: scale(1.1);
 }
 
 .cart-icon {
@@ -875,10 +894,9 @@ body.no-scroll {
 ========================================= */
 .search-bar-container {
     position: relative;
-    flex: 1;
-    max-width: 600px;
-    margin: 0 15px;
-    padding: 0;
+    max-width: 680px;
+    margin: 15px auto 10px;
+    padding: 0 15px;
 }
 .search-bar-inner {
     display: flex;
@@ -1678,15 +1696,15 @@ body.no-scroll {
     }
 }
 
-/* Promotional Photo Banner Slider (below navbar) */
+/* Promotional Photo Banner Slider (inside navbar center row) */
 .nav-promo-slider {
-    max-width: 900px;
-    height: 90px;
-    margin: 15px auto 10px;
-    padding: 0 15px;
+    flex: 1;
+    max-width: 550px;
+    height: 44px;
+    margin: 0 15px;
     position: relative;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 8px;
     box-shadow: none !important;
     background: transparent !important;
     border: none !important;
