@@ -1959,3 +1959,44 @@ async function loadPublishedReviewsSlider() {
         loadFlashSaleBanner();
     }
 })();
+/* =============================================
+   new addition
+   ============================================= */
+   // Array of Category Data (Replace icon paths with your own image URLs/paths)
+const categoryData = [
+    { name: "Sarees", icon: "./img/categories/saree.png", filter: "saree" },
+    { name: "Three Piece", icon: "./img/categories/three-piece.png", filter: "three-piece" },
+    { name: "Gowns", icon: "./img/categories/gown.png", filter: "gown" },
+    { name: "Kids Wear", icon: "./img/categories/kids.png", filter: "kids" },
+    { name: "Jewellery", icon: "./img/categories/jewellery.png", filter: "jewellery" },
+    { name: "Ornaments", icon: "./img/categories/ornaments.png", filter: "ornaments" },
+    { name: "Handbags", icon: "./img/categories/handbag.png", filter: "handbag" },
+    { name: "Footwear", icon: "./img/categories/footwear.png", filter: "footwear" }
+];
+
+// Function to render categories
+function renderCategoryGrid() {
+    const gridContainer = document.getElementById("category-grid");
+    if (!gridContainer) return;
+
+    gridContainer.innerHTML = categoryData.map(cat => `
+        <div class="category-card" onclick="filterByCategory('${cat.filter}')">
+            <div class="category-icon-wrap">
+                <img src="${cat.icon}" alt="${cat.name}" loading="lazy" onError="this.src='./img/profile_image.jpg';">
+            </div>
+            <p class="category-title">${cat.name}</p>
+        </div>
+    `).join("");
+}
+
+// Category click filter handler
+function filterByCategory(categoryFilter) {
+    const filterSelect = document.getElementById("global-filter-select");
+    if (filterSelect) {
+        filterSelect.value = categoryFilter;
+        filterSelect.dispatchEvent(new Event('change'));
+    }
+}
+
+// Call on page load
+document.addEventListener("DOMContentLoaded", renderCategoryGrid);

@@ -2563,3 +2563,97 @@ body.no-scroll #flash-sale-banner,
         font-size: 11px;
     }
 }
+
+/* =============================================
+   new addition
+   ============================================= */
+   /* Category Section Styling */
+.category-section {
+    padding: 30px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.category-header {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 16px;
+    justify-content: center;
+}
+
+/* Square Animated Card */
+.category-card {
+    aspect-ratio: 1 / 1; /* Keeps it strictly square */
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #eaeaea;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Card Hover Animations */
+.category-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.1);
+    border-color: #f0c14b; /* Subtle brand highlight border */
+}
+
+/* Icon Container with Floating Effect */
+.category-icon-wrap {
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    transition: transform 0.3s ease;
+}
+
+.category-icon-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.category-card:hover .category-icon-wrap {
+    transform: scale(1.12);
+}
+
+/* Label Styling */
+.category-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333333;
+    text-align: center;
+    line-height: 1.2;
+    margin: 0;
+}
+
+/* Responsive Tweak for Small Screens */
+@media (max-width: 480px) {
+    .category-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    .category-icon-wrap {
+        width: 45px;
+        height: 45px;
+    }
+    .category-title {
+        font-size: 11px;
+    }
+}
