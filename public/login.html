@@ -547,7 +547,7 @@
                                     <span>Payment: <strong>${escapeHTML(order.paymentMethod)}</strong></span> • 
                                     <span>Address: <strong>${escapeHTML(order.address)}</strong></span>
                                 </div>
-                                <button onclick='downloadOrderReceipt(${JSON.stringify(order).replace(/'/g, "&apos;")})' style="background: #111111; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-file-pdf"></i> Download Invoice</button>
+                                <button onclick="downloadOrderReceipt('${escapeHTML(order.orderNumber)}')" style="background: #111111; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-file-pdf"></i> Download Invoice</button>
                             </div>
                         </div>
                     `;
@@ -565,7 +565,7 @@
 
             let wishlist = [];
             try {
-                const saved = localStorage.getItem('avaroni_wishlist');
+                const saved = localStorage.getItem('wishlist_items');
                 if (saved) wishlist = JSON.parse(saved);
             } catch(e) {}
 
@@ -581,43 +581,46 @@
                 return;
             }
 
-            container.innerHTML = wishlist.map(item => `
+            container.innerHTML = wishlist.map(item => {
+                const itemId = item._id || item.id || '';
+                const imgUrl = item.imageUrl || item.image || './img/profile_image.jpg';
+                return `
                 <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
-                    <img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}" style="width: 100%; height: 140px; object-fit: cover;">
+                    <img src="${escapeHTML(imgUrl)}" alt="${escapeHTML(item.name)}" style="width: 100%; height: 140px; object-fit: cover;">
                     <div style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
                             <h5 style="margin: 0 0 4px; font-size: 13px; font-weight: 600; color: #111;">${escapeHTML(item.name)}</h5>
-                            <strong style="font-size: 14px; color: #111;">৳${escapeHTML(item.price)}</strong>
+                            <strong style="font-size: 14px; color: #111;">৳${escapeHTML(String(item.price))}</strong>
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button onclick="addToCart('${escapeHTML(item.id)}', '${escapeHTML(item.name)}', ${item.price}, '${escapeHTML(item.image)}')" style="flex: 1; padding: 7px; background: #111; color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;"><i class="fas fa-cart-plus"></i> Add</button>
-                            <button onclick="removeWishlistItem('${escapeHTML(item.id)}')" style="padding: 7px 10px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 11px; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                            <button onclick="addToCart('${escapeHTML(itemId)}', '${escapeHTML(item.name)}', ${item.price}, '${escapeHTML(imgUrl)}')" style="flex: 1; padding: 7px; background: #111; color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;"><i class="fas fa-cart-plus"></i> Add</button>
+                            <button onclick="removeWishlistItemDash('${escapeHTML(itemId)}')" style="padding: 7px 10px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 11px; cursor: pointer;"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        // Remove Wishlist Item
-        function removeWishlistItem(id) {
+        // Remove Wishlist Item from Dashboard
+        function removeWishlistItemDash(id) {
             let wishlist = [];
             try {
-                const saved = localStorage.getItem('avaroni_wishlist');
+                const saved = localStorage.getItem('wishlist_items');
                 if (saved) wishlist = JSON.parse(saved);
             } catch(e) {}
 
-            wishlist = wishlist.filter(item => item.id !== id);
-            localStorage.setItem('avaroni_wishlist', JSON.stringify(wishlist));
+            wishlist = wishlist.filter(item => (item._id !== id && item.id !== id));
+            localStorage.setItem('wishlist_items', JSON.stringify(wishlist));
             if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
             loadUserWishlist();
         }
 
         // Download PDF Invoice
-        function downloadOrderReceipt(order) {
-            if (typeof generatePDFInvoice === 'function') {
-                generatePDFInvoice(order);
+        function downloadOrderReceipt(orderNumber) {
+            if (typeof downloadInvoice === 'function') {
+                downloadInvoice(orderNumber);
             } else {
-                alert(`Order Receipt:\nOrder #: ${order.orderNumber}\nTotal: ৳${order.totalAmount}\nStatus: ${order.status}`);
+                alert('Order: ' + orderNumber + ' — Invoice module not loaded.');
             }
         }
 
