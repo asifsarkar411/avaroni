@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In & Register - आभाणी | Avaroni</title>
-    <meta name="description" content="Sign in or create your Avaroni account using your Gmail, Phone number, or Google account.">
+    <title>My Account & Orders - आभाणी | Avaroni</title>
+    <meta name="description" content="Manage your Avaroni account, view purchase history, saved wishlist items, and orders.">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Invoice Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body style="background: #f8f9fa; min-height: 100vh; display: flex; flex-direction: column;">
 
@@ -21,6 +24,7 @@
         </a>
         <div class="nav-links">
             <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="far fa-heart"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
             <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
         </div>
     </nav>
@@ -42,11 +46,13 @@
         <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
     </div>
 
-    <!-- MAIN AUTH CONTAINER -->
+    <!-- MAIN AUTH & DASHBOARD CONTAINER -->
     <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 15px;">
-        <div class="auth-box" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); width: 100%; max-width: 440px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 15px 35px rgba(0,0,0,0.08); padding: 35px 30px; transition: all 0.3s ease;">
+        
+        <!-- 1. AUTH BOX (When NOT signed in) -->
+        <div id="auth-box-container" class="auth-box" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); width: 100%; max-width: 440px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 15px 35px rgba(0,0,0,0.08); padding: 35px 30px; transition: all 0.3s ease;">
             
-            <!-- Auth Header & Tabs -->
+            <!-- Auth Header -->
             <div style="text-align: center; margin-bottom: 25px;">
                 <h2 id="auth-title" style="margin: 0 0 8px; font-size: 26px; font-weight: 700; color: #111;">Welcome Back</h2>
                 <p id="auth-subtitle" style="margin: 0; font-size: 14px; color: #666;">Sign in to manage your account & orders</p>
@@ -87,7 +93,7 @@
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px;">Gmail Address or Phone Number</label>
                     <div style="position: relative;">
                         <i class="fas fa-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999;"></i>
-                        <input type="text" id="login-identifier" placeholder="e.g. name@gmail.com or 017xxxxxxxx" required style="width: 100%; padding: 12px 14px 12px 40px; border: 1.5px solid #e1e3e8; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;">
+                        <input type="text" id="login-identifier" placeholder="e.g. name@gmail.com or 017xxxxxxxx" required style="width: 100%; padding: 12px 14px 12px 40px; border: 1.5px solid #e1e3e8; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -98,7 +104,7 @@
                     </div>
                     <div style="position: relative;">
                         <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999;"></i>
-                        <input type="password" id="login-password" placeholder="Enter your password" required style="width: 100%; padding: 12px 40px 12px 40px; border: 1.5px solid #e1e3e8; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;">
+                        <input type="password" id="login-password" placeholder="Enter your password" required style="width: 100%; padding: 12px 40px 12px 40px; border: 1.5px solid #e1e3e8; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box;">
                         <i id="toggle-login-pass" class="fas fa-eye" onclick="togglePasswordVisibility('login-password', 'toggle-login-pass')" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #999; cursor: pointer;"></i>
                     </div>
                 </div>
@@ -106,7 +112,7 @@
                 <button type="submit" id="login-submit-btn" class="btn" style="width: 100%; padding: 13px; font-size: 15px; font-weight: 600; border-radius: 12px; background: #111111; color: #ffffff; border: none; cursor: pointer; margin-top: 8px;">Sign In</button>
             </form>
 
-            <!-- FORM: CREATE ACCOUNT (Hidden by default) -->
+            <!-- FORM: CREATE ACCOUNT -->
             <form id="register-form" style="display: none; flex-direction: column; gap: 16px;">
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px;">Full Name</label>
@@ -135,22 +141,76 @@
 
                 <button type="submit" id="reg-submit-btn" class="btn" style="width: 100%; padding: 13px; font-size: 15px; font-weight: 600; border-radius: 12px; background: #111111; color: #ffffff; border: none; cursor: pointer; margin-top: 8px;">Create Account</button>
             </form>
+        </div>
 
-            <!-- USER LOGGED IN VIEW (If already authenticated) -->
-            <div id="user-profile-view" style="display: none; text-align: center; padding: 10px 0;">
-                <div style="position: relative; display: inline-block; margin-bottom: 15px;">
-                    <img id="user-avatar" src="./img/profile_image.jpg" alt="User Avatar" style="width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #111111; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+        <!-- 2. FULL CUSTOMER DASHBOARD (When signed in) -->
+        <div id="user-dashboard-container" style="display: none; width: 100%; max-width: 900px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); border-radius: 20px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 15px 35px rgba(0,0,0,0.08); padding: 30px; box-sizing: border-box;">
+            
+            <!-- Dashboard Header Profile Card -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; padding-bottom: 25px; border-bottom: 1px solid #eaeaea; margin-bottom: 25px;">
+                <div style="display: flex; align-items: center; gap: 18px;">
+                    <img id="dash-avatar" src="./img/profile_image.jpg" alt="Avatar" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #111111; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h2 id="dash-name" style="margin: 0; font-size: 22px; font-weight: 700; color: #111;">Customer Name</h2>
+                            <span style="background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;"><i class="fas fa-check-circle"></i> Verified Member</span>
+                        </div>
+                        <p id="dash-contact" style="margin: 4px 0 0; font-size: 14px; color: #666;"><i class="fas fa-envelope"></i> user@gmail.com</p>
+                    </div>
                 </div>
-                <h3 id="user-name" style="margin: 0 0 5px; font-size: 20px; font-weight: 700; color: #111;">Customer Name</h3>
-                <p id="user-contact" style="margin: 0 0 20px; font-size: 13px; color: #666;">user@gmail.com</p>
+                <div>
+                    <button type="button" onclick="handleUserLogout()" class="btn" style="padding: 10px 20px; background: #dc3545; color: #fff; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 8px;"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                </div>
+            </div>
 
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <a href="track-order.html" class="btn" style="width: 100%; padding: 12px; background: #111111; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 600;"><i class="fas fa-box"></i> View My Orders</a>
-                    <button type="button" onclick="handleUserLogout()" class="btn" style="width: 100%; padding: 12px; background: #dc3545; color: #fff; border-radius: 10px; border: none; font-weight: 600; cursor: pointer;"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+            <!-- Dashboard Navigation Tabs -->
+            <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; overflow-x: auto; padding-bottom: 10px;">
+                <button type="button" id="dash-tab-orders" onclick="switchDashboardTab('orders')" style="padding: 10px 18px; border: none; background: #111111; color: #fff; font-weight: 600; font-size: 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"><i class="fas fa-shopping-bag"></i> Purchase History</button>
+                <button type="button" id="dash-tab-wishlist" onclick="switchDashboardTab('wishlist')" style="padding: 10px 18px; border: none; background: transparent; color: #555; font-weight: 600; font-size: 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"><i class="fas fa-heart"></i> Saved Wishlist</button>
+                <button type="button" id="dash-tab-profile" onclick="switchDashboardTab('profile')" style="padding: 10px 18px; border: none; background: transparent; color: #555; font-weight: 600; font-size: 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"><i class="fas fa-user-cog"></i> Account Details</button>
+            </div>
+
+            <!-- DASHBOARD SECTION 1: PURCHASE HISTORY -->
+            <div id="dash-section-orders" style="display: block;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                    <h3 style="margin: 0; font-size: 18px; color: #111;"><i class="fas fa-history"></i> Recent Orders & Purchase History</h3>
+                    <button onclick="loadUserOrders()" style="background: none; border: none; color: #0d6efd; font-size: 13px; font-weight: 600; cursor: pointer;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+
+                <div id="user-orders-list" style="display: flex; flex-direction: column; gap: 18px;">
+                    <p style="text-align: center; color: #888; padding: 30px;">Loading your purchase history...</p>
+                </div>
+            </div>
+
+            <!-- DASHBOARD SECTION 2: SAVED WISHLIST -->
+            <div id="dash-section-wishlist" style="display: none;">
+                <h3 style="margin: 0 0 18px; font-size: 18px; color: #111;"><i class="fas fa-heart"></i> Your Saved Wishlist Items</h3>
+                <div id="user-wishlist-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
+                    <!-- Dynamically populated wishlist items -->
+                </div>
+            </div>
+
+            <!-- DASHBOARD SECTION 3: ACCOUNT DETAILS -->
+            <div id="dash-section-profile" style="display: none;">
+                <h3 style="margin: 0 0 18px; font-size: 18px; color: #111;"><i class="fas fa-id-card"></i> Account & Profile Information</h3>
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+                    <div>
+                        <span style="font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Full Name</span>
+                        <p id="prof-name" style="margin: 4px 0 0; font-size: 16px; font-weight: 600; color: #111;">Name</p>
+                    </div>
+                    <div>
+                        <span style="font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Contact Identifier</span>
+                        <p id="prof-contact" style="margin: 4px 0 0; font-size: 16px; font-weight: 600; color: #111;">Identifier</p>
+                    </div>
+                    <div>
+                        <span style="font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Member Status</span>
+                        <p style="margin: 4px 0 0; font-size: 14px; font-weight: 600; color: #10b981;"><i class="fas fa-shield-alt"></i> Active Registered Customer</p>
+                    </div>
                 </div>
             </div>
 
         </div>
+
     </div>
 
     <!-- FOOTER -->
@@ -158,9 +218,10 @@
         <p>&copy; 2026 Avaroni (আভরণী). All rights reserved.</p>
     </footer>
 
+    <script src="invoice.js"></script>
     <script src="script.js"></script>
     <script>
-        // Tab switching logic
+        // Auth Tab Switch
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('login-form');
             const registerForm = document.getElementById('register-form');
@@ -182,7 +243,6 @@
 
                 tabRegister.style.background = 'transparent';
                 tabRegister.style.color = '#666';
-                tabRegister.style.boxShadow = 'none';
 
                 authTitle.textContent = 'Welcome Back';
                 authSubtitle.textContent = 'Sign in to manage your account & orders';
@@ -196,10 +256,42 @@
 
                 tabLogin.style.background = 'transparent';
                 tabLogin.style.color = '#666';
-                tabLogin.style.boxShadow = 'none';
 
                 authTitle.textContent = 'Create Account';
                 authSubtitle.textContent = 'Sign up with Gmail or Phone number in seconds';
+            }
+        }
+
+        // Dashboard Tab Switch
+        function switchDashboardTab(tab) {
+            const secOrders = document.getElementById('dash-section-orders');
+            const secWishlist = document.getElementById('dash-section-wishlist');
+            const secProfile = document.getElementById('dash-section-profile');
+
+            const btnOrders = document.getElementById('dash-tab-orders');
+            const btnWishlist = document.getElementById('dash-tab-wishlist');
+            const btnProfile = document.getElementById('dash-tab-profile');
+
+            [secOrders, secWishlist, secProfile].forEach(el => el.style.display = 'none');
+            [btnOrders, btnWishlist, btnProfile].forEach(b => {
+                b.style.background = 'transparent';
+                b.style.color = '#555';
+            });
+
+            if (tab === 'orders') {
+                secOrders.style.display = 'block';
+                btnOrders.style.background = '#111111';
+                btnOrders.style.color = '#fff';
+                loadUserOrders();
+            } else if (tab === 'wishlist') {
+                secWishlist.style.display = 'block';
+                btnWishlist.style.background = '#111111';
+                btnWishlist.style.color = '#fff';
+                loadUserWishlist();
+            } else if (tab === 'profile') {
+                secProfile.style.display = 'block';
+                btnProfile.style.background = '#111111';
+                btnProfile.style.color = '#fff';
             }
         }
 
@@ -238,17 +330,12 @@
             }
         }
 
-        // Handle Customer Sign In Submission
+        // Login Submit
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const identifier = document.getElementById('login-identifier').value.trim();
             const password = document.getElementById('login-password').value;
             const submitBtn = document.getElementById('login-submit-btn');
-
-            if (!identifier || !password) {
-                showAlert('Please enter your Gmail or Phone number and password.');
-                return;
-            }
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Signing in...';
@@ -267,10 +354,7 @@
                 if (data.success) {
                     localStorage.setItem('userToken', data.token);
                     localStorage.setItem('userProfile', JSON.stringify(data.user));
-                    showAlert('Signed in successfully! Redirecting...', 'success');
-                    setTimeout(() => {
-                        checkUserSession();
-                    }, 1000);
+                    checkUserSession();
                 } else {
                     showAlert(data.message || 'Login failed.');
                 }
@@ -281,18 +365,13 @@
             }
         });
 
-        // Handle Customer Registration Submission
+        // Register Submit
         document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('reg-name').value.trim();
             const identifier = document.getElementById('reg-identifier').value.trim();
             const password = document.getElementById('reg-password').value;
             const submitBtn = document.getElementById('reg-submit-btn');
-
-            if (!name || !identifier || !password) {
-                showAlert('Please fill in all fields.');
-                return;
-            }
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating Account...';
@@ -311,10 +390,7 @@
                 if (data.success) {
                     localStorage.setItem('userToken', data.token);
                     localStorage.setItem('userProfile', JSON.stringify(data.user));
-                    showAlert('Account created successfully! Redirecting...', 'success');
-                    setTimeout(() => {
-                        checkUserSession();
-                    }, 1000);
+                    checkUserSession();
                 } else {
                     showAlert(data.message || 'Registration failed.');
                 }
@@ -325,12 +401,11 @@
             }
         });
 
-        // Trigger Google Sign-In via Google Identity API or fallback prompt
+        // Trigger Google Sign In
         function triggerGoogleSignIn() {
             if (window.google && window.google.accounts && window.google.accounts.id) {
                 window.google.accounts.id.prompt();
             } else {
-                // Interactive fallback for Google Auth
                 const email = prompt("Enter your Google Account Gmail address to sign in:");
                 if (email && email.includes('@')) {
                     handleGoogleAuthResponse({
@@ -343,7 +418,7 @@
             }
         }
 
-        // Handle Google OAuth Payload Response
+        // Handle Google Response
         async function handleGoogleAuthResponse(googlePayload) {
             try {
                 const res = await fetch('/api/user/auth/google', {
@@ -355,10 +430,7 @@
                 if (data.success) {
                     localStorage.setItem('userToken', data.token);
                     localStorage.setItem('userProfile', JSON.stringify(data.user));
-                    showAlert('Google Sign-In successful!', 'success');
-                    setTimeout(() => {
-                        checkUserSession();
-                    }, 1000);
+                    checkUserSession();
                 } else {
                     showAlert(data.message || 'Google Sign-In failed.');
                 }
@@ -367,67 +439,185 @@
             }
         }
 
-        // Initialize Google Identity Services
-        window.onload = function () {
-            checkUserSession();
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-                window.google.accounts.id.initialize({
-                    client_id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com", // Handled dynamically
-                    callback: function(response) {
-                        try {
-                            const base64Url = response.credential.split('.')[1];
-                            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                            const payload = JSON.parse(window.atob(base64));
-                            handleGoogleAuthResponse({
-                                googleId: payload.sub,
-                                email: payload.email,
-                                name: payload.name,
-                                avatar: payload.picture
-                            });
-                        } catch(e) {
-                            console.error("Google token decode error:", e);
-                        }
-                    }
-                });
-            }
-        };
-
-        // Check and render active user session dynamically
+        // Check Session & Render View
         function checkUserSession() {
             const token = localStorage.getItem('userToken');
             const savedProfile = localStorage.getItem('userProfile');
 
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const googleBtn = document.getElementById('google-auth-btn');
-            const userProfileView = document.getElementById('user-profile-view');
-            const authTitle = document.getElementById('auth-title');
-            const authSubtitle = document.getElementById('auth-subtitle');
+            const authBox = document.getElementById('auth-box-container');
+            const dashBox = document.getElementById('user-dashboard-container');
 
             if (token && savedProfile) {
                 try {
                     const user = JSON.parse(savedProfile);
-                    loginForm.style.display = 'none';
-                    registerForm.style.display = 'none';
-                    if (googleBtn) googleBtn.style.display = 'none';
+                    authBox.style.display = 'none';
+                    dashBox.style.display = 'block';
 
-                    document.getElementById('user-name').textContent = user.username || 'Customer';
-                    document.getElementById('user-contact').textContent = user.email || user.phone || '';
+                    document.getElementById('dash-name').textContent = user.username || 'Customer';
+                    document.getElementById('dash-contact').textContent = user.email || user.phone || '';
                     if (user.avatar) {
-                        document.getElementById('user-avatar').src = user.avatar;
+                        document.getElementById('dash-avatar').src = user.avatar;
                     }
 
-                    userProfileView.style.display = 'block';
-                    authTitle.textContent = 'Account Dashboard';
-                    authSubtitle.textContent = 'Welcome, ' + (user.username || 'Customer');
+                    document.getElementById('prof-name').textContent = user.username || 'Customer';
+                    document.getElementById('prof-contact').textContent = user.email || user.phone || 'N/A';
+
+                    loadUserOrders();
                 } catch(e) {
                     localStorage.removeItem('userToken');
                     localStorage.removeItem('userProfile');
                 }
             } else {
-                if (userProfileView) userProfileView.style.display = 'none';
-                if (googleBtn) googleBtn.style.display = 'flex';
+                dashBox.style.display = 'none';
+                authBox.style.display = 'block';
                 switchAuthTab('login');
+            }
+        }
+
+        // Load Customer Orders
+        async function loadUserOrders() {
+            const container = document.getElementById('user-orders-list');
+            if (!container) return;
+
+            const token = localStorage.getItem('userToken');
+            if (!token) return;
+
+            container.innerHTML = '<p style="text-align: center; color: #888; padding: 25px;"><i class="fas fa-spinner fa-spin"></i> Fetching your orders...</p>';
+
+            try {
+                const res = await fetch('/api/user/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!data.success || !data.orders || data.orders.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 35px; background: #fafafa; border-radius: 12px; border: 1px dashed #ccc;">
+                            <i class="fas fa-shopping-bag" style="font-size: 36px; color: #ccc; margin-bottom: 12px;"></i>
+                            <h4 style="margin: 0 0 6px; color: #333;">No Purchase History Found</h4>
+                            <p style="margin: 0 0 16px; font-size: 13px; color: #777;">You haven't placed any orders with this account yet.</p>
+                            <a href="index.html" class="btn" style="padding: 9px 18px; font-size: 13px; background: #111; color: #fff; border-radius: 8px; text-decoration: none; display: inline-block;">Browse Store</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.orders.map(order => {
+                    const statusColors = {
+                        'Pending': '#f59e0b',
+                        'Approved': '#10b981',
+                        'Processing': '#3b82f6',
+                        'Delivered': '#059669',
+                        'Cancelled': '#ef4444'
+                    };
+                    const badgeColor = statusColors[order.status] || '#6b7280';
+                    const orderDateStr = new Date(order.orderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+                    const itemsHtml = (order.cartItems || []).map(item => `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                            <img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #eee;">
+                            <div style="flex: 1;">
+                                <h5 style="margin: 0; font-size: 13px; font-weight: 600; color: #111;">${escapeHTML(item.name)}</h5>
+                                <span style="font-size: 12px; color: #666;">Qty: ${escapeHTML(item.quantity)} × ৳${escapeHTML(item.price)}</span>
+                            </div>
+                            <strong style="font-size: 13px; color: #111;">৳${Number(item.price) * Number(item.quantity)}</strong>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid #f0f0f0; margin-bottom: 14px;">
+                                <div>
+                                    <span style="font-size: 12px; color: #666;">Order ID:</span>
+                                    <h4 style="margin: 2px 0 0; font-size: 16px; font-weight: 700; color: #111;">${escapeHTML(order.orderNumber)}</h4>
+                                    <span style="font-size: 12px; color: #888;">Placed on ${orderDateStr}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="display: inline-block; background: ${badgeColor}15; color: ${badgeColor}; border: 1px solid ${badgeColor}40; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 4px;">${escapeHTML(order.status)}</span>
+                                    <div style="font-size: 15px; font-weight: 700; color: #111;">Total: ৳${order.totalAmount}</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 14px;">
+                                ${itemsHtml}
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: #fafafa; padding: 12px 16px; border-radius: 10px;">
+                                <div style="font-size: 12px; color: #555;">
+                                    <span>Payment: <strong>${escapeHTML(order.paymentMethod)}</strong></span> • 
+                                    <span>Address: <strong>${escapeHTML(order.address)}</strong></span>
+                                </div>
+                                <button onclick='downloadOrderReceipt(${JSON.stringify(order).replace(/'/g, "&apos;")})' style="background: #111111; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-file-pdf"></i> Download Invoice</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                container.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 25px;">Failed to load order history. Please try again.</p>';
+            }
+        }
+
+        // Load Saved Wishlist Items
+        function loadUserWishlist() {
+            const container = document.getElementById('user-wishlist-grid');
+            if (!container) return;
+
+            let wishlist = [];
+            try {
+                const saved = localStorage.getItem('avaroni_wishlist');
+                if (saved) wishlist = JSON.parse(saved);
+            } catch(e) {}
+
+            if (wishlist.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 35px; background: #fafafa; border-radius: 12px; border: 1px dashed #ccc;">
+                        <i class="far fa-heart" style="font-size: 36px; color: #ccc; margin-bottom: 12px;"></i>
+                        <h4 style="margin: 0 0 6px; color: #333;">Your Wishlist is Empty</h4>
+                        <p style="margin: 0 0 16px; font-size: 13px; color: #777;">Save your favorite products to view them here.</p>
+                        <a href="index.html" class="btn" style="padding: 9px 18px; font-size: 13px; background: #111; color: #fff; border-radius: 8px; text-decoration: none; display: inline-block;">Discover Products</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = wishlist.map(item => `
+                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+                    <img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}" style="width: 100%; height: 140px; object-fit: cover;">
+                    <div style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h5 style="margin: 0 0 4px; font-size: 13px; font-weight: 600; color: #111;">${escapeHTML(item.name)}</h5>
+                            <strong style="font-size: 14px; color: #111;">৳${escapeHTML(item.price)}</strong>
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button onclick="addToCart('${escapeHTML(item.id)}', '${escapeHTML(item.name)}', ${item.price}, '${escapeHTML(item.image)}')" style="flex: 1; padding: 7px; background: #111; color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;"><i class="fas fa-cart-plus"></i> Add</button>
+                            <button onclick="removeWishlistItem('${escapeHTML(item.id)}')" style="padding: 7px 10px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 11px; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Remove Wishlist Item
+        function removeWishlistItem(id) {
+            let wishlist = [];
+            try {
+                const saved = localStorage.getItem('avaroni_wishlist');
+                if (saved) wishlist = JSON.parse(saved);
+            } catch(e) {}
+
+            wishlist = wishlist.filter(item => item.id !== id);
+            localStorage.setItem('avaroni_wishlist', JSON.stringify(wishlist));
+            if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
+            loadUserWishlist();
+        }
+
+        // Download PDF Invoice
+        function downloadOrderReceipt(order) {
+            if (typeof generatePDFInvoice === 'function') {
+                generatePDFInvoice(order);
+            } else {
+                alert(`Order Receipt:\nOrder #: ${order.orderNumber}\nTotal: ৳${order.totalAmount}\nStatus: ${order.status}`);
             }
         }
 
@@ -435,11 +625,12 @@
         function handleUserLogout() {
             localStorage.removeItem('userToken');
             localStorage.removeItem('userProfile');
-            showAlert('Signed out successfully.', 'success');
-            setTimeout(() => {
-                checkUserSession();
-            }, 800);
+            checkUserSession();
         }
+
+        window.onload = function() {
+            checkUserSession();
+        };
     </script>
 </body>
 </html>

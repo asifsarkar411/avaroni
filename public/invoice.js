@@ -141,3 +141,8 @@ function downloadInvoice(orderNumber) {
             alert('Failed to generate invoice. Please try again.');
         });
 }
+
+function generatePDFInvoice(order) {
+    if (!order) return;
+    downloadInvoice(order.orderNumber || order._id);
+}

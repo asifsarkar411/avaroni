@@ -725,8 +725,37 @@ app.get('/api/user/auth/me', async (req, res) => {
                 }
             });
         });
+// Get Logged In User Purchase History
+app.get('/api/user/orders', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ success: false, message: "No token provided" });
+
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, getJwtSecret(), async (err, decoded) => {
+            if (err) return res.status(403).json({ success: false, message: "Invalid or expired session" });
+
+            const user = await User.findById(decoded.id);
+            if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+            const queryConditions = [];
+            if (user.email && user.email.trim()) {
+                queryConditions.push({ email: new RegExp(`^${user.email.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') });
+            }
+            if (user.phone && user.phone.trim()) {
+                queryConditions.push({ phone: user.phone.trim() });
+            }
+
+            if (queryConditions.length === 0) {
+                return res.json({ success: true, orders: [] });
+            }
+
+            const orders = await Order.find({ $or: queryConditions }).sort({ orderDate: -1 });
+            res.json({ success: true, orders });
+        });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server error" });
+        console.error("User Orders Error:", err);
+        res.status(500).json({ success: false, message: "Failed to load order history." });
     }
 });
 
