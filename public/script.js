@@ -572,6 +572,22 @@ sidebar.appendChild(headerDiv);
         return a;
     };
 
+    // Add dynamic Sign In / Account link to sidebar
+    let savedUser = null;
+    try {
+        const profile = localStorage.getItem('userProfile');
+        if (profile) savedUser = JSON.parse(profile);
+    } catch(e) {}
+
+    if (savedUser && savedUser.username) {
+        const userAccountLink = createSidebarLink('login.html', 'fas fa-user-check', `My Account (${escapeHTML(savedUser.username)})`);
+        userAccountLink.style.color = '#28a745';
+        sidebar.appendChild(userAccountLink);
+    } else {
+        const signInLink = createSidebarLink('login.html', 'fas fa-user-circle', 'Sign In / Register');
+        sidebar.appendChild(signInLink);
+    }
+
     // Guarantee Track Order link is always included at the top of quick links
     const hasTrackOrder = footerLinks.some(link => link.getAttribute('href') === 'track-order.html');
     if (!hasTrackOrder) {
@@ -946,7 +962,44 @@ function initFooterAndWidgets() {
 // INITIALIZATION & EVENT LISTENERS
 // ==========================================
 
+function updateUserNavbarIcon() {
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    let userIcon = navLinks.querySelector('.user-nav-btn');
+    if (!userIcon) {
+        userIcon = document.createElement('a');
+        userIcon.className = 'user-nav-btn';
+        userIcon.href = 'login.html';
+        userIcon.title = 'Account & Orders';
+        userIcon.style.cssText = 'margin-right: 12px; color: #333; font-size: 18px; display: inline-flex; align-items: center; text-decoration: none;';
+        
+        const wishlistBtn = navLinks.querySelector('.wishlist-icon');
+        if (wishlistBtn) {
+            navLinks.insertBefore(userIcon, wishlistBtn);
+        } else {
+            navLinks.prepend(userIcon);
+        }
+    }
+
+    let savedUser = null;
+    try {
+        const profile = localStorage.getItem('userProfile');
+        if (profile) savedUser = JSON.parse(profile);
+    } catch(e) {}
+
+    if (savedUser && savedUser.username) {
+        const initial = (savedUser.username[0] || 'U').toUpperCase();
+        userIcon.innerHTML = `<span style="width:26px; height:26px; border-radius:50%; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${escapeHTML(initial)}</span>`;
+    } else {
+        userIcon.innerHTML = `<i class="far fa-user"></i>`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Update navbar user session icon
+    updateUserNavbarIcon();
+
     // Load dynamic category navigation from database
     loadNavCategories();
 

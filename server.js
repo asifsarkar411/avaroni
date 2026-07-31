@@ -539,6 +539,198 @@ app.post('/api/reset-password', authLimiter, async (req, res) => {
 });
 
 // ==========================================
+// 👤 CUSTOMER USER AUTHENTICATION ROUTES
+// ==========================================
+
+function isEmailIdentifier(str) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str.trim());
+}
+
+// Customer Register (Email or Phone + Password)
+app.post('/api/user/auth/register', authLimiter, async (req, res) => {
+    try {
+        const { name, identifier, password } = req.body;
+        if (!name || !identifier || !password) {
+            return res.status(400).json({ success: false, message: "Name, email/phone, and password are required." });
+        }
+
+        const cleanName = sanitize(name).trim();
+        const cleanId = sanitize(identifier).trim();
+
+        const isEmail = isEmailIdentifier(cleanId);
+        const query = isEmail ? { email: cleanId.toLowerCase() } : { phone: cleanId };
+
+        const existingUser = await User.findOne(query);
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: isEmail ? "Account with this Gmail already exists." : "Account with this Phone Number already exists." });
+        }
+
+        const userData = {
+            username: cleanName,
+            password: password
+        };
+        if (isEmail) {
+            userData.email = cleanId.toLowerCase();
+        } else {
+            userData.phone = cleanId;
+        }
+
+        const newUser = new User(userData);
+        await newUser.save();
+
+        const token = jwt.sign(
+            { id: newUser._id, username: newUser.username, email: newUser.email, phone: newUser.phone },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.status(201).json({
+            success: true,
+            token,
+            user: {
+                id: newUser._id,
+                username: newUser.username,
+                email: newUser.email || '',
+                phone: newUser.phone || '',
+                avatar: newUser.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("User Register Error:", err);
+        res.status(500).json({ success: false, message: "Failed to register account." });
+    }
+});
+
+// Customer Login (Email or Phone + Password)
+app.post('/api/user/auth/login', authLimiter, async (req, res) => {
+    try {
+        const { identifier, password } = req.body;
+        if (!identifier || !password) {
+            return res.status(400).json({ success: false, message: "Please provide Gmail/Phone number and Password." });
+        }
+
+        const cleanId = sanitize(identifier).trim();
+        const isEmail = isEmailIdentifier(cleanId);
+        const query = isEmail 
+            ? { email: new RegExp(`^${cleanId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } 
+            : { phone: cleanId };
+
+        const user = await User.findOne(query);
+        if (!user || !user.password) {
+            return res.status(400).json({ success: false, message: "Invalid Gmail/Phone or password." });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Invalid Gmail/Phone or password." });
+        }
+
+        user.loginCount = (user.loginCount || 0) + 1;
+        await user.save();
+
+        const token = jwt.sign(
+            { id: user._id, username: user.username, email: user.email, phone: user.phone },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: user.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("User Login Error:", err);
+        res.status(500).json({ success: false, message: "Login failed. Please try again." });
+    }
+});
+
+// Customer Google Direct OAuth Login / Sign Up
+app.post('/api/user/auth/google', async (req, res) => {
+    try {
+        const { googleId, email, name, avatar } = req.body;
+        if (!email && !googleId) {
+            return res.status(400).json({ success: false, message: "Google authentication payload missing." });
+        }
+
+        const cleanEmail = email ? sanitize(email).trim().toLowerCase() : '';
+        let user = await User.findOne({ $or: [{ googleId }, { email: cleanEmail }] });
+
+        if (!user) {
+            user = new User({
+                username: name ? sanitize(name).trim() : (cleanEmail.split('@')[0] || 'User'),
+                email: cleanEmail,
+                googleId: googleId || '',
+                avatar: avatar || '',
+                password: Math.random().toString(36).slice(-10) + Date.now()
+            });
+            await user.save();
+        } else {
+            if (avatar && !user.avatar) user.avatar = avatar;
+            if (googleId && !user.googleId) user.googleId = googleId;
+            user.loginCount = (user.loginCount || 0) + 1;
+            await user.save();
+        }
+
+        const token = jwt.sign(
+            { id: user._id, username: user.username, email: user.email },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: user.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("Google Login Error:", err);
+        res.status(500).json({ success: false, message: "Google Sign-In failed." });
+    }
+});
+
+// Get Current Logged In User Profile
+app.get('/api/user/auth/me', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ success: false, message: "No token provided" });
+
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, getJwtSecret(), async (err, decoded) => {
+            if (err) return res.status(403).json({ success: false, message: "Invalid or expired session" });
+
+            const user = await User.findById(decoded.id).select('-password');
+            if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+            res.json({
+                success: true,
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    avatar: user.avatar || ''
+                }
+            });
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// ==========================================
 // 🛡️ JWT VERIFICATION MIDDLEWARE (Gatekeeper)
 // ==========================================
 function verifyAdminToken(req, res, next) {

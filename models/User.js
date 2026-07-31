@@ -8,13 +8,23 @@ const userSchema = new mongoose.Schema({
     },
     email: { 
         type: String, 
-        required: true, 
-        unique: true,
-        lowercase: true
+        lowercase: true,
+        sparse: true
+    },
+    phone: {
+        type: String,
+        sparse: true
+    },
+    googleId: {
+        type: String,
+        sparse: true
+    },
+    avatar: {
+        type: String,
+        default: ""
     },
     password: { 
-        type: String, 
-        required: true 
+        type: String 
     },
     
     // --- SECURITY & 2FA FIELDS ---
