@@ -1964,12 +1964,10 @@ async function loadPublishedReviewsSlider() {
    ============================================= */
    // Array of Category Data (Replace icon paths with your own image URLs/paths)
 const categoryData = [
-    { name: "Sarees", icon: "./img/categories/saree.png", filter: "saree" },
+    { name: "Sarees", icon: "./img", filter: "saree" },
     { name: "Three Piece", icon: "./img/categories/three-piece.png", filter: "three-piece" },
-    { name: "Gowns", icon: "./img/categories/gown.png", filter: "gown" },
     { name: "Kids Wear", icon: "./img/categories/kids.png", filter: "kids" },
     { name: "Jewellery", icon: "./img/categories/jewellery.png", filter: "jewellery" },
-    { name: "Ornaments", icon: "./img/categories/ornaments.png", filter: "ornaments" },
     { name: "Handbags", icon: "./img/categories/handbag.png", filter: "handbag" },
     { name: "Footwear", icon: "./img/categories/footwear.png", filter: "footwear" }
 ];
