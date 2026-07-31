@@ -351,17 +351,17 @@ h6, .h6 {
         padding: 12px 20px;
     }
 
-    /* Hide category text links on mobile as they are inside sidebar (keep cart & wishlist icons) */
-    .nav-links a:not(.cart-icon):not(.wishlist-icon) {
+    /* Hide category text links on mobile as they are inside sidebar (keep cart, wishlist & user icons) */
+    .nav-links a:not(.cart-icon):not(.wishlist-icon):not(.user-nav-btn) {
         display: none;
     }
 
-    /* Align cart icon and menu button nicely on the right */
+    /* Align cart icon, wishlist icon, user icon, and menu button nicely on the right */
     .nav-links {
         margin-top: 0;
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 14px;
     }
 
     /* Reduce padding on the product grid for smaller screens */

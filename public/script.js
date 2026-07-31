@@ -972,14 +972,20 @@ function updateUserNavbarIcon() {
         userIcon.className = 'user-nav-btn';
         userIcon.href = 'login.html';
         userIcon.title = 'Account & Orders';
-        userIcon.style.cssText = 'margin-right: 12px; color: #333; font-size: 18px; display: inline-flex; align-items: center; text-decoration: none;';
-        
-        const wishlistBtn = navLinks.querySelector('.wishlist-icon');
-        if (wishlistBtn) {
-            navLinks.insertBefore(userIcon, wishlistBtn);
-        } else {
-            navLinks.prepend(userIcon);
-        }
+        userIcon.style.cssText = 'color: #333; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;';
+    }
+
+    const menuBtn = navLinks.querySelector('#menu-icon-btn, .menu-icon');
+    if (menuBtn) {
+        navLinks.insertBefore(userIcon, menuBtn);
+    } else {
+        navLinks.appendChild(userIcon);
+    }
+
+    // Ensure wishlist icon is arranged right before user icon
+    const wishlistBtn = navLinks.querySelector('.wishlist-icon');
+    if (wishlistBtn && userIcon) {
+        navLinks.insertBefore(wishlistBtn, userIcon);
     }
 
     let savedUser = null;
