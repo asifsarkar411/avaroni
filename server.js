@@ -61,6 +61,7 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
             imgSrc: ["'self'", "data:", "blob:", "https:"],
@@ -75,7 +76,12 @@ app.use(helmet({
     xFrameOptions: { action: "sameorigin" },
     xContentTypeOptions: true,
     referrerPolicy: { policy: "strict-origin-when-cross-origin" }
-})); 
+}));
+
+// Serve Favicon fallback to prevent 404 errors
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
+}); 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors()); // Allow frontend to communicate with backend
