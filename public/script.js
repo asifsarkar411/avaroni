@@ -2001,22 +2001,11 @@ function renderCategoryGrid() {
     });
 }
 
-// Category filter action handler
-function filterByCategory(categoryFilter) {
-    const filterSelect = document.getElementById("global-filter-select");
-    const searchInput = document.getElementById("global-search-input");
-
-    if (filterSelect) {
-        const optionExists = Array.from(filterSelect.options).some(opt => opt.value === categoryFilter);
-
-        if (optionExists) {
-            filterSelect.value = categoryFilter;
-            filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        } else if (searchInput) {
-            searchInput.value = categoryFilter.replace(/-/g, " ");
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    }
+// Category filter action handler — navigates to the dedicated category page
+function filterByCategory(categorySlug) {
+    // Use the same routing logic as sidebar categories
+    const url = getCategoryPageUrl(categorySlug, categorySlug);
+    window.location.href = url;
 }
 
 // Event delegation for category grid clicks
@@ -2029,7 +2018,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = event.target.closest(".category-card");
             if (card) {
                 const categoryFilter = card.getAttribute("data-filter");
-                filterByCategory(categoryFilter);
+                if (categoryFilter) {
+                    filterByCategory(categoryFilter);
+                }
             }
         });
     }
