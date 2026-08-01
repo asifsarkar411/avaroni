@@ -732,6 +732,153 @@ app.get('/api/user/auth/me', async (req, res) => {
     }
 });
 
+// Customer Forgot Password - Request Password Reset Email Link
+app.post('/api/user/auth/forgot-password', authLimiter, async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier || !identifier.trim()) {
+            return res.status(400).json({ success: false, message: "Please enter your registered Gmail address or phone number." });
+        }
+
+        const cleanIdentifier = sanitize(identifier).trim();
+        let query = {};
+        if (isEmailIdentifier(cleanIdentifier)) {
+            query = { email: cleanIdentifier.toLowerCase() };
+        } else if (/^\+?\d{7,15}$/.test(cleanIdentifier.replace(/[\s-]/g, ''))) {
+            query = { phone: cleanIdentifier.replace(/[\s-]/g, '') };
+        } else {
+            query = { $or: [{ email: cleanIdentifier.toLowerCase() }, { username: cleanIdentifier }] };
+        }
+
+        const user = await User.findOne(query);
+        if (!user) {
+            return res.json({ success: true, message: "If an account matching that detail exists, a password reset link has been sent." });
+        }
+
+        const targetEmail = user.email || (isEmailIdentifier(cleanIdentifier) ? cleanIdentifier.toLowerCase() : null);
+        if (!targetEmail) {
+            return res.status(400).json({ success: false, message: "No Gmail address associated with this account to send the reset link." });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = Date.now() + 3600000; // Token valid for 1 hour
+        await user.save();
+
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || 'localhost:3000';
+        const resetLink = `${protocol}://${host}/login.html?resetToken=${resetToken}`;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@avaroni.com',
+            to: targetEmail,
+            subject: '🔐 Password Reset Link - Avaroni (আভরণী)',
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 550px; margin: 0 auto; padding: 30px; background: #ffffff; border-radius: 16px; border: 1px solid #eaeaea; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <h1 style="color: #111111; margin: 0; font-size: 24px;">আভরণী | Avaroni</h1>
+                        <p style="color: #666666; font-size: 14px; margin-top: 4px;">Password Reset Instructions</p>
+                    </div>
+                    <div style="background: #fafafa; padding: 22px; border-radius: 12px; border: 1px solid #f0f0f0;">
+                        <p style="font-size: 15px; color: #111111; margin-top: 0;">Hello <strong>${escapeHTML(user.username || 'Valued Customer')}</strong>,</p>
+                        <p style="font-size: 14px; color: #444444; line-height: 1.6;">You requested a password reset for your Avaroni account. Click the button below to set a new password:</p>
+                        <div style="text-align: center; margin: 25px 0;">
+                            <a href="${resetLink}" style="background-color: #111111; color: #ffffff; text-decoration: none; padding: 13px 30px; border-radius: 10px; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">Reset My Password</a>
+                        </div>
+                        <p style="font-size: 12px; color: #777777; margin-bottom: 6px;">If the button above does not work, copy and paste this link into your browser:</p>
+                        <p style="font-size: 12px; color: #0066cc; word-break: break-all; margin-top: 0;"><a href="${resetLink}" style="color: #0066cc;">${resetLink}</a></p>
+                        <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;">
+                        <p style="font-size: 12px; color: #999999; margin: 0; text-align: center;">This reset link expires in 1 hour. If you did not request this, please ignore this email.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        transporter.sendMail(mailOptions, (err) => {
+            if (err) {
+                console.warn("Nodemailer delivery notice (Dev reset link logged):", err.message);
+            }
+            console.log(`[PASSWORD RESET GENERATED] Email: ${targetEmail} | Link: ${resetLink}`);
+            res.json({
+                success: true,
+                message: "Password reset link sent! Please check your Gmail inbox (and Spam folder).",
+                devResetLink: (!process.env.EMAIL_USER || process.env.NODE_ENV !== 'production') ? resetLink : undefined
+            });
+        });
+    } catch (err) {
+        console.error("User Forgot Password Error:", err);
+        res.status(500).json({ success: false, message: "Server error processing request." });
+    }
+});
+
+// Verify Password Reset Token
+app.get('/api/user/auth/verify-reset-token/:token', async (req, res) => {
+    try {
+        const token = sanitize(req.params.token);
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired password reset link." });
+        }
+
+        res.json({ success: true, email: user.email || user.username });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error verifying reset token." });
+    }
+});
+
+// Reset Password with Valid Token
+app.post('/api/user/auth/reset-password', authLimiter, async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword || newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: "New password must be at least 6 characters long." });
+        }
+
+        const sanitizedToken = sanitize(token);
+        const user = await User.findOne({
+            resetPasswordToken: sanitizedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired password reset token." });
+        }
+
+        user.password = newPassword; // Automatically hashed by pre-save hook in User model
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        user.failedLoginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
+
+        const authToken = jwt.sign(
+            { id: user._id, username: user.username, email: user.email },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            message: "Password reset successful! Logging you in...",
+            token: authToken,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: user.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("User Reset Password Error:", err);
+        res.status(500).json({ success: false, message: "Failed to reset password." });
+    }
+});
+
 // Get Logged In User Purchase History
 app.get('/api/user/orders', async (req, res) => {
     try {

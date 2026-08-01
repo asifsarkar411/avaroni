@@ -100,7 +100,7 @@
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label style="font-size: 13px; font-weight: 600; color: #444;">Password</label>
-                        <a href="faq.html" style="font-size: 12px; color: #111; font-weight: 600; text-decoration: none;">Forgot?</a>
+                        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 12px; color: #111; font-weight: 600; text-decoration: none;"><i class="fas fa-key" style="font-size:10px;"></i> Forgot?</a>
                     </div>
                     <div style="position: relative;">
                         <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999;"></i>
@@ -140,6 +140,29 @@
                 </div>
 
                 <button type="submit" id="reg-submit-btn" class="btn" style="width: 100%; padding: 13px; font-size: 15px; font-weight: 600; border-radius: 12px; background: #111111; color: #ffffff; border: none; cursor: pointer; margin-top: 8px;">Create Account</button>
+            </form>
+
+            <!-- FORM: RESET PASSWORD (When resetToken link is opened) -->
+            <form id="reset-password-form" style="display: none; flex-direction: column; gap: 16px;">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 14px; border-radius: 10px; font-size: 13px; text-align: center;">
+                    <i class="fas fa-check-circle"></i> Reset token verified! Enter your new password below.
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px;">New Password</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-key" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+                        <input type="password" id="reset-new-password" placeholder="At least 6 characters" minlength="6" required style="width: 100%; padding: 12px 40px 12px 40px; border: 1.5px solid #e1e3e8; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box;">
+                        <i id="toggle-reset-pass" class="fas fa-eye" onclick="togglePasswordVisibility('reset-new-password', 'toggle-reset-pass')" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #999; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px;">Confirm New Password</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+                        <input type="password" id="reset-confirm-password" placeholder="Re-enter new password" minlength="6" required style="width: 100%; padding: 12px 40px 12px 40px; border: 1.5px solid #e1e3e8; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box;">
+                    </div>
+                </div>
+                <button type="submit" id="reset-submit-btn" class="btn" style="width: 100%; padding: 13px; font-size: 15px; font-weight: 600; border-radius: 12px; background: #111111; color: #ffffff; border: none; cursor: pointer; margin-top: 8px;">Update Password & Sign In</button>
             </form>
         </div>
 
@@ -494,8 +517,179 @@
             }
         }
 
+        // Open Forgot Password Modal
+        function openForgotPasswordModal() {
+            let modal = document.getElementById('forgot-pass-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'forgot-pass-modal';
+                modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box;';
+                modal.innerHTML = `
+                    <div style="background:#fff; width:100%; max-width:420px; border-radius:18px; padding:28px 24px; box-shadow:0 15px 35px rgba(0,0,0,0.2); position:relative; text-align:center;">
+                        <button type="button" onclick="document.getElementById('forgot-pass-modal').style.display='none'" style="position:absolute; right:15px; top:15px; background:none; border:none; font-size:22px; color:#666; cursor:pointer;">&times;</button>
+                        
+                        <div style="margin-bottom:18px;">
+                            <div style="width:48px; height:48px; background:#f0f1f3; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:22px; color:#111; margin-bottom:10px;">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h3 style="margin:0; font-size:20px; font-weight:700; color:#111;">Forgot Password?</h3>
+                            <p style="margin:6px 0 0; font-size:13px; color:#666; line-height:1.4;">Enter your registered Gmail address or phone number. We will send you a password reset link.</p>
+                        </div>
+
+                        <div id="forgot-modal-alert" style="display:none; padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:14px; text-align:left;"></div>
+
+                        <form id="forgot-modal-form" style="display:flex; flex-direction:column; gap:14px; text-align:left;">
+                            <div>
+                                <label style="display:block; font-size:12px; font-weight:600; color:#444; margin-bottom:6px;">Gmail Address or Phone</label>
+                                <div style="position:relative;">
+                                    <i class="fas fa-envelope" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#999;"></i>
+                                    <input type="text" id="forgot-identifier-input" placeholder="e.g. name@gmail.com" required style="width:100%; padding:12px 14px 12px 40px; border:1.5px solid #e1e3e8; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;">
+                                </div>
+                            </div>
+                            <button type="submit" id="forgot-modal-submit-btn" style="width:100%; padding:12px; background:#111111; color:#fff; border:none; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="fas fa-paper-plane"></i> Send Reset Link
+                            </button>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                document.getElementById('forgot-modal-form').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const identifier = document.getElementById('forgot-identifier-input').value.trim();
+                    const btn = document.getElementById('forgot-modal-submit-btn');
+                    const alertBox = document.getElementById('forgot-modal-alert');
+
+                    if (!identifier) return;
+
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending link...';
+                    alertBox.style.display = 'none';
+
+                    try {
+                        const res = await fetch('/api/user/auth/forgot-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ identifier })
+                        });
+                        const data = await res.json();
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+
+                        if (data.success) {
+                            let msg = data.message;
+                            if (data.devResetLink) {
+                                msg += `<br><br><a href="${data.devResetLink}" style="display:inline-block; padding:8px 14px; background:#111; color:#fff; text-decoration:none; border-radius:6px; font-weight:600; margin-top:6px;">👉 Click Here To Reset Password Now</a>`;
+                            }
+                            alertBox.style.cssText = 'display:block; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:12px; border-radius:8px; font-size:13px; text-align:left;';
+                            alertBox.innerHTML = msg;
+                        } else {
+                            alertBox.style.cssText = 'display:block; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:12px; border-radius:8px; font-size:13px; text-align:left;';
+                            alertBox.textContent = data.message || 'Failed to send reset link.';
+                        }
+                    } catch (err) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+                        alertBox.style.cssText = 'display:block; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:12px; border-radius:8px; font-size:13px; text-align:left;';
+                        alertBox.textContent = 'Connection error. Please try again.';
+                    }
+                });
+            }
+            modal.style.display = 'flex';
+        }
+
+        // Check if URL has ?resetToken=... to activate Reset Password view
+        function checkResetTokenFlow() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('resetToken');
+            if (!token) return false;
+
+            const authBox = document.getElementById('auth-box-container');
+            const dashBox = document.getElementById('user-dashboard-container');
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const resetForm = document.getElementById('reset-password-form');
+
+            // Hide normal forms & Google button, show Reset Form
+            authBox.style.display = 'block';
+            dashBox.style.display = 'none';
+            loginForm.style.display = 'none';
+            regForm.style.display = 'none';
+            const googleDiv = document.getElementById('google-auth-btn');
+            if (googleDiv && googleDiv.parentElement) googleDiv.parentElement.style.display = 'none';
+            const tabDiv = document.querySelector('#auth-box-container > div:nth-child(2)');
+            if (tabDiv) tabDiv.style.display = 'none';
+
+            document.getElementById('auth-title').textContent = 'Set New Password';
+            document.getElementById('auth-subtitle').textContent = 'Enter a new password for your account';
+
+            fetch(`/api/user/auth/verify-reset-token/${token}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        resetForm.style.display = 'flex';
+                    } else {
+                        showAlert(data.message || 'Invalid or expired password reset link.');
+                    }
+                })
+                .catch(() => showAlert('Failed to verify reset token.'));
+
+            return true;
+        }
+
+        // Reset Password Submit Listener
+        document.getElementById('reset-password-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('resetToken');
+            const newPassword = document.getElementById('reset-new-password').value;
+            const confirmPassword = document.getElementById('reset-confirm-password').value;
+            const submitBtn = document.getElementById('reset-submit-btn');
+
+            if (newPassword !== confirmPassword) {
+                showAlert('Passwords do not match.');
+                return;
+            }
+            if (newPassword.length < 6) {
+                showAlert('Password must be at least 6 characters.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating Password...';
+
+            try {
+                const res = await fetch('/api/user/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, newPassword })
+                });
+                const data = await res.json();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Password & Sign In';
+
+                if (data.success) {
+                    localStorage.setItem('userToken', data.token);
+                    localStorage.setItem('userProfile', JSON.stringify(data.user));
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    checkUserSession();
+                } else {
+                    showAlert(data.message || 'Reset failed.');
+                }
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Password & Sign In';
+                showAlert('Connection error. Please try again.');
+            }
+        });
+
         // Check Session & Render View
         function checkUserSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('resetToken')) {
+                if (checkResetTokenFlow()) return;
+            }
+
             const token = localStorage.getItem('userToken');
             const savedProfile = localStorage.getItem('userProfile');
 

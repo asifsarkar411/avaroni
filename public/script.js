@@ -927,21 +927,26 @@ function initFooterAndWidgets() {
     <p><i class="fas fa-phone" style="color: #ffb6d8; margin-right: 8px;"></i> 01628628300</p>
     <p><i class="fab fa-whatsapp" style="color: #ffb6d8; margin-right: 8px;"></i> 01628628300</p>
     <div class="social-icons">
-        <!-- WhatsApp (Official Green) -->
-        <a href="https://wa.me/8801743648510" style="text-decoration: none;" target="_blank">
-            <i class="fab fa-whatsapp" style="color: #25D366;"></i>
-        </a>
-        
-        <!-- Phone (Standard Green) -->
-        <a href="tel:+8801743648510" style="text-decoration: none;">
-            <i class="fas fa-phone-alt" style="color: #28a745;"></i>
-        </a>
-        
-        <!-- Facebook (Official Blue) -->
-        <a href="https://www.facebook.com/profile.php?id=61572879166588" style="text-decoration: none;" target="_blank">
-            <i class="fab fa-facebook-f" style="color: #1877F2;"></i>
-        </a>
-    </div>
+    <!-- WhatsApp (Official Green) -->
+    <a href="https://wa.me/8801743648510" style="text-decoration: none;" target="_blank">
+        <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+    </a>
+    
+    <!-- Messenger (Official Blue) -->
+    <a href="https://m.me/61572879166588" style="text-decoration: none;" target="_blank">
+        <i class="fab fa-facebook-messenger" style="color: #0084FF;"></i>
+    </a>
+    
+    <!-- Phone (Standard Green) -->
+    <a href="tel:+8801743648510" style="text-decoration: none;">
+        <i class="fas fa-phone-alt" style="color: #28a745;"></i>
+    </a>
+    
+    <!-- Facebook (Official Blue) -->
+    <a href="https://www.facebook.com/profile.php?id=61572879166588" style="text-decoration: none;" target="_blank">
+        <i class="fab fa-facebook-f" style="color: #1877F2;"></i>
+    </a>
+</div>
 </div>
                 </div>
             </div>
