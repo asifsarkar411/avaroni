@@ -700,9 +700,10 @@ if (paymentForm) {
                         <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
                         <p style="margin: 15px 0; color: #333;">Thank you for your purchase. We will process your order soon.</p>
                         <p>Your order number is: <strong style="font-size: 20px; color: #007bff;">${data.orderNumber || 'N/A'}</strong></p>
-                        <br>
-                        <button onclick="downloadInvoice('${data.orderNumber}')" class="btn" style="padding: 10px 20px; background-color: #111111; color: white; border-radius: 4px; margin-right: 10px; cursor: pointer;"><i class="fas fa-file-download"></i> Download Invoice</button>
-                        <a href="index.html" class="btn" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px;">Return to Home</a>
+                        <div class="order-success-actions">
+                            <button onclick="downloadInvoice('${data.orderNumber}')" class="btn order-success-btn invoice-btn" data-aos="zoom-in"><i class="fas fa-file-download"></i> Download Invoice</button>
+                            <a href="index.html" class="btn order-success-btn home-btn" data-aos="zoom-in" data-aos-delay="100"><i class="fas fa-home"></i> Return to Home</a>
+                        </div>
                     `;
                 }
                 
