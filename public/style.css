@@ -3011,3 +3011,13 @@ body.no-scroll #flash-sale-banner,
     position: relative;
     z-index: 10;
 }
+@media (max-width: 600px) {
+    .order-success-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .order-success-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
