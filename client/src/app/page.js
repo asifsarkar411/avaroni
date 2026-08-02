@@ -1,6 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import NavPromoSlider from '@/components/NavPromoSlider';
+import HeroSlider from '@/components/HeroSlider';
+import FlashSaleBanner from '@/components/FlashSaleBanner';
+import ReviewsSlider from '@/components/ReviewsSlider';
 
 export default function Home() {
   const [categories, setCategories] = useState([]);
@@ -30,6 +34,8 @@ export default function Home() {
 
   return (
     <div className="home-container">
+        <NavPromoSlider />
+
         <div className="welcome-section" style={{textAlign: 'center', padding: '20px'}}>
             <h2 data-aos="fade-down" style={{color: '#000000', fontWeight: '700', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', marginBottom: '12px', textAlign: 'center', lineHeight: '1.2'}}>
                 Elegance Redefined for Every Moment
@@ -38,6 +44,8 @@ export default function Home() {
                 Step into a world of curated elegance. From stunning women's wear to sparkling jewellery and cute kids' outfits, upgrade your wardrobe with exclusive designs crafted just for you.
             </h3>
         </div>
+
+        <HeroSlider />
 
         <section className="category-section">
             <div className="category-header">
@@ -62,6 +70,8 @@ export default function Home() {
                 </div>
             )}
         </section>
+        
+        <FlashSaleBanner />
 
         <div className="new-arrivals-section">
             <h2 className="section-title" data-aos="fade-up"><i className="fas fa-sparkles"></i> New Arrivals <i className="fas fa-sparkles"></i></h2>
@@ -90,6 +100,9 @@ export default function Home() {
                 </div>
             )}
         </div>
+
+        <ReviewsSlider />
     </div>
   );
 }
+
