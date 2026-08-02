@@ -763,7 +763,7 @@ app.post('/api/user/auth/forgot-password', authLimiter, async (req, res) => {
 
         const user = await User.findOne(query);
         if (!user) {
-            return res.json({ success: true, message: "If an account matching that detail exists, a password reset link has been sent." });
+            return res.json({ success: false, message: "No account found with that email or phone number." });
         }
 
         const targetEmail = user.email || (isEmailIdentifier(cleanIdentifier) ? cleanIdentifier.toLowerCase() : null);
@@ -805,17 +805,21 @@ app.post('/api/user/auth/forgot-password', authLimiter, async (req, res) => {
             `
         };
 
-        transporter.sendMail(mailOptions, (err) => {
-            if (err) {
-                console.warn("Nodemailer delivery notice (Dev reset link logged):", err.message);
-            }
+        try {
+            await transporter.sendMail(mailOptions);
             console.log(`[PASSWORD RESET GENERATED] Email: ${targetEmail} | Link: ${resetLink}`);
             res.json({
                 success: true,
                 message: "Password reset link sent! Please check your Gmail inbox (and Spam folder).",
                 devResetLink: (!process.env.EMAIL_USER || process.env.NODE_ENV !== 'production') ? resetLink : undefined
             });
-        });
+        } catch (err) {
+            console.error("Nodemailer delivery failed:", err.message);
+            res.status(500).json({
+                success: false,
+                message: "We encountered an issue sending the email. Please try again later."
+            });
+        }
     } catch (err) {
         console.error("User Forgot Password Error:", err);
         res.status(500).json({ success: false, message: "Server error processing request." });
