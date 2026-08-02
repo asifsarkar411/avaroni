@@ -31,28 +31,16 @@ export default function NavPromoSlider() {
     if (sliders.length === 0) return null;
 
     return (
-        <div className="nav-promo-slider" style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderBottom: '1px solid rgba(0,0,0,0.05)',
-            padding: '10px',
-            textAlign: 'center',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#111',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-            overflow: 'hidden',
-            position: 'relative'
-        }}>
-            <div style={{
-                transition: 'opacity 0.5s ease-in-out',
-                opacity: 1
-            }}>
-                <a href={sliders[currentIndex].linkUrl || '#'} style={{ color: 'inherit', textDecoration: 'none' }}>
-                    <i className="fas fa-bullhorn" style={{marginRight: '8px', color: '#555'}}></i>
-                    {sliders[currentIndex].text}
+        <div className="nav-promo-slider" id="nav-promo-slider">
+            {sliders.map((slider, index) => (
+                <a key={slider._id || index} href={slider.linkUrl || '#'}>
+                    <img 
+                        src={slider.imageUrl} 
+                        alt="Promo" 
+                        className={index === currentIndex ? 'active' : ''} 
+                    />
                 </a>
-            </div>
+            ))}
         </div>
     );
 }

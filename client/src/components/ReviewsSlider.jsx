@@ -39,41 +39,22 @@ export default function ReviewsSlider() {
     };
 
     return (
-        <section style={{ padding: '60px 20px', background: '#f8f9fa', textAlign: 'center' }}>
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                <h2 style={{ fontSize: '2rem', marginBottom: '10px' }}><i className="fas fa-star" style={{color:'#ffc107'}}></i> What Our Customers Say <i className="fas fa-star" style={{color:'#ffc107'}}></i></h2>
-                <p style={{ color: '#666', marginBottom: '40px' }}>Real reviews from our valued shoppers</p>
+        <section className="reviews-slider-section" id="reviews-slider-section" style={{ display: 'block' }}>
+            <div className="reviews-slider-container">
+                <h2 className="section-title"><i className="fas fa-star" style={{color:'#ffc107'}}></i> What Our Customers Say <i className="fas fa-star" style={{color:'#ffc107'}}></i></h2>
+                <p className="section-subtitle">Real reviews from our valued shoppers</p>
                 
-                <div style={{ position: 'relative', minHeight: '200px', overflow: 'hidden' }}>
-                    {reviews.map((review, index) => (
-                        <div key={review._id} style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            opacity: index === currentIndex ? 1 : 0,
-                            transform: 	ranslateX(px),
-                            transition: 'all 0.6s ease-in-out',
-                            pointerEvents: index === currentIndex ? 'auto' : 'none'
-                        }}>
-                            <div style={{
-                                background: 'white',
-                                padding: '30px',
-                                borderRadius: '16px',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-                                display: 'inline-block',
-                                width: '100%',
-                                maxWidth: '600px'
-                            }}>
-                                <div style={{ marginBottom: '15px' }}>{renderStars(review.rating)}</div>
-                                <p style={{ fontSize: '1.1rem', fontStyle: 'italic', color: '#444', lineHeight: '1.6', marginBottom: '20px' }}>
-                                    "{review.comment}"
-                                </p>
-                                <h4 style={{ margin: 0, color: '#111' }}>{review.reviewerName}</h4>
-                                <small style={{ color: '#888' }}>on {review.productName}</small>
+                <div className="reviews-slider-wrapper">
+                    <div className="reviews-slides" style={{ transform: 	ranslateX(-\%), display: 'flex', transition: 'transform 0.5s ease' }}>
+                        {reviews.map((review) => (
+                            <div key={review._id} className="review-card" style={{ minWidth: '100%', boxSizing: 'border-box' }}>
+                                <div className="review-rating">{renderStars(review.rating)}</div>
+                                <p className="review-text">"{review.comment}"</p>
+                                <h4 className="reviewer-name">{review.reviewerName}</h4>
+                                <small className="review-product">on {review.productName}</small>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
 
                 {reviews.length > 1 && (
