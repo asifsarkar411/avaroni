@@ -884,17 +884,15 @@ function initFooterAndWidgets() {
             <a href="https://wa.me/8801743648510" target="_blank" class="floating-btn floating-whatsapp" title="WhatsApp Us">
                 <i class="fab fa-whatsapp"></i>
             </a>
-            <a href="https://m.me/61572879166588" target="_blank" class="floating-btn floating-messenger" title="Send us a Message">
-                <i class="fab fa-facebook-messenger"></i>
+            <a href="tel:+8801628628300" class="floating-btn floating-phone" title="Call Us">
+                <i class="fas fa-phone-alt"></i>
             </a>
-            <a href="tel:+8801743648510" class="floating-btn floating-phone" title="Call Us">
+            <a href="https://m.me/61572879166588" class="floating-btn floating-phone" title="Call Us">
                 <i class="fas fa-phone-alt"></i>
             </a>
         `;
         document.body.appendChild(floatingContainer);
     }
-}
-    
 
     // 2. Create and append the dynamic footer if not already present
     if (!document.querySelector('.site-footer')) {
