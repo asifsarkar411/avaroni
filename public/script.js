@@ -887,8 +887,8 @@ function initFooterAndWidgets() {
             <a href="tel:+8801628628300" class="floating-btn floating-phone" title="Call Us">
                 <i class="fas fa-phone-alt"></i>
             </a>
-            <a href="https://m.me/61572879166588" class="floating-btn floating-phone" title="Call Us">
-                <i class="fas fa-phone-alt"></i>
+            <a href="https://m.me/61572879166588" class="floating-btn floating-messenger" title="Call Us">
+                <i class="fab fa-messenger"></i>
             </a>
         `;
         document.body.appendChild(floatingContainer);
