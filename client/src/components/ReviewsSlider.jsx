@@ -45,7 +45,7 @@ export default function ReviewsSlider() {
                 <p className="section-subtitle">Real reviews from our valued shoppers</p>
                 
                 <div className="reviews-slider-wrapper">
-                    <div className="reviews-slides" style={{ transform: 	ranslateX(-\%), display: 'flex', transition: 'transform 0.5s ease' }}>
+                    <div className="reviews-slides" style={{ transform: `translateX(-${currentIndex * 100}%)`, display: 'flex', transition: 'transform 0.5s ease' }}>
                         {reviews.map((review) => (
                             <div key={review._id} className="review-card" style={{ minWidth: '100%', boxSizing: 'border-box' }}>
                                 <div className="review-rating">{renderStars(review.rating)}</div>
