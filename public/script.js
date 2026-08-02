@@ -220,7 +220,7 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
         const activeClass = inWishlist ? "active" : "";
 
         container.innerHTML += `
-            <div class="product-card" data-product-id="${product._id}">
+            <div class="product-card" data-product-id="${product._id}" data-aos="fade-up">
                 <div class="product-image-wrap">
                     <button class="wishlist-card-btn ${activeClass}" data-id="${product._id}" title="${inWishlist ? 'Remove from Wishlist' : 'Save to Wishlist'}">
                         <i class="${heartClass}"></i>
@@ -1485,7 +1485,7 @@ async function openProductModal(productId) {
                 relatedGrid.innerHTML = '';
                 data.relatedProducts.forEach(rp => {
                     relatedGrid.innerHTML += `
-                        <div class="related-product-card" data-product-id="${rp._id}">
+                        <div class="related-product-card" data-product-id="${rp._id}" data-aos="fade-up">
                             <img src="${formatImageUrl(rp.imageUrl)}" alt="${rp.name}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                             <h4>${rp.name}</h4>
                             <span class="related-price">৳${rp.price}</span>
@@ -1636,7 +1636,7 @@ function renderWishlistPage() {
         const fullImageUrl = formatImageUrl(product.imageUrl);
         const pId = product._id || product.id;
         grid.innerHTML += `
-            <div class="product-card" data-product-id="${pId}">
+            <div class="product-card" data-product-id="${pId}" data-aos="fade-up">
                 <div class="product-image-wrap">
                     <button class="wishlist-card-btn active" data-id="${pId}" title="Remove from Wishlist">
                         <i class="fas fa-heart"></i>
@@ -2114,7 +2114,7 @@ async function renderCategoryGrid() {
     }
 
     gridContainer.innerHTML = categoriesToRender.map(cat => `
-        <div class="category-card" data-url="${escapeHTML(cat.redirectUrl)}" style="cursor: pointer;">
+        <div class="category-card" data-url="${escapeHTML(cat.redirectUrl)}" style="cursor: pointer;" data-aos="zoom-in">
             <div class="category-icon-wrap">
                 <img src="${escapeHTML(cat.icon)}" alt="${escapeHTML(cat.name)}" loading="lazy" class="category-icon-img" onerror="this.onerror=null; this.src='${FALLBACK_ICON}';">
             </div>
@@ -2139,4 +2139,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+});
+// Auto-refresh AOS when new elements are injected
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new MutationObserver((mutations) => {
+        let shouldRefresh = false;
+        mutations.forEach(mutation => {
+            if (mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && (node.hasAttribute('data-aos') || node.querySelector('[data-aos]'))) {
+                        shouldRefresh = true;
+                    }
+                });
+            }
+        });
+        if (shouldRefresh && typeof AOS !== 'undefined') {
+            setTimeout(() => AOS.refreshHard(), 100);
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 });
