@@ -1681,7 +1681,7 @@ app.get('/api/admin/products', verifyAdminToken, async (req, res) => {
 
 // Add Product
 // Product creation - JSON body with Base64 image
-app.post('/api/products', verifyAdminToken, async (req, res) => {
+app.post('/api/admin/products', verifyAdminToken, async (req, res) => {
     try {
         // Check Content-Type to decide parsing strategy
         const contentType = req.headers['content-type'] || '';

@@ -21,9 +21,9 @@
         }
 
         :root {
-            --primary: #e60050;
-            --primary-hover: #c50044;
-            --primary-light: #ffe6ef;
+            --primary: #111111;
+            --primary-hover: #333333;
+            --primary-light: rgba(0, 0, 0, 0.05);
             --dark: #1e1e2d;
             --dark-light: #2c2c3e;
             --bg-main: #f5f6fa;
@@ -41,7 +41,9 @@
         }
 
         .chart-card {
-            background: var(--white);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 22px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.04);
@@ -158,6 +160,7 @@
         }
 
         .tab-btn {
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -303,6 +306,7 @@
         }
 
         .btn {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -415,11 +419,11 @@
             font-size: 20px;
         }
 
-        .icon-blue { background-color: #e8f2ff; color: #007bff; }
-        .icon-green { background-color: #e6f9ed; color: #28a745; }
-        .icon-pink { background-color: #ffe6ef; color: #e60050; }
-        .icon-yellow { background-color: #fff9e6; color: #ffc107; }
-        .icon-purple { background-color: #f3e8ff; color: #8a2be2; }
+        .icon-blue { background-color: rgba(0,0,0,0.05); color: #333; }
+        .icon-green { background-color: rgba(0,0,0,0.08); color: #111; }
+        .icon-pink { background-color: rgba(0,0,0,0.1); color: #000; }
+        .icon-yellow { background-color: rgba(0,0,0,0.05); color: #222; }
+        .icon-purple { background-color: rgba(0,0,0,0.05); color: #222; }
 
         /* Recent Activity / Panel blocks */
         .panel-box {
@@ -542,6 +546,7 @@
             }
 
             .tab-btn {
+            transition: all 0.3s ease;
                 justify-content: flex-start !important;
                 padding: 12px 16px !important;
             }
@@ -612,10 +617,21 @@
                 grid-template-columns: 1fr !important;
             }
         }
+        /* Toasts */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast {
+            min-width: 280px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px);
+            padding: 16px 20px; border-radius: 8px; color: #111; margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.08); border-left: 6px solid #111; box-shadow: 0 10px 30px rgba(0,0,0,0.1); animation: slideIn 0.5s ease forwards;
+        }
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 </head>
 <body>
+    <div id="toast-container"></div>
 
     <div class="admin-layout">
         <!-- Sidebar Navigation -->
@@ -787,7 +803,7 @@
                 <div id="orders-tab" class="tab-content">
                     <div class="panel-box">
                         <div class="panel-header" style="flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center;">
-                            <h2><i class="fas fa-shopping-bag" style="color: #e60050;"></i> All Customer Orders</h2>
+                            <h2><i class="fas fa-shopping-bag" style="color: #111111;"></i> All Customer Orders</h2>
                             
                             <!-- Search Input -->
                             <div style="position: relative; width: 100%; max-width: 380px;">
@@ -1021,7 +1037,7 @@
                 <div id="manage-flash-sale-tab" class="tab-content">
                     <div class="panel-box">
                         <div class="panel-header">
-                            <h2><i class="fas fa-bolt" style="color: #e60050;"></i> Flash Sale Sticky Countdown Banner Settings</h2>
+                            <h2><i class="fas fa-bolt" style="color: #111111;"></i> Flash Sale Sticky Countdown Banner Settings</h2>
                         </div>
                         
                         <form id="flash-sale-form" style="display: flex; flex-direction: column; gap: 20px;">
@@ -1029,7 +1045,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                     <h3 style="font-size: 16px; margin: 0; color: #2c2c3e;"><i class="fas fa-toggle-on" style="color: var(--primary); margin-right: 8px;"></i> Banner Status</h3>
                                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; font-size: 15px;">
-                                        <input type="checkbox" id="flash-is-active" style="width: 20px; height: 20px; accent-color: #e60050;">
+                                        <input type="checkbox" id="flash-is-active" style="width: 20px; height: 20px; accent-color: #111111;">
                                         <span id="flash-status-label" style="color: #28a745;">Banner Active (Visible to Customers)</span>
                                     </label>
                                 </div>
@@ -1438,3 +1454,6 @@
     </script>
 </body>
 </html>
+
+
+

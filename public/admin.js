@@ -1,3 +1,21 @@
+// Custom Toast Notification System
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = "toast ${type}";
+    
+    const icon = type === 'success' ? '<i class="fas fa-check-circle" style="color:#28a745; margin-right:8px;"></i>' : '<i class="fas fa-exclamation-circle" style="color:#dc3545; margin-right:8px;"></i>';
+    toast.innerHTML = icon + message;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.5s ease reverse forwards';
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
 // Helper function to format image URLs safely
 function formatImageUrl(url) {
     if (!url || typeof url !== 'string' || !url.trim()) {
@@ -29,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = 'admin-login.html';
         return; // Important: Stops the rest of the script from running if not logged in
     } else {
-        showDashboard();
+        showDashboard().catch(err => console.error('Dashboard init error:', err));
     }
 
     // 2. Attach Static Event Listeners
@@ -182,7 +200,7 @@ async function fetchWithAuth(url, options = {}) {
         const response = await fetch(url, { ...options, headers });
         if (response.status === 401 || response.status === 403) {
             localStorage.removeItem('adminToken');
-            alert("Your session has expired or is invalid. Please log in again.");
+            showToast("Your session has expired or is invalid. Please log in again.", 'error');
             window.location.href = 'admin-login.html';
             return null;
         }
@@ -606,7 +624,7 @@ async function toggleAvailability(id) {
 
 async function deleteProduct(id) {
     if (!id || id === 'undefined') {
-        alert("Invalid product ID");
+        showToast("Invalid product ID", 'error');
         return;
     }
     if (confirm("Are you sure you want to delete this product?")) {
@@ -621,11 +639,11 @@ async function deleteProduct(id) {
                 fetchDashboardStats();
                 fetchAnalyticsCharts();
             } else {
-                alert("Failed to delete product: " + (data.message || "Unknown error"));
+                showToast("Failed to delete product: " + (data.message || "Unknown error", 'error'));
             }
         } catch(err) {
             console.error("Error deleting product:", err);
-            alert("Network error deleting product.");
+            showToast("Network error deleting product.", 'error');
         }
     }
 }
@@ -641,7 +659,7 @@ async function handleAddProduct(e) {
     let imageBase64 = "";
     
     if (!imageFile) {
-        alert("Please select a product photo before saving.");
+        showToast("Please select a product photo before saving.", 'error');
         saveBtn.disabled = false;
         saveBtn.innerText = 'Save Product to Database';
         return;
@@ -651,7 +669,7 @@ async function handleAddProduct(e) {
         imageBase64 = await fileToBase64(imageFile);
     } catch (err) {
         console.error("Error reading image:", err);
-        alert("Failed to read image file. Please try a different photo.");
+        showToast("Failed to read image file. Please try a different photo.", 'error');
         saveBtn.disabled = false;
         saveBtn.innerText = 'Save Product to Database';
         return;
@@ -670,7 +688,7 @@ async function handleAddProduct(e) {
     };
 
     try {
-        const response = await fetch('/api/products', {
+        const response = await fetchWithAuth('/api/admin/products', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -681,15 +699,15 @@ async function handleAddProduct(e) {
         const data = await response.json();
         
         if (data.success) {
-            alert('Product added successfully!');
+            showToast('Product added successfully!');
             document.getElementById('add-product-form').reset();
             fetchManageProducts(); // Refresh the list instantly
         } else {
-            alert('Failed to save product: ' + (data.message || 'Unknown error'));
+            showToast('Failed to save product: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error saving product:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = 'Save Product to Database';
@@ -991,15 +1009,15 @@ async function handleOrderStatusDropdownChange(selectEl, orderId, currentStatus)
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message || `Order status updated to "${newStatus}"!`);
+            showToast(data.message || `Order status updated to "${newStatus}"!`);
             fetchOrders();
         } else {
-            alert(data.message || "Failed to update order status.");
+            showToast(data.message || "Failed to update order status.", 'error');
             selectEl.value = currentStatus;
         }
     } catch (err) {
         console.error("Error updating order status:", err);
-        alert("Server connection error.");
+        showToast("Server connection error.", 'error');
         selectEl.value = currentStatus;
     }
 }
@@ -1021,14 +1039,14 @@ async function updateOrderStatus(orderId, newStatus) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message || `Order status updated to ${newStatus}!`);
+            showToast(data.message || `Order status updated to ${newStatus}!`);
             fetchOrders(); // Refresh order table
         } else {
-            alert(data.message || "Failed to update order status.");
+            showToast(data.message || "Failed to update order status.", 'error');
         }
     } catch (err) {
         console.error("Error updating order status:", err);
-        alert("Failed to connect to server. Please try again.");
+        showToast("Failed to connect to server. Please try again.", 'error');
     }
 }
 
@@ -1104,11 +1122,11 @@ async function updateCardHeading(cardId) {
         });
         const data = await response.json();
         if(data.success) {
-            alert('Heading saved successfully!');
+            showToast('Heading saved successfully!');
         }
     } catch (err) {
         console.error("Error saving heading:", err);
-        alert('Error saving heading');
+        showToast('Error saving heading', 'error');
     }
 }
 
@@ -1124,7 +1142,7 @@ async function createNewCard() {
         loadAdminBanners();
     } catch (err) { 
         console.error("Error creating card:", err);
-        alert('Error creating card'); 
+        showToast('Error creating card', 'error'); 
     }
 }
 
@@ -1138,7 +1156,7 @@ async function deleteCard(cardId) {
         loadAdminBanners();
     } catch (err) { 
         console.error("Error deleting card:", err);
-        alert('Error deleting card'); 
+        showToast('Error deleting card', 'error'); 
     }
 }
 
@@ -1161,11 +1179,11 @@ async function uploadImageToCard(cardId) {
         if (data.success) {
             loadAdminBanners(); 
         } else {
-            alert('Failed to upload banner: ' + (data.message || 'Unknown error'));
+            showToast('Failed to upload banner: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) { 
         console.error("Error uploading image:", err);
-        alert('Error uploading image'); 
+        showToast('Error uploading image', 'error'); 
     }
 }
 
@@ -1179,7 +1197,7 @@ async function deleteImageFromCard(cardId, imageIndex) {
         loadAdminBanners();
     } catch (err) { 
         console.error("Error deleting image:", err);
-        alert('Error deleting image'); 
+        showToast('Error deleting image', 'error'); 
     }
 }
 
@@ -1350,14 +1368,14 @@ async function handleAddCategory(e) {
         if (!response) return;
         const data = await response.json();
         if (data.success) {
-            alert('Category added successfully!');
+            showToast('Category added successfully!');
             nameInput.value = '';
             if (iconFileInput) iconFileInput.value = '';
             if (iconUrlInput) iconUrlInput.value = '';
             if (redirectInput) redirectInput.value = '';
             renderCategoriesTab();
         } else {
-            alert('Failed to add category: ' + (data.message || 'Unknown error'));
+            showToast('Failed to add category: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         if (submitBtn) {
@@ -1365,7 +1383,7 @@ async function handleAddCategory(e) {
             submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
         }
         console.error("Error adding category:", err);
-        alert('An error occurred connecting to the server.');
+        showToast('An error occurred connecting to the server.', 'error');
     }
 }
 
@@ -1374,7 +1392,7 @@ async function handleAddSubcategory(catId) {
     if (!input) return;
     const name = input.value.trim();
     if (!name) {
-        alert("Please enter a subcategory name.");
+        showToast("Please enter a subcategory name.", 'error');
         return;
     }
 
@@ -1392,11 +1410,11 @@ async function handleAddSubcategory(catId) {
             input.value = '';
             renderCategoriesTab();
         } else {
-            alert('Failed to add subcategory: ' + (data.message || 'Unknown error'));
+            showToast('Failed to add subcategory: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error adding subcategory:", err);
-        alert('An error occurred connecting to the server.');
+        showToast('An error occurred connecting to the server.', 'error');
     }
 }
 
@@ -1411,11 +1429,11 @@ async function deleteSubcategory(catId, subName) {
         if (data.success) {
             renderCategoriesTab();
         } else {
-            alert('Failed to remove subcategory: ' + (data.message || 'Unknown error'));
+            showToast('Failed to remove subcategory: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error deleting subcategory:", err);
-        alert('An error occurred connecting to the server.');
+        showToast('An error occurred connecting to the server.', 'error');
     }
 }
 
@@ -1430,11 +1448,11 @@ async function deleteCategory(catId) {
         if (data.success) {
             renderCategoriesTab();
         } else {
-            alert('Failed to delete category: ' + (data.message || 'Unknown error'));
+            showToast('Failed to delete category: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error deleting category:", err);
-        alert('An error occurred connecting to the server.');
+        showToast('An error occurred connecting to the server.', 'error');
     }
 }
 
@@ -1511,11 +1529,11 @@ async function handleEditCategorySubmit(e) {
         const data = await response.json();
 
         if (data.success) {
-            alert('Category updated successfully!');
+            showToast('Category updated successfully!');
             closeEditCategoryModal();
             renderCategoriesTab();
         } else {
-            alert('Failed to update category: ' + (data.message || 'Unknown error'));
+            showToast('Failed to update category: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         if (saveBtn) {
@@ -1523,7 +1541,7 @@ async function handleEditCategorySubmit(e) {
             saveBtn.innerText = 'Save Category';
         }
         console.error("Error updating category:", err);
-        alert('An error occurred connecting to the server.');
+        showToast('An error occurred connecting to the server.', 'error');
     }
 }
 
@@ -1587,7 +1605,7 @@ async function handleAddPromoCode(e) {
     const discountValue = Number(document.getElementById('new-promo-value').value);
 
     if (!code || isNaN(discountValue) || discountValue <= 0) {
-        alert("Please enter valid promo code information.");
+        showToast("Please enter valid promo code information.", 'error');
         return;
     }
 
@@ -1603,15 +1621,15 @@ async function handleAddPromoCode(e) {
         
         const data = await response.json();
         if (data.success) {
-            alert('Promo Code created successfully!');
+            showToast('Promo Code created successfully!');
             document.getElementById('add-promo-form').reset();
             fetchPromoCodes();
         } else {
-            alert('Failed to create promo code: ' + (data.message || 'Unknown error'));
+            showToast('Failed to create promo code: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error saving promo code:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     }
 }
 
@@ -1626,11 +1644,11 @@ async function deletePromoCode(promoId) {
         if (data.success) {
             fetchPromoCodes();
         } else {
-            alert('Failed to delete promo code: ' + (data.message || 'Unknown error'));
+            showToast('Failed to delete promo code: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error deleting promo code:", err);
-        alert('An error occurred connecting to the server.');
+        showToast('An error occurred connecting to the server.', 'error');
     }
 }
 
@@ -1681,7 +1699,7 @@ async function handleAddNavSlider(e) {
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
     if (!fileInput.files || fileInput.files.length === 0) {
-        alert("Please select a promo image file.");
+        showToast("Please select a promo image file.", 'error');
         return;
     }
 
@@ -1707,15 +1725,15 @@ async function handleAddNavSlider(e) {
 
         const data = await response.json();
         if (data.success) {
-            alert("Navbar promo image uploaded successfully!");
+            showToast("Navbar promo image uploaded successfully!");
             e.target.reset();
             loadAdminNavSliders();
         } else {
-            alert("Failed to upload promo image: " + (data.message || 'Unknown error'));
+            showToast("Failed to upload promo image: " + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error uploading nav slider image:", err);
-        alert("An error occurred during upload.");
+        showToast("An error occurred during upload.", 'error');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "Upload & Add to Navbar";
@@ -1735,11 +1753,11 @@ async function deleteNavSlider(id) {
         if (data.success) {
             loadAdminNavSliders();
         } else {
-            alert("Failed to delete nav slider: " + (data.message || 'Unknown error'));
+            showToast("Failed to delete nav slider: " + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error deleting nav slider:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     }
 }
 
@@ -1821,14 +1839,14 @@ async function updateReturnStatus(requestId, status) {
 
         const data = await response.json();
         if (data.success) {
-            alert(`Return request was ${status} successfully! Customer has been notified by email.`);
+            showToast(`Return request was ${status} successfully! Customer has been notified by email.`);
             fetchReturnRequests(); // Refresh the list
         } else {
-            alert("Failed to update status: " + (data.message || 'Unknown error'));
+            showToast("Failed to update status: " + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error updating return request status:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     }
 }
 
@@ -1906,11 +1924,11 @@ async function markMessageRead(messageId) {
             fetchContactMessages(); // Refresh the list
             fetchDashboardStats();  // Update dashboard unread counter
         } else {
-            alert("Failed to mark message as read: " + (data.message || 'Unknown error'));
+            showToast("Failed to mark message as read: " + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error marking message as read:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     }
 }
 
@@ -1925,15 +1943,15 @@ async function deleteMessage(messageId) {
 
         const data = await response.json();
         if (data.success) {
-            alert("Message deleted successfully!");
+            showToast("Message deleted successfully!");
             fetchContactMessages(); // Refresh the list
             fetchDashboardStats();  // Update dashboard counter
         } else {
-            alert("Failed to delete message: " + (data.message || 'Unknown error'));
+            showToast("Failed to delete message: " + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error deleting message:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     }
 }
 
@@ -1949,7 +1967,7 @@ window.deleteMessage = deleteMessage;
 async function openEditModal(id) {
     const prod = currentInventoryProducts.find(p => p._id === id);
     if (!prod) {
-        alert("Product details not found. Please refresh the inventory table.");
+        showToast("Product details not found. Please refresh the inventory table.", 'error');
         return;
     }
 
@@ -2021,7 +2039,7 @@ async function handleEditProductSubmit(e) {
             imageBase64 = await fileToBase64(imageFile);
         } catch (err) {
             console.error("Error reading image:", err);
-            alert("Failed to read new image file.");
+            showToast("Failed to read new image file.", 'error');
             saveBtn.disabled = false;
             saveBtn.innerText = 'Save Changes';
             return;
@@ -2053,15 +2071,15 @@ async function handleEditProductSubmit(e) {
         const data = await response.json();
 
         if (data.success) {
-            alert('Product updated successfully!');
+            showToast('Product updated successfully!');
             closeEditModal();
             fetchManageProducts();
         } else {
-            alert('Failed to update product: ' + (data.message || 'Unknown error'));
+            showToast('Failed to update product: ' + (data.message || 'Unknown error', 'error'));
         }
     } catch (err) {
         console.error("Error updating product:", err);
-        alert("An error occurred connecting to the server.");
+        showToast("An error occurred connecting to the server.", 'error');
     } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = 'Save Changes';
@@ -2139,14 +2157,14 @@ async function togglePublishReview(reviewId, isPublished) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message);
+            showToast(data.message);
             fetchAdminReviews();
         } else {
-            alert(data.message || "Failed to update review.");
+            showToast(data.message || "Failed to update review.", 'error');
         }
     } catch (err) {
         console.error("Error toggling review status:", err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", 'error');
     }
 }
 
@@ -2161,14 +2179,14 @@ async function deleteAdminReview(reviewId) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message);
+            showToast(data.message);
             fetchAdminReviews();
         } else {
-            alert(data.message || "Failed to delete review.");
+            showToast(data.message || "Failed to delete review.", 'error');
         }
     } catch (err) {
         console.error("Error deleting review:", err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", 'error');
     }
 }
 
@@ -2201,7 +2219,7 @@ async function handleChangeEmail(e) {
     const newEmail = document.getElementById('setting-new-email').value.trim();
 
     if (!currentPassword || !newEmail) {
-        alert("Please fill in both your current password and new email.");
+        showToast("Please fill in both your current password and new email.", 'error');
         return;
     }
 
@@ -2215,16 +2233,16 @@ async function handleChangeEmail(e) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message || "Email updated successfully!");
+            showToast(data.message || "Email updated successfully!");
             document.getElementById('change-email-form').reset();
             const currentEmailInput = document.getElementById('setting-current-email');
             if (currentEmailInput) currentEmailInput.value = data.email;
         } else {
-            alert(data.message || "Failed to update email.");
+            showToast(data.message || "Failed to update email.", 'error');
         }
     } catch (err) {
         console.error("Change Email Error:", err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", 'error');
     }
 }
 
@@ -2235,12 +2253,12 @@ async function handleChangePassword(e) {
     const confirmPassword = document.getElementById('setting-confirm-new-pass').value;
 
     if (newPassword !== confirmPassword) {
-        alert("New password and confirm password do not match!");
+        showToast("New password and confirm password do not match!");
         return;
     }
 
     if (newPassword.length < 8) {
-        alert("New password must be at least 8 characters long.");
+        showToast("New password must be at least 8 characters long.");
         return;
     }
 
@@ -2254,14 +2272,14 @@ async function handleChangePassword(e) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message || "Password updated successfully!");
+            showToast(data.message || "Password updated successfully!");
             document.getElementById('change-password-form').reset();
         } else {
-            alert(data.message || "Failed to update password.");
+            showToast(data.message || "Failed to update password.", 'error');
         }
     } catch (err) {
         console.error("Change Password Error:", err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", 'error');
     }
 }
 
@@ -2306,7 +2324,7 @@ async function handleCreateUser(e) {
     const password = document.getElementById('new-user-pass').value;
 
     if (!username || !email || !password) {
-        alert("Please enter a username, email, and initial password.");
+        showToast("Please enter a username, email, and initial password.", 'error');
         return;
     }
 
@@ -2320,15 +2338,15 @@ async function handleCreateUser(e) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message || "User access granted successfully!");
+            showToast(data.message || "User access granted successfully!");
             document.getElementById('create-user-form').reset();
             fetchAdminUsers();
         } else {
-            alert(data.message || "Failed to create user account.");
+            showToast(data.message || "Failed to create user account.", 'error');
         }
     } catch (err) {
         console.error("Create User Error:", err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", 'error');
     }
 }
 
@@ -2343,14 +2361,14 @@ async function deleteUserAccess(userId) {
 
         const data = await response.json();
         if (data.success) {
-            alert(data.message || "User access revoked.");
+            showToast(data.message || "User access revoked.");
             fetchAdminUsers();
         } else {
-            alert(data.message || "Failed to revoke access.");
+            showToast(data.message || "Failed to revoke access.", 'error');
         }
     } catch (err) {
         console.error("Delete User Error:", err);
-        alert("Failed to connect to server.");
+        showToast("Failed to connect to server.", 'error');
     }
 }
 
@@ -2475,7 +2493,7 @@ async function handleFlashSaleSubmit(e) {
 
     const endTimeLocal = document.getElementById('flash-end-time').value;
     if (!endTimeLocal) {
-        alert('Please set a Countdown End Date & Time.');
+        showToast('Please set a Countdown End Date & Time.', 'error');
         return;
     }
 
@@ -2501,14 +2519,17 @@ async function handleFlashSaleSubmit(e) {
         });
         const data = await res.json();
         if (res.ok && data.success) {
-            alert('✅ Flash sale banner saved and published!');
+            showToast('✅ Flash sale banner saved and published!');
         } else {
-            alert('❌ ' + (data.message || 'Failed to save flash sale banner.'));
+            showToast('❌ ' + (data.message || 'Failed to save flash sale banner.', 'error'));
         }
     } catch (err) {
         console.error('Flash sale save error:', err);
-        alert('Server connection error.');
+        showToast('Server connection error.', 'error');
     } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Publish Flash Sale Banner'; }
     }
 }
+
+
+
