@@ -51,7 +51,7 @@ export default function Home() {
             ) : (
                 <div className="category-grid" id="category-grid">
                     {categories.map(cat => (
-                        <div key={cat._id} className="category-card" data-aos="fade-up" onClick={() => window.location.href = /shop/}>
+                        <div key={cat._id} className="category-card" data-aos="fade-up" onClick={() => window.location.href = `/shop/${cat.name.toLowerCase()}`}>
                             <img src={cat.image} alt={cat.name} loading="lazy" />
                             <div className="category-info">
                                 <h3>{cat.name}</h3>

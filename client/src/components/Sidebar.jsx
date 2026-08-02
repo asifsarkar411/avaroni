@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function Sidebar({ isOpen, onClose }) {
   return (
-    <div id="sidebar" className={sidebar }>
+    <div id="sidebar" className={'sidebar ' + (isOpen ? 'active' : '')}>
         <div className="sidebar-header">
             <Link href="/" className="sidebar-brand">
                 <img src="/img/profile_image.jpg" alt="Logo" className="sidebar-logo" />
