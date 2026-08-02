@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout & Payment -  আভরণী (Avaroni)</title>
+    <meta name="description" content="Complete your order securely with Cash on Delivery or Mobile Banking at  আভরণী (Avaroni).">
+    
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="আভরণী (Avaroni)">
+    <meta property="og:title" content="Checkout & Payment -  আভরণী (Avaroni)">
+    <meta property="og:description" content="Complete your order securely at Avaroni!">
+    <meta property="og:image" content="./img/profile_image.jpg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Checkout & Payment -  আভরণী (Avaroni)">
+    <meta name="twitter:description" content="Complete your order securely at Avaroni!">
+    <meta name="twitter:image" content="./img/profile_image.jpg">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* ── Payment Page Responsive Layout ── */
+        .payment-page-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+        }
+
+        .payment-page-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .checkout-card {
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .checkout-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .checkout-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111;
+            margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .checkout-card h3 i {
+            color: #555;
+            font-size: 18px;
+        }
+
+        .checkout-card input[type="text"],
+        .checkout-card input[type="email"],
+        .checkout-card input[type="tel"],
+        .checkout-card textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+            background: #fafafa;
+        }
+
+        .checkout-card input:focus,
+        .checkout-card textarea:focus {
+            border-color: #111;
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+            background: #fff;
+        }
+
+        .checkout-card textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Place Order Button */
+        .place-order-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #111111;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .place-order-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .place-order-btn:active {
+            transform: translateY(0);
+        }
+
+        .place-order-btn:disabled {
+            background: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Full-width across both columns */
+        .payment-full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ── Confirmation Modal ── */
+        .order-confirm-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .order-confirm-overlay.active {
+            display: flex;
+            animation: fadeInOverlay 0.25s ease;
+        }
+
+        .order-confirm-modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 36px 32px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .order-confirm-modal .modal-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #111;
+        }
+
+        .order-confirm-modal h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111;
+            margin: 0 0 10px;
+            border: none;
+            padding: 0;
+            display: block;
+        }
+
+        .order-confirm-modal p {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 24px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-actions button {
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #ddd;
+        }
+
+        .modal-btn-confirm {
+            background: #111;
+            color: #fff;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Payment method label highlight */
+        .pay-method-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1.5px solid #eee;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .pay-method-label:hover {
+            border-color: #bbb;
+        }
+
+        .pay-method-label.disabled-method {
+            color: gray;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .payment-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .payment-page-title {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            .payment-page-wrapper {
+                padding: 20px 14px 40px;
+            }
+
+            .checkout-card {
+                padding: 18px;
+            }
+
+            .place-order-btn {
+                font-size: 15px;
+                padding: 14px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .payment-page-wrapper {
+                max-width: 1200px;
+            }
+        }
+
+        /* Success message */
+        .success-container {
+            display: none;
+            text-align: center;
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            border-radius: 14px;
+            padding: 40px 30px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        .success-container h2 {
+            color: #16a34a;
+            font-size: 22px;
+            margin: 0 0 12px;
+        }
+
+        .success-container .home-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 28px;
+            background: #111;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+
+        .success-container .home-btn:hover {
+            background: #333;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+</head>
+<body>
+   <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>আভরণী</B>
+        </a>
+        <!-- Search & Filter Bar -->
+        <div class="search-bar-container">
+            <div class="search-bar-inner">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search search-bar-icon"></i>
+                    <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                    <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="search-filter-divider"></div>
+                <div class="search-filter-wrapper">
+                    <i class="fas fa-sliders-h search-filter-icon"></i>
+                    <select id="global-filter-select" class="search-filter-select" title="Filter & Sort Products">
+                        <option value="all">Filter & Sort</option>
+                        <optgroup label="Price">
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group">
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            <div id="search-results-dropdown" class="search-results-dropdown"></div>
+        </div>
+        <div class="nav-links">
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="far fa-heart"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Promo Slider (below navbar) -->
+    <div class="nav-promo-slider" id="nav-promo-slider"></div>
+
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span>আভরণী</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        </div>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <div class="payment-page-wrapper">
+        <h2 class="payment-page-title"><i class="fas fa-credit-card" style="margin-right: 8px;"></i>Finalize Payment</h2>
+
+        <form id="checkout-form">
+            <div class="payment-grid">
+
+                <!-- LEFT COLUMN: Order Summary -->
+                <div class="checkout-card">
+                    <h3><i class="fas fa-shopping-bag"></i> Order Summary</h3>
+                    <div id="cart-items" style="margin-top: 4px; color: #333;"></div>
+                    
+                    <div id="delivery-location" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                        <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 8px;">Delivery Location</label>
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <label style="cursor: pointer; font-size: 13px; color: #333; display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="deliveryLocation" value="inside" checked> Inside Dhaka (৳80)
+                            </label>
+                            <label style="cursor: pointer; font-size: 13px; color: #333; display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="deliveryLocation" value="outside"> Outside Dhaka (৳150)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="promo-code-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #ccc;">
+                        <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Promo Code</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="promo-code-input" placeholder="Enter promo code" style="flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none;">
+                            <button type="button" id="apply-promo-btn" style="padding: 10px 18px; background: #111; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: background 0.2s;">Apply</button>
+                        </div>
+                        <p id="promo-message" style="margin: 5px 0 0; font-size: 12px; color: #888;"></p>
+                    </div>
+
+                    <div style="margin-top: 15px; border-top: 2px solid #f0f0f0; padding-top: 12px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; color: #555;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Subtotal:</span>
+                            <span style="font-weight: 600;">৳<span id="cart-subtotal">0</span></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Delivery Charge:</span>
+                            <span style="font-weight: 600;">৳<span id="shipping-charge">0</span></span>
+                        </div>
+                        <div id="discount-row" style="display: none; justify-content: space-between; color: #16a34a; font-weight: 600;">
+                            <span>Promo Discount:</span>
+                            <span>-৳<span id="promo-discount">0</span></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 2px solid #111; padding-top: 10px; font-size: 20px; font-weight: 800; color: #111;">
+                            <span>Total:</span>
+                            <span>৳<span id="cart-total">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Shipping + Payment -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+
+                    <!-- Shipping Details -->
+                    <div class="checkout-card">
+                        <h3><i class="fas fa-truck"></i> Shipping Details</h3>
+                        <input type="text" id="name" placeholder="Full Name" required>
+                        <input type="email" id="email" placeholder="Email Address" required>
+                        <input type="tel" id="phone" placeholder="Phone Number" required>
+                        <textarea id="address" rows="3" placeholder="Proper Delivery Address" required></textarea>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="checkout-card">
+                        <h3><i class="fas fa-wallet"></i> Payment Method</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <label class="pay-method-label">
+                                <input type="radio" name="paymentMethod" value="cod" checked> 
+                                <strong>Cash on Delivery</strong>
+                            </label>
+                            <label class="pay-method-label">
+                                <input type="radio" name="paymentMethod" value="bkash"> 
+                                <strong>bKash</strong>
+                            </label>
+                            <label class="pay-method-label disabled-method">
+                                <input type="radio" name="paymentMethod" value="card" disabled> 
+                                <strong>Visa/Debit Card</strong> <span style="font-size: 11px;">(Unavailable)</span>
+                            </label>
+                        </div>
+
+                        <div id="cod-details" style="display: block; background: #f0f9ff; padding: 14px; border-radius: 8px; margin-top: 14px; border-left: 4px solid #0ea5e9; font-size: 13px;">
+                            <p style="margin: 0; line-height: 1.5;">You will pay when the product is delivered to your address.</p>
+                        </div>
+
+                        <div id="bkash-details" style="display: none; background: #fdf2f8; padding: 14px; border-radius: 8px; margin-top: 14px; border-left: 4px solid #e2136e; text-align: center;">
+                            <p style="margin: 0 0 8px; font-size: 13px;">Please send your total bill via bKash to:</p>
+                            <h2 style="color: #e2136e; margin: 8px 0;">01628628300</h2>
+                            <p style="margin: 0 0 10px; font-size: 13px;">After sending, enter the Transaction ID below.</p>
+                            <input type="text" id="trx-id" placeholder="Enter bKash Transaction ID (TrxID)" style="width: 100%; padding: 10px; text-align: center; border: 2px solid #e2136e; border-radius: 8px; box-sizing: border-box; font-size: 14px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Place Order Button (full width) -->
+                <div class="payment-full-width">
+                    <button type="button" id="place-order-btn" class="place-order-btn">
+                        <i class="fas fa-lock"></i> Place Order
+                    </button>
+                </div>
+
+            </div>
+        </form>
+
+        <!-- Success Message -->
+        <div id="success-message" class="success-container">
+            <h2><i class="fas fa-check-circle"></i> Order Placed Successfully!</h2>
+            <p id="success-details" style="color: #333; margin: 12px 0;">Thank you for your purchase. We will process your order soon.</p>
+            <a href="index.html" class="home-btn"><i class="fas fa-home"></i> Return to Home</a>
+        </div>
+    </div>
+
+    <!-- ── Confirmation Modal ── -->
+    <div id="order-confirm-overlay" class="order-confirm-overlay">
+        <div class="order-confirm-modal">
+            <div class="modal-icon"><i class="fas fa-shopping-bag"></i></div>
+            <h3>Confirm Your Order</h3>
+            <div id="modal-summary-details" style="background: #f8f9fa; border: 1px solid #eee; border-radius: 10px; padding: 14px; margin: 15px 0; text-align: left; font-size: 13px; color: #444;">
+                <!-- Dynamically populated -->
+            </div>
+            <p style="font-size: 13px; color: #666; margin: 0 0 20px;">Are you sure you want to confirm and place this order?</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn-cancel" id="modal-cancel-btn">Cancel</button>
+                <button type="button" class="modal-btn-confirm" id="modal-confirm-btn"><i class="fas fa-check"></i> Confirm Order</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="invoice.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Wire up delivery location radio buttons to recalculate totals
+        document.querySelectorAll('input[name="deliveryLocation"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (typeof renderCart === 'function') renderCart();
+            });
+        });
+
+        // Wire up Apply Promo Code button
+        document.getElementById('apply-promo-btn').addEventListener('click', async () => {
+            const input = document.getElementById('promo-code-input');
+            const msg = document.getElementById('promo-message');
+            const code = input.value.trim();
+
+            if (!code) {
+                msg.style.color = '#e60050';
+                msg.textContent = 'Please enter a promo code.';
+                return;
+            }
+
+            msg.style.color = '#888';
+            msg.textContent = 'Validating...';
+
+            try {
+                const res = await fetch('/api/promocodes/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    // Store the validated promo details globally
+                    window.appliedPromoCode = data.code;
+                    window.appliedPromoType = data.discountType;   // 'percentage' or 'fixed'
+                    window.appliedPromoValue = data.discountValue;  // e.g. 10 or 150
+
+                    msg.style.color = '#28a745';
+                    if (data.discountType === 'percentage') {
+                        msg.textContent = `✓ Code "${data.code}" applied! ${data.discountValue}% off.`;
+                    } else {
+                        msg.textContent = `✓ Code "${data.code}" applied! ৳${data.discountValue} off.`;
+                    }
+
+                    input.disabled = true;
+                    document.getElementById('apply-promo-btn').textContent = 'Applied ✓';
+                    document.getElementById('apply-promo-btn').disabled = true;
+                    document.getElementById('apply-promo-btn').style.background = '#888';
+
+                    // Recalculate totals
+                    if (typeof renderCart === 'function') renderCart();
+                } else {
+                    window.appliedPromoCode = null;
+                    window.appliedPromoType = null;
+                    window.appliedPromoValue = null;
+                    msg.style.color = '#e60050';
+                    msg.textContent = data.message || 'Invalid promo code.';
+                    if (typeof renderCart === 'function') renderCart();
+                }
+            } catch (err) {
+                msg.style.color = '#e60050';
+                msg.textContent = 'Could not validate. Try again.';
+            }
+        });
+
+        // ── Place Order → Show Confirmation Modal ──
+        const placeOrderBtn = document.getElementById('place-order-btn');
+        const overlay = document.getElementById('order-confirm-overlay');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const checkoutForm = document.getElementById('checkout-form');
+
+        placeOrderBtn.addEventListener('click', () => {
+            // Validate form fields first
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+
+            if (!name || !email || !phone || !address) {
+                alert('Please fill in all shipping details before placing your order.');
+                return;
+            }
+
+            // Check bKash TrxID if bkash selected
+            const paymentMethodRadio = document.querySelector('input[name="paymentMethod"]:checked');
+            const paymentMethod = paymentMethodRadio ? paymentMethodRadio.value : 'cod';
+            if (paymentMethod === 'bkash') {
+                const trxId = document.getElementById('trx-id').value.trim();
+                if (!trxId) {
+                    alert('Please enter your bKash Transaction ID.');
+                    return;
+                }
+            }
+
+            // Populate modal order breakdown details
+            const totalText = document.getElementById('cart-total') ? document.getElementById('cart-total').textContent : '0';
+            const itemsCount = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart.length : 0;
+            const payMethodName = paymentMethod === 'bkash' ? 'bKash Mobile Banking' : 'Cash on Delivery';
+            const locRadio = document.querySelector('input[name="deliveryLocation"]:checked');
+            const locText = (locRadio && locRadio.value === 'inside') ? 'Inside Dhaka (৳80)' : 'Outside Dhaka (৳150)';
+
+            const summaryEl = document.getElementById('modal-summary-details');
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Total Items:</span><strong>${itemsCount} item(s)</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Delivery:</span><strong>${locText}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Payment Method:</span><strong>${payMethodName}</strong></div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ddd; padding-top:6px; font-weight:800; font-size:15px; color:#111;"><span>Total Payable:</span><span style="color:#28a745;">৳${totalText}</span></div>
+                `;
+            }
+
+            // Show confirmation modal
+            overlay.classList.add('active');
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            overlay.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+            }
+        });
+
+        modalConfirmBtn.addEventListener('click', () => {
+            overlay.classList.remove('active');
+            // Trigger the actual form submission
+            checkoutForm.requestSubmit();
+        });
+
+        // Run initial calculation immediately on page load
+        if (typeof renderCart === 'function') renderCart();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof AOS !== "undefined") {
+                AOS.init({
+                    duration: 800,
+                    once: true,
+                    offset: 50
+                });
+            }
+        });
+    </script>
+</body>
+</html>

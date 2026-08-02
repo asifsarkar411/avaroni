@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order -  আভরণী (Avaroni)</title>
+    <meta name="description" content="Track your order status live with आभाরণী (Avaroni). Enter your Order ID to see real-time updates and delivery status.">
+    
+    <link rel="icon" href="./fabicon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .track-hero {
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #0d0d0d 100%);
+            color: #ffffff;
+            padding: 50px 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(230, 0, 80, 0.4);
+        }
+
+        .track-hero h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .track-hero p {
+            font-size: 15px;
+            color: #cccccc;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+        }
+
+        .track-search-box {
+            max-width: 550px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .track-search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 12px 20px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .track-search-box input::placeholder {
+            color: #aaaaaa;
+        }
+
+        .track-search-box button {
+            background: linear-gradient(135deg, #e60050, #ff1a6e);
+            color: #ffffff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.4);
+        }
+
+        .track-search-box button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(230, 0, 80, 0.6);
+        }
+
+        .track-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Tracker Timeline Card */
+        .status-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            margin-bottom: 30px;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .order-id-badge {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111111;
+        }
+
+        .order-status-pill {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .status-approved, .status-processing {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Step Timeline Bar */
+        .timeline-wrapper {
+            margin: 40px 0 20px 0;
+            position: relative;
+        }
+
+        .timeline-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            color: #888888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .timeline-step.active .step-icon {
+            background: #e60050;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(230, 0, 80, 0.5);
+            transform: scale(1.1);
+        }
+
+        .timeline-step.completed .step-icon {
+            background: #111111;
+            color: #ffffff;
+        }
+
+        .step-label {
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #666666;
+            text-align: center;
+        }
+
+        .timeline-step.active .step-label {
+            color: #111111;
+        }
+
+        .timeline-progress-bar {
+            position: absolute;
+            top: 23px;
+            left: 10%;
+            width: 80%;
+            height: 4px;
+            background: #e0e0e0;
+            z-index: 1;
+            border-radius: 2px;
+        }
+
+        .timeline-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #111111, #e60050);
+            width: 0%;
+            transition: width 0.6s ease;
+            border-radius: 2px;
+        }
+
+        /* Order Info Grid */
+        .order-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .info-box {
+            background: #f9f9f9;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #eeeeee;
+        }
+
+        .info-box h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #777777;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box p {
+            margin: 4px 0;
+            font-weight: 600;
+            color: #222222;
+            font-size: 14px;
+        }
+
+        /* Items Table */
+        .order-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        .order-items-table th {
+            text-align: left;
+            padding: 12px;
+            background: #f5f5f7;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #555555;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .order-items-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eeeeee;
+            font-size: 14px;
+        }
+
+        .product-item-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-item-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: #f0f0f2;
+            color: #111111;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e2e5;
+        }
+
+        .btn-primary-action {
+            background: #111111;
+            color: #ffffff;
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary-action:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 600px) {
+            .track-hero h1 { font-size: 24px; }
+            .step-label { font-size: 11px; }
+            .step-icon { width: 38px; height: 38px; font-size: 14px; }
+            .timeline-progress-bar { top: 19px; }
+            .track-search-box { flex-direction: column; border-radius: 16px; background: rgba(255,255,255,0.15); }
+            .track-search-box button { width: 100%; border-radius: 12px; }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <b>আভরণী</b>
+        </a>
+        <!-- Search & Filter Bar -->
+        <div class="search-bar-container">
+            <div class="search-bar-inner">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search search-bar-icon"></i>
+                    <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                    <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="search-filter-divider"></div>
+                <div class="search-filter-wrapper">
+                    <i class="fas fa-sliders-h search-filter-icon"></i>
+                    <select id="global-filter-select" class="search-filter-select" title="Filter & Sort Products">
+                        <option value="all">Filter & Sort</option>
+                        <optgroup label="Price">
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group">
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            <div id="search-results-dropdown" class="search-results-dropdown"></div>
+        </div>
+        <div class="nav-links">
+            <a href="track-order.html" style="font-weight:700; color:#e60050;"><i class="fas fa-truck"></i> Track Order</a>
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="far fa-heart"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Promo Slider (below navbar) -->
+    <div class="nav-promo-slider" id="nav-promo-slider"></div>
+
+    <!-- Sidebar Drawer -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span>আভরণী</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        </div>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <a href="index.html"><i class="fas fa-home"></i> Home</a>
+        <a href="track-order.html" class="active"><i class="fas fa-truck"></i> Track Order</a>
+        <a href="cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+        <a href="wishlist.html"><i class="fas fa-heart"></i> My Wishlist</a>
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact Us</a>
+    </div>
+
+    <!-- Hero Search Section -->
+    <div class="track-hero">
+        <h1><i class="fas fa-search-location" style="color: #ff1a6e;"></i> Track Your Order</h1>
+        <p>Enter your Order Number below to get real-time delivery status & order updates.</p>
+        
+        <form id="track-order-form" class="track-search-box">
+            <input type="text" id="track-order-input" placeholder="e.g. ORD-1785236789012" required autocomplete="off">
+            <button type="submit" id="track-submit-btn"><i class="fas fa-search"></i> Track Order</button>
+        </form>
+    </div>
+
+    <!-- Results Container -->
+    <div class="track-container">
+        <div id="track-loading" style="display: none; text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 36px; color: #e60050;"></i>
+            <p style="margin-top: 15px; font-weight: 600; color: #555;">Fetching your order details...</p>
+        </div>
+
+        <div id="track-error" style="display: none; background: #fff0f5; border: 1.5px solid #ffccd8; color: #c93f8b; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+            <span id="track-error-msg">Order not found. Please verify your Order ID.</span>
+        </div>
+
+        <div id="track-result" style="display: none;">
+            <!-- Status Timeline Card -->
+            <div class="status-card">
+                <div class="status-header">
+                    <div>
+                        <span style="font-size: 13px; color: #777; text-transform: uppercase; font-weight: 700; display: block;">Order Reference</span>
+                        <span id="res-order-number" class="order-id-badge">ORD-0000000000000</span>
+                    </div>
+                    <div>
+                        <span id="res-status-badge" class="order-status-pill status-pending">PENDING</span>
+                    </div>
+                </div>
+
+                <!-- Step Tracker -->
+                <div class="timeline-wrapper">
+                    <div class="timeline-progress-bar">
+                        <div id="timeline-fill" class="timeline-progress-fill"></div>
+                    </div>
+                    <div class="timeline-steps">
+                        <div id="step-placed" class="timeline-step active completed">
+                            <div class="step-icon"><i class="fas fa-shopping-bag"></i></div>
+                            <span class="step-label">Order Placed</span>
+                        </div>
+                        <div id="step-approved" class="timeline-step">
+                            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                            <span class="step-label">Confirmed</span>
+                        </div>
+                        <div id="step-shipped" class="timeline-step">
+                            <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
+                            <span class="step-label">Processing / Shipping</span>
+                        </div>
+                        <div id="step-delivered" class="timeline-step">
+                            <div class="step-icon"><i class="fas fa-box-open"></i></div>
+                            <span class="step-label">Delivered</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="order-details-grid">
+                    <div class="info-box">
+                        <h4><i class="fas fa-calendar-alt"></i> Order Date</h4>
+                        <p id="res-order-date">-</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h4><i class="fas fa-user"></i> Customer Name</h4>
+                        <p id="res-customer-name">-</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h4><i class="fas fa-credit-card"></i> Payment Info</h4>
+                        <p id="res-payment-method">-</p>
+                    </div>
+
+                    <div class="info-box" style="grid-column: span 1 / -1;">
+                        <h4><i class="fas fa-map-marker-alt"></i> Shipping Address</h4>
+                        <p id="res-shipping-address" style="font-weight: 500; line-height: 1.5;">-</p>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <h3 style="margin-top: 30px; font-size: 18px; font-weight: 800; color: #111;"><i class="fas fa-boxes"></i> Ordered Items</h3>
+                <div style="overflow-x: auto;">
+                    <table class="order-items-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th style="text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="res-items-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Total Breakdown -->
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    <div style="width: 100%; max-width: 320px; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #555;">
+                            <span>Subtotal:</span>
+                            <span id="res-subtotal">৳0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #555;">
+                            <span>Shipping Fee:</span>
+                            <span id="res-shipping">৳0</span>
+                        </div>
+                        <div id="res-discount-row" style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #28a745; display: none;">
+                            <span>Discount Promo:</span>
+                            <span id="res-discount">-৳0</span>
+                        </div>
+                        <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 800; color: #111;">
+                            <span>Grand Total:</span>
+                            <span id="res-total" style="color: #e60050;">৳0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="action-btns">
+                    <a id="res-invoice-btn" href="#" target="_blank" class="btn-primary-action"><i class="fas fa-file-invoice"></i> View Tax Invoice</a>
+                    <a href="contact.html" class="btn-secondary"><i class="fas fa-headset"></i> Need Help? Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer" style="margin-top: 60px;">
+        <div class="footer-bottom" style="text-align: center; padding: 20px; color: #777; font-size: 14px;">
+            <p>&copy; 2026 <strong>আভরণী (Avaroni)</strong>. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('track-order-form');
+            const input = document.getElementById('track-order-input');
+            const loading = document.getElementById('track-loading');
+            const errorBox = document.getElementById('track-error');
+            const errorMsg = document.getElementById('track-error-msg');
+            const resultCard = document.getElementById('track-result');
+
+            // Check URL for ?orderId=ORD-xxxx
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryOrderId = urlParams.get('orderId');
+            if (queryOrderId) {
+                input.value = queryOrderId.trim();
+                fetchOrderDetails(queryOrderId.trim());
+            }
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const orderId = input.value.trim();
+                if (!orderId) return;
+                fetchOrderDetails(orderId);
+            });
+
+            async function fetchOrderDetails(orderId) {
+                loading.style.display = 'block';
+                errorBox.style.display = 'none';
+                resultCard.style.display = 'none';
+
+                try {
+                    const res = await fetch('/api/orders/track/' + encodeURIComponent(orderId));
+                    const data = await res.json();
+                    loading.style.display = 'none';
+
+                    if (res.ok && data.success && data.order) {
+                        renderOrderResult(data.order);
+                    } else {
+                        errorMsg.textContent = data.message || "No order found with this ID. Please check your Order ID.";
+                        errorBox.style.display = 'block';
+                    }
+                } catch (err) {
+                    console.error("Track order error:", err);
+                    loading.style.display = 'none';
+                    errorMsg.textContent = "Server connection error. Please try again later.";
+                    errorBox.style.display = 'block';
+                }
+            }
+
+            function renderOrderResult(order) {
+                document.getElementById('res-order-number').textContent = order.orderNumber || order._id;
+                
+                // Status badge & tracker timeline
+                const status = (order.status || 'Pending').toLowerCase();
+                const badge = document.getElementById('res-status-badge');
+                if (badge) {
+                    badge.textContent = (order.status || 'Pending').toUpperCase();
+                    badge.className = 'order-status-pill ';
+                    if (status === 'approved') {
+                        badge.classList.add('status-approved');
+                    } else if (status === 'processing') {
+                        badge.style.background = '#17a2b8';
+                        badge.style.color = '#ffffff';
+                    } else if (status === 'delivered') {
+                        badge.style.background = '#20c997';
+                        badge.style.color = '#ffffff';
+                    } else if (status === 'cancelled') {
+                        badge.classList.add('status-cancelled');
+                    } else {
+                        badge.classList.add('status-pending');
+                    }
+                }
+
+                // Remove old cancelled banner if exists
+                const oldCancelBanner = document.getElementById('res-cancelled-alert');
+                if (oldCancelBanner) oldCancelBanner.remove();
+
+                // Timeline updates
+                const stepPlaced = document.getElementById('step-placed');
+                const stepApproved = document.getElementById('step-approved');
+                const stepShipped = document.getElementById('step-shipped');
+                const stepDelivered = document.getElementById('step-delivered');
+                const progressFill = document.getElementById('timeline-fill');
+
+                // Reset classes & styles
+                [stepPlaced, stepApproved, stepShipped, stepDelivered].forEach(s => {
+                    s.classList.remove('active', 'completed');
+                });
+                progressFill.style.background = 'linear-gradient(90deg, #111111, #e60050)';
+
+                if (status === 'approved') {
+                    stepPlaced.classList.add('active', 'completed');
+                    stepApproved.classList.add('active', 'completed');
+                    progressFill.style.width = '33%';
+                } else if (status === 'processing') {
+                    stepPlaced.classList.add('active', 'completed');
+                    stepApproved.classList.add('active', 'completed');
+                    stepShipped.classList.add('active', 'completed');
+                    progressFill.style.width = '66%';
+                } else if (status === 'delivered') {
+                    stepPlaced.classList.add('active', 'completed');
+                    stepApproved.classList.add('active', 'completed');
+                    stepShipped.classList.add('active', 'completed');
+                    stepDelivered.classList.add('active', 'completed');
+                    progressFill.style.width = '100%';
+                    progressFill.style.background = '#20c997';
+                } else if (status === 'cancelled') {
+                    progressFill.style.width = '0%';
+                    progressFill.style.background = '#dc3545';
+                    
+                    // Show clear Cancellation Notice Alert
+                    const cancelBanner = document.createElement('div');
+                    cancelBanner.id = 'res-cancelled-alert';
+                    cancelBanner.style.cssText = 'background: #f8d7da; border: 1.5px solid #f5c6cb; color: #721c24; padding: 16px 20px; border-radius: 12px; margin: 20px 0; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;';
+                    cancelBanner.innerHTML = `<i class="fas fa-times-circle" style="font-size: 22px;"></i> Order Cancelled — This order was cancelled by the store administration. Please contact support if you need assistance.`;
+                    
+                    const statusHeader = document.querySelector('.status-header');
+                    if (statusHeader && statusHeader.parentNode) {
+                        statusHeader.parentNode.insertBefore(cancelBanner, statusHeader.nextSibling);
+                    }
+                } else {
+                    // Pending
+                    stepPlaced.classList.add('active', 'completed');
+                    progressFill.style.width = '15%';
+                }
+
+                // Details
+                const dateObj = new Date(order.orderDate || Date.now());
+                document.getElementById('res-order-date').textContent = dateObj.toLocaleString('en-US', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                });
+
+                document.getElementById('res-customer-name').textContent = order.customerName || 'Customer';
+                document.getElementById('res-payment-method').textContent = `${order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'bKash Mobile Payment'} (TxID: ${order.transactionId || 'N/A'})`;
+                document.getElementById('res-shipping-address').textContent = `${order.address} | Phone: ${order.phone}`;
+
+                // Invoice Link
+                const invoiceBtn = document.getElementById('res-invoice-btn');
+                if (invoiceBtn) {
+                    invoiceBtn.href = `invoice.html?orderNumber=${encodeURIComponent(order.orderNumber || order._id)}`;
+                }
+
+                // Cart items table
+                const tbody = document.getElementById('res-items-body');
+                tbody.innerHTML = '';
+                
+                let subtotal = 0;
+                (order.cartItems || []).forEach(item => {
+                    const itemQty = Number(item.quantity) || 1;
+                    const itemPrice = Number(item.price) || 0;
+                    const itemTotal = itemQty * itemPrice;
+                    subtotal += itemTotal;
+
+                    const tr = document.createElement('tr');
+                    const imgUrl = item.image ? item.image : './img/profile_image.jpg';
+                    tr.innerHTML = `
+                        <td>
+                            <div class="product-item-cell">
+                                <img src="${imgUrl}" alt="${item.name}" class="product-item-img">
+                                <span style="font-weight: 700; color: #222;">${item.name}</span>
+                            </div>
+                        </td>
+                        <td style="font-weight: 600;">x${itemQty}</td>
+                        <td>৳${itemPrice}</td>
+                        <td style="text-align: right; font-weight: 700; color: #111;">৳${itemTotal}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Financials
+                const shippingFee = Number(order.shippingFee) || 0;
+                const discount = Number(order.discountAmount) || 0;
+                const total = Number(order.totalAmount) || (subtotal + shippingFee - discount);
+
+                document.getElementById('res-subtotal').textContent = `৳${subtotal}`;
+                document.getElementById('res-shipping').textContent = `৳${shippingFee}`;
+                
+                const discountRow = document.getElementById('res-discount-row');
+                if (discount > 0) {
+                    document.getElementById('res-discount').textContent = `-৳${discount}`;
+                    discountRow.style.display = 'flex';
+                } else {
+                    discountRow.style.display = 'none';
+                }
+
+                document.getElementById('res-total').textContent = `৳${total}`;
+
+                resultCard.style.display = 'block';
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof AOS !== "undefined") {
+                AOS.init({
+                    duration: 800,
+                    once: true,
+                    offset: 50
+                });
+            }
+        });
+    </script>
+</body>
+</html>

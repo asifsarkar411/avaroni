@@ -1,0 +1,2535 @@
+// Custom Toast Notification System
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = "toast ${type}";
+    
+    const icon = type === 'success' ? '<i class="fas fa-check-circle" style="color:#28a745; margin-right:8px;"></i>' : '<i class="fas fa-exclamation-circle" style="color:#dc3545; margin-right:8px;"></i>';
+    toast.innerHTML = icon + message;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.5s ease reverse forwards';
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+// Helper function to format image URLs safely
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
+// Global HTML Escaper function to prevent XSS attacks
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Check if user is logged in
+    if (!localStorage.getItem('adminToken')) {
+        window.location.href = 'admin-login.html';
+        return; // Important: Stops the rest of the script from running if not logged in
+    } else {
+        showDashboard().catch(err => console.error('Dashboard init error:', err));
+    }
+
+    // 2. Attach Static Event Listeners
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    const addCardBtn = document.getElementById('add-card-btn');
+    if (addCardBtn) addCardBtn.addEventListener('click', createNewCard);
+
+    // 2b. Initialize Mobile Sidebar Drawer Navigation
+    initMobileAdminSidebar();
+
+    // 3. Tab Switching Logic
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const btn = event.target.closest('.tab-btn');
+            if (!btn) return;
+            const targetTab = btn.getAttribute('data-target');
+            if (targetTab) switchTab(targetTab);
+        });
+    });
+
+    // 4. Add Product Form Submit
+    const addProductForm = document.getElementById('add-product-form');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', handleAddProduct);
+    }
+
+    // 5. Add Category Form Submit
+    const addCategoryForm = document.getElementById('add-category-form');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', handleAddCategory);
+    }
+
+    // 6. Dynamic Category -> Subcategory selection binding
+    const prodCategorySelect = document.getElementById('prod-category');
+    if (prodCategorySelect) {
+        prodCategorySelect.addEventListener('change', (e) => {
+            populateSubcategories(e.target.value);
+        });
+    }
+
+    // 7. Add Promo Code Form Submit
+    const addPromoForm = document.getElementById('add-promo-form');
+    if (addPromoForm) {
+        addPromoForm.addEventListener('submit', handleAddPromoCode);
+    }
+
+    // 8. Add Navbar Promo Slider Form Submit
+    const addNavSliderForm = document.getElementById('add-nav-slider-form');
+    if (addNavSliderForm) {
+        addNavSliderForm.addEventListener('submit', handleAddNavSlider);
+    }
+
+    // 9. Edit Product Form Submit
+    const editProductForm = document.getElementById('edit-product-form');
+    if (editProductForm) {
+        editProductForm.addEventListener('submit', handleEditProductSubmit);
+    }
+
+    // 10. Edit Category Form Submit
+    const editCategoryForm = document.getElementById('edit-category-form');
+    if (editCategoryForm) {
+        editCategoryForm.addEventListener('submit', handleEditCategorySubmit);
+    }
+
+    const editCategorySelect = document.getElementById('edit-prod-category');
+    if (editCategorySelect) {
+        editCategorySelect.addEventListener('change', (e) => {
+            populateEditSubcategories(e.target.value);
+        });
+    }
+
+    // 10. Settings & User Forms Submit
+    const changeEmailForm = document.getElementById('change-email-form');
+    if (changeEmailForm) changeEmailForm.addEventListener('submit', handleChangeEmail);
+
+    const changePassForm = document.getElementById('change-password-form');
+    if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
+
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) createUserForm.addEventListener('submit', handleCreateUser);
+});
+
+// Helper to convert & compress image file to optimized Base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+            // Fallback for non-standard image types
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const maxDim = 1200; // Max 1200px dimension for studio clarity
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress image to 0.82 quality JPEG for super fast network transfer
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.82);
+                resolve(compressedBase64);
+            };
+            img.onerror = () => resolve(event.target.result); // Fallback if image load fails
+        };
+        reader.onerror = error => reject(error);
+    });
+}
+
+// Helper function to get auth headers securely
+function getAuthHeaders() {
+    const token = localStorage.getItem('adminToken');
+    return {
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+// Wrapper around fetch that automatically handles expired/invalid token sessions (401/403)
+async function fetchWithAuth(url, options = {}) {
+    const headers = {
+        ...getAuthHeaders(),
+        ...(options.headers || {})
+    };
+    
+    try {
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('adminToken');
+            showToast("Your session has expired or is invalid. Please log in again.", 'error');
+            window.location.href = 'admin-login.html';
+            return null;
+        }
+        return response;
+    } catch (err) {
+        console.error("Network or fetch error:", err);
+        throw err;
+    }
+}
+
+// ==========================================
+// CORE FUNCTIONS
+// ==========================================
+
+function logout() {
+    localStorage.removeItem('adminToken');
+    window.location.href = 'admin-login.html'; 
+}
+
+async function showDashboard() {
+    // Validate session token on startup before fetching stats
+    const res = await fetchWithAuth('/api/user-data');
+    if (res && res.ok) {
+        fetchDashboardStats();
+        fetchAnalyticsCharts();
+    }
+}
+
+let chartInstances = {};
+
+function destroyChart(canvasId) {
+    if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+        delete chartInstances[canvasId];
+    }
+}
+
+async function fetchDashboardStats() {
+    try {
+        const response = await fetchWithAuth('/api/admin/dashboard-stats');
+        if (!response) return;
+        const data = await response.json();
+        
+        if (data.success && data.stats) {
+            const countOrders = document.getElementById('count-orders');
+            const countProducts = document.getElementById('count-products');
+            const countBanners = document.getElementById('count-banners');
+            const countSliders = document.getElementById('count-sliders');
+            const countReturns = document.getElementById('count-returns');
+            const countMessages = document.getElementById('count-messages');
+            const totalRevenue = document.getElementById('total-revenue');
+
+            if (countOrders) countOrders.innerText = data.stats.ordersCount || 0;
+            if (countProducts) countProducts.innerText = data.stats.productsCount || 0;
+            if (countBanners) countBanners.innerText = data.stats.bannersCount || 0;
+            if (countSliders) countSliders.innerText = data.stats.slidersCount || 0;
+            if (countReturns) countReturns.innerText = data.stats.returnsCount || 0;
+            if (countMessages) countMessages.innerText = data.stats.messagesCount || 0;
+            if (totalRevenue) totalRevenue.innerText = Number(data.stats.totalRevenue || 0).toLocaleString();
+        }
+    } catch (err) {
+        console.error("Error loading dashboard stats:", err);
+    }
+}
+
+async function fetchAnalyticsCharts() {
+    if (typeof Chart === 'undefined') return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/analytics');
+        if (!response) return;
+        const data = await response.json();
+        if (!data.success || !data.analytics) return;
+
+        const analytics = data.analytics;
+
+        // 1. Order Overview (Doughnut)
+        const ctx1 = document.getElementById('orderOverviewChart');
+        if (ctx1) {
+            destroyChart('orderOverviewChart');
+            const overviewData = analytics.orderOverview || {};
+            const labels = Object.keys(overviewData);
+            const values = Object.values(overviewData);
+            
+            const colorMap = {
+                'Pending': '#ffc107',
+                'Processing': '#17a2b8',
+                'Approved': '#28a745',
+                'Cancelled': '#dc3545'
+            };
+            const backgroundColors = labels.map(l => colorMap[l] || '#6c757d');
+
+            chartInstances['orderOverviewChart'] = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const val = context.parsed || 0;
+                                    return ` ${label}: ${val} orders`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Monthly Sales Trend (Line)
+        const ctx2 = document.getElementById('monthlySalesChart');
+        if (ctx2) {
+            destroyChart('monthlySalesChart');
+            chartInstances['monthlySalesChart'] = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: analytics.monthlySalesTrend.labels,
+                    datasets: [{
+                        label: 'Sales (৳)',
+                        data: analytics.monthlySalesTrend.data,
+                        borderColor: '#e60050',
+                        backgroundColor: 'rgba(230, 0, 80, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#e60050'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // 3. Monthly Payment Record (Bar)
+        const ctx3 = document.getElementById('paymentRecordChart');
+        if (ctx3) {
+            destroyChart('paymentRecordChart');
+            chartInstances['paymentRecordChart'] = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: analytics.paymentRecord.labels,
+                    datasets: [{
+                        label: 'Revenue (৳)',
+                        data: analytics.paymentRecord.data,
+                        backgroundColor: ['#0d6efd', '#d63384', '#6f42c1', '#fd7e14', '#198754'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // 4. Top Selling Products (Horizontal Bar)
+        const ctx4 = document.getElementById('topProductsChart');
+        if (ctx4) {
+            destroyChart('topProductsChart');
+            const hasData = analytics.topSellingProducts.labels.length > 0;
+            chartInstances['topProductsChart'] = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: hasData ? analytics.topSellingProducts.labels : ['No Sales Yet'],
+                    datasets: [{
+                        label: 'Quantity Sold',
+                        data: hasData ? analytics.topSellingProducts.data : [0],
+                        backgroundColor: '#6f42c1',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+    } catch (err) {
+        console.error("Error loading analytics charts:", err);
+    }
+}
+
+function initMobileAdminSidebar() {
+    const toggleBtn = document.getElementById('admin-menu-toggle');
+    const closeBtn = document.getElementById('admin-sidebar-close');
+    const sidebar = document.getElementById('admin-sidebar') || document.querySelector('.admin-sidebar');
+    const overlay = document.getElementById('admin-sidebar-overlay');
+    const tabBtns = document.querySelectorAll('.sidebar-nav .tab-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    function openSidebarDrawer() {
+        if (sidebar) sidebar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+    }
+
+    function closeSidebarDrawer() {
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains('active')) {
+                closeSidebarDrawer();
+            } else {
+                openSidebarDrawer();
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSidebarDrawer);
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebarDrawer);
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.innerWidth <= 991) {
+                closeSidebarDrawer();
+            }
+        });
+    });
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 991) {
+                closeSidebarDrawer();
+            }
+        });
+    }
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    const targetBtn = document.querySelector(`button[data-target="${tabName}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+    
+    const targetTab = document.getElementById(`${tabName}-tab`);
+    if (targetTab) targetTab.classList.add('active');
+
+    // Update Topbar Title
+    const titleElement = document.getElementById('tab-title');
+    if (titleElement) {
+        let cleanTitle = "Dashboard Overview";
+        if (tabName === 'orders') cleanTitle = "Customer Orders";
+        if (tabName === 'manage-products') cleanTitle = "Manage Inventory";
+        if (tabName === 'add-product') cleanTitle = "Add New Product";
+        if (tabName === 'manage-categories') cleanTitle = "Manage Categories";
+        if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
+        if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
+        if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
+        if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
+        if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
+        if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
+        if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
+        if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
+        titleElement.innerText = cleanTitle;
+    }
+
+    // Fetch data dynamically based on the active tab
+    if (tabName === 'dashboard') fetchDashboardStats();
+    if (tabName === 'orders') fetchOrders();
+    if (tabName === 'manage-products') fetchManageProducts();
+    if (tabName === 'add-product') populateAddProductCategories();
+    if (tabName === 'manage-categories') renderCategoriesTab();
+    if (tabName === 'manage-promocodes') fetchPromoCodes();
+    if (tabName === 'manage-banners') loadAdminBanners();
+    if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
+    if (tabName === 'manage-returns') fetchReturnRequests();
+    if (tabName === 'manage-messages') fetchContactMessages();
+    if (tabName === 'manage-reviews') fetchAdminReviews();
+    if (tabName === 'manage-flash-sale') initFlashSaleTab();
+    if (tabName === 'admin-settings') initSettingsTab();
+}
+
+// ==========================================
+// DYNAMIC EVENT DELEGATORS
+// ==========================================
+
+let currentInventoryProducts = [];
+
+const manageTableBody = document.getElementById('manage-table-body');
+if (manageTableBody) {
+    manageTableBody.addEventListener('click', (e) => {
+        const targetBtn = e.target.closest('button');
+        if (!targetBtn) return;
+
+        if (targetBtn.classList.contains('edit-btn')) {
+            openEditModal(targetBtn.getAttribute('data-id'));
+        } else if (targetBtn.classList.contains('toggle-btn')) {
+            toggleAvailability(targetBtn.getAttribute('data-id'));
+        } else if (targetBtn.classList.contains('delete-btn')) {
+            deleteProduct(targetBtn.getAttribute('data-id'));
+        }
+    });
+}
+
+const adminCardsContainer = document.getElementById('admin-cards-container');
+if (adminCardsContainer) {
+    adminCardsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-card-btn')) {
+            deleteCard(e.target.getAttribute('data-id'));
+        } else if (e.target.classList.contains('save-heading-btn')) {
+            updateCardHeading(e.target.getAttribute('data-id'));
+        } else if (e.target.classList.contains('delete-img-btn')) {
+            deleteImageFromCard(e.target.getAttribute('data-card-id'), e.target.getAttribute('data-img-index'));
+        }
+    });
+
+    adminCardsContainer.addEventListener('submit', (e) => {
+        if (e.target.classList.contains('upload-image-form')) {
+            e.preventDefault();
+            uploadImageToCard(e.target.getAttribute('data-id'));
+        }
+    });
+}
+
+// ==========================================
+// INVENTORY MANAGEMENT
+// ==========================================
+
+async function fetchManageProducts() {
+    try {
+        const response = await fetchWithAuth('/api/admin/products');
+        if (!response) return;
+        const data = await response.json();
+        const tbody = document.getElementById('manage-table-body');
+        
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.products) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:red;">Failed to load products.</td></tr>';
+            return;
+        }
+
+        currentInventoryProducts = data.products;
+
+        if (data.products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products in inventory.</td></tr>';
+            return;
+        }
+
+        data.products.forEach(prod => {
+            const imgUrl = formatImageUrl(prod.imageUrl);
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="50" height="50" style="object-fit:cover; border-radius:4px;"></td>
+                    <td><strong>${escapeHTML(prod.name)}</strong></td>
+                    <td>${escapeHTML(prod.category)}</td>
+                    <td>${escapeHTML(prod.size || '-')}</td>
+                    <td>${escapeHTML(prod.colour || '-')}</td>
+                    <td>${escapeHTML(prod.brand || '-')}</td>
+                    <td style="color:#0d6efd; font-weight:bold;">৳${prod.price}</td>
+                    <td>${prod.stockQuantity} Left</td> 
+                    <td>${prod.isAvailable ? '<span style="color:green; font-weight:bold;">Available</span>' : '<span style="color:red; font-weight:bold;">Unavailable</span>'}</td>
+                    <td>
+                        <button data-id="${prod._id}" class="btn edit-btn" style="background:#0d6efd; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-edit"></i> Edit</button>
+                        <button data-id="${prod._id}" class="btn toggle-btn" style="background:#333; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-eye-slash"></i> Hide/Show</button>
+                        <button data-id="${prod._id}" class="btn delete-btn" style="background:#dc3545; font-size:12px; width:100%; padding:5px;"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch(err) {
+        console.error("Error fetching products:", err);
+    }
+}
+
+async function toggleAvailability(id) {
+    try {
+        await fetchWithAuth(`/api/admin/products/${id}/toggle`, { 
+            method: 'PATCH'
+        });
+        fetchManageProducts();
+    } catch(err) {
+        console.error("Error toggling availability:", err);
+    }
+}
+
+async function deleteProduct(id) {
+    if (!id || id === 'undefined') {
+        showToast("Invalid product ID", 'error');
+        return;
+    }
+    if (confirm("Are you sure you want to delete this product?")) {
+        try {
+            const response = await fetchWithAuth(`/api/admin/products/${id}`, { 
+                method: 'DELETE'
+            });
+            if (!response) return;
+            const data = await response.json();
+            if (response.ok && data.success) {
+                fetchManageProducts();
+                fetchDashboardStats();
+                fetchAnalyticsCharts();
+            } else {
+                showToast("Failed to delete product: " + (data.message || "Unknown error", 'error'));
+            }
+        } catch(err) {
+            console.error("Error deleting product:", err);
+            showToast("Network error deleting product.", 'error');
+        }
+    }
+}
+
+async function handleAddProduct(e) {
+    e.preventDefault();
+    
+    const saveBtn = document.getElementById('save-product-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Saving...';
+    
+    const imageFile = document.getElementById('prod-image').files[0];
+    let imageBase64 = "";
+    
+    if (!imageFile) {
+        showToast("Please select a product photo before saving.", 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Product to Database';
+        return;
+    }
+
+    try {
+        imageBase64 = await fileToBase64(imageFile);
+    } catch (err) {
+        console.error("Error reading image:", err);
+        showToast("Failed to read image file. Please try a different photo.", 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Product to Database';
+        return;
+    }
+
+    const payload = {
+        name: document.getElementById('prod-name').value,
+        price: document.getElementById('prod-price').value,
+        category: document.getElementById('prod-category').value,
+        subcategory: document.getElementById('prod-subcategory').value,
+        size: document.getElementById('prod-size') ? document.getElementById('prod-size').value : '',
+        colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
+        brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
+        stock: document.getElementById('prod-stock').value,
+        image: imageBase64
+    };
+
+    try {
+        const response = await fetchWithAuth('/api/admin/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Product added successfully!');
+            document.getElementById('add-product-form').reset();
+            fetchManageProducts(); // Refresh the list instantly
+        } else {
+            showToast('Failed to save product: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error saving product:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Product to Database';
+    }
+}
+
+// ==========================================
+// ORDER MANAGEMENT
+// ==========================================
+
+let allAdminOrders = [];
+let activeOrderFilterStatus = 'ALL';
+let currentOrdersPage = 1;
+let ordersPerPage = 10;
+
+async function fetchOrders() {
+    try {
+        const response = await fetch('/api/admin/orders', {
+            headers: getAuthHeaders()
+        });
+        
+        const tbody = document.getElementById('orders-table-body');
+        if (!tbody) return;
+        
+        if (response.status === 401 || response.status === 403) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:red;">Unauthorized: Please log out and log back in.</td></tr>';
+            return;
+        }
+
+        const data = await response.json();
+        allAdminOrders = data.orders || [];
+
+        // Update counts
+        updateOrderCounts(allAdminOrders);
+
+        // Attach listeners once
+        initOrderFilterListeners();
+
+        // Render filtered view
+        renderFilteredOrders();
+
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+    }
+}
+
+function updateOrderCounts(orders) {
+    const counts = { ALL: orders.length, Pending: 0, Approved: 0, Processing: 0, Delivered: 0, Cancelled: 0 };
+    orders.forEach(o => {
+        const st = o.status || 'Pending';
+        if (counts[st] !== undefined) counts[st]++;
+    });
+
+    ['all','pending','approved','processing','delivered','cancelled'].forEach(key => {
+        const el = document.getElementById(`cnt-${key}`);
+        if (el) el.textContent = counts[key === 'all' ? 'ALL' : key.charAt(0).toUpperCase() + key.slice(1)];
+    });
+}
+
+function initOrderFilterListeners() {
+    const searchInput = document.getElementById('order-search-input');
+    if (searchInput && !searchInput.dataset.listener) {
+        searchInput.dataset.listener = 'true';
+        searchInput.addEventListener('input', () => {
+            currentOrdersPage = 1;
+            renderFilteredOrders();
+        });
+    }
+
+    const perPageSelect = document.getElementById('pag-per-page');
+    if (perPageSelect && !perPageSelect.dataset.listener) {
+        perPageSelect.dataset.listener = 'true';
+        perPageSelect.addEventListener('change', (e) => {
+            ordersPerPage = parseInt(e.target.value) || 10;
+            currentOrdersPage = 1;
+            renderFilteredOrders();
+        });
+    }
+
+    const filterBtns = document.querySelectorAll('.order-filter-btn');
+    filterBtns.forEach(btn => {
+        if (!btn.dataset.listener) {
+            btn.dataset.listener = 'true';
+            btn.addEventListener('click', (e) => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('active');
+                });
+                btn.classList.add('active');
+                activeOrderFilterStatus = btn.dataset.status || 'ALL';
+                currentOrdersPage = 1;
+                renderFilteredOrders();
+            });
+        }
+    });
+}
+
+function renderFilteredOrders() {
+    const tbody = document.getElementById('orders-table-body');
+    const cardsContainer = document.getElementById('mobile-orders-cards');
+    const searchInput = document.getElementById('order-search-input');
+    const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+    let filtered = allAdminOrders;
+
+    if (activeOrderFilterStatus !== 'ALL') {
+        filtered = filtered.filter(o => (o.status || 'Pending').toLowerCase() === activeOrderFilterStatus.toLowerCase());
+    }
+
+    if (query) {
+        filtered = filtered.filter(o => {
+            const num = (o.orderNumber || '').toLowerCase();
+            const name = (o.customerName || '').toLowerCase();
+            const phone = (o.phone || '').toLowerCase();
+            const email = (o.email || '').toLowerCase();
+            const trx = (o.transactionId || '').toLowerCase();
+            return num.includes(query) || name.includes(query) || phone.includes(query) || email.includes(query) || trx.includes(query);
+        });
+    }
+
+    const totalOrders = filtered.length;
+    const totalPages = Math.ceil(totalOrders / ordersPerPage) || 1;
+
+    if (currentOrdersPage > totalPages) currentOrdersPage = totalPages;
+    if (currentOrdersPage < 1) currentOrdersPage = 1;
+
+    const startIndex = (currentOrdersPage - 1) * ordersPerPage;
+    const endIndex = Math.min(startIndex + ordersPerPage, totalOrders);
+
+    const pageOrders = filtered.slice(startIndex, endIndex);
+
+    // Update Pagination Controls UI
+    updatePaginationUI(startIndex + 1, endIndex, totalOrders, totalPages);
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (cardsContainer) cardsContainer.innerHTML = '';
+
+    if (pageOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding: 20px;">No matching orders found.</td></tr>';
+        if (cardsContainer) cardsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">No matching orders found.</div>';
+        return;
+    }
+
+    pageOrders.forEach(order => {
+        const date = new Date(order.orderDate).toLocaleString();
+        const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
+        const displayOrderNum = order.orderNumber || 'N/A'; 
+        const orderStatus = order.status || 'Pending';
+
+        let statusBadge = `<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending</span>`;
+        if (orderStatus === 'Processing') {
+            statusBadge = `<span style="background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Processing</span>`;
+        } else if (orderStatus === 'Approved') {
+            statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
+        } else if (orderStatus === 'Delivered') {
+            statusBadge = `<span style="background:#20c997; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Delivered</span>`;
+        } else if (orderStatus === 'Cancelled') {
+            statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
+        }
+
+        const statusSelectHtml = `
+            <select onchange="handleOrderStatusDropdownChange(this, '${order._id}', '${orderStatus}')" class="order-status-select ${orderStatus.toLowerCase()}-select">
+                <option value="Pending" ${orderStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                <option value="Approved" ${orderStatus === 'Approved' ? 'selected' : ''}>✅ Approved</option>
+                <option value="Processing" ${orderStatus === 'Processing' ? 'selected' : ''}>⚙️ Processing</option>
+                <option value="Delivered" ${orderStatus === 'Delivered' ? 'selected' : ''}>📦 Delivered</option>
+                <option value="Cancelled" ${orderStatus === 'Cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+            </select>
+        `;
+
+        // 1. Desktop Table Row
+        tbody.innerHTML += `
+            <tr>
+                <td>${date}</td>
+                <td style="color: #007bff; font-weight: bold;">${escapeHTML(displayOrderNum)}</td> 
+                <td><strong>${escapeHTML(order.customerName)}</strong></td>
+                <td>${escapeHTML(order.phone)}<br>${escapeHTML(order.email)}</td>
+                <td>${escapeHTML(order.address)}</td>
+                <td><strong>${escapeHTML(order.transactionId || 'N/A')}</strong></td>
+                <td style="color:#111111; font-weight:bold;">৳${order.totalAmount}</td>
+                <td class="items-list">${itemsList}</td>
+                <td>${statusBadge}</td>
+                <td style="white-space: nowrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Download Tax Invoice"><i class="fas fa-file-invoice"></i> Invoice</button>
+                        ${statusSelectHtml}
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        // 2. Mobile Responsive Card
+        if (cardsContainer) {
+            cardsContainer.innerHTML += `
+                <div class="mobile-order-card" style="background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <div>
+                            <span style="font-size: 11px; color: #888; text-transform: uppercase;">Order ID</span>
+                            <div style="font-weight: 800; color: #007bff; font-size: 15px;">${escapeHTML(displayOrderNum)}</div>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <div style="font-size: 13px; color: #555; margin-bottom: 8px;">
+                        <strong>${escapeHTML(order.customerName)}</strong> &bull; ${escapeHTML(order.phone)}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
+                        <i class="fas fa-map-marker-alt" style="color: #e60050;"></i> ${escapeHTML(order.address)}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 13px;">
+                        <span>Payment: <strong>${escapeHTML(order.paymentMethod === 'cod' ? 'COD' : 'bKash')}</strong> (TxID: ${escapeHTML(order.transactionId || 'N/A')})</span>
+                        <span style="font-size: 16px; font-weight: 800; color: #e60050;">৳${order.totalAmount}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #444; margin-bottom: 12px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
+                        <strong>Items:</strong> ${itemsList}
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
+                        ${statusSelectHtml}
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+function updatePaginationUI(start, end, total, totalPages) {
+    const startEl = document.getElementById('pag-start');
+    const endEl = document.getElementById('pag-end');
+    const totalEl = document.getElementById('pag-total');
+    const buttonsContainer = document.getElementById('pag-buttons');
+
+    if (startEl) startEl.textContent = total === 0 ? 0 : start;
+    if (endEl) endEl.textContent = end;
+    if (totalEl) totalEl.textContent = total;
+
+    if (!buttonsContainer) return;
+    buttonsContainer.innerHTML = '';
+
+    if (total <= ordersPerPage) return;
+
+    // Previous Button
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = currentOrdersPage === 1;
+    prevBtn.style.cssText = 'padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px;' + (currentOrdersPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : '');
+    prevBtn.onclick = () => {
+        if (currentOrdersPage > 1) {
+            currentOrdersPage--;
+            renderFilteredOrders();
+        }
+    };
+    buttonsContainer.appendChild(prevBtn);
+
+    // Page Number Buttons
+    for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        const isActive = i === currentOrdersPage;
+        pageBtn.style.cssText = `padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid ${isActive ? '#111' : '#ccc'}; background: ${isActive ? '#111' : '#fff'}; color: ${isActive ? '#fff' : '#333'};`;
+        pageBtn.onclick = () => {
+            currentOrdersPage = i;
+            renderFilteredOrders();
+        };
+        buttonsContainer.appendChild(pageBtn);
+    }
+
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = currentOrdersPage === totalPages;
+    nextBtn.style.cssText = 'padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px;' + (currentOrdersPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : '');
+    nextBtn.onclick = () => {
+        if (currentOrdersPage < totalPages) {
+            currentOrdersPage++;
+            renderFilteredOrders();
+        }
+    };
+    buttonsContainer.appendChild(nextBtn);
+}
+
+async function handleOrderStatusDropdownChange(selectEl, orderId, currentStatus) {
+    const newStatus = selectEl.value;
+    if (newStatus === currentStatus) return;
+
+    if (!confirm(`Are you sure you want to change order status from "${currentStatus}" to "${newStatus}"? An automated email notification will be sent to the customer.`)) {
+        selectEl.value = currentStatus;
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || `Order status updated to "${newStatus}"!`);
+            fetchOrders();
+        } else {
+            showToast(data.message || "Failed to update order status.", 'error');
+            selectEl.value = currentStatus;
+        }
+    } catch (err) {
+        console.error("Error updating order status:", err);
+        showToast("Server connection error.", 'error');
+        selectEl.value = currentStatus;
+    }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+    if (!confirm(`Are you sure you want to change order status to "${newStatus}"? An automated notification email will be sent to the customer.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || `Order status updated to ${newStatus}!`);
+            fetchOrders(); // Refresh order table
+        } else {
+            showToast(data.message || "Failed to update order status.", 'error');
+        }
+    } catch (err) {
+        console.error("Error updating order status:", err);
+        showToast("Failed to connect to server. Please try again.", 'error');
+    }
+}
+
+// ==========================================
+// 🌟 MULTIPLE BANNER CARDS LOGIC 🌟
+// ==========================================
+
+async function loadAdminBanners() {
+    const container = document.getElementById('admin-cards-container');
+    if(!container) return; 
+
+    try {
+        const response = await fetch('/api/banner-cards', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        container.innerHTML = ''; 
+        
+        if(!data.cards || data.cards.length === 0) {
+            container.innerHTML = '<p style="text-align:center;">No slider cards yet. Click "+ Add New Carousel Card" above!</p>';
+            return;
+        }
+
+        data.cards.forEach((card, index) => {
+            let imagesHtml = '';
+            card.images.forEach((imgUrl, imgIndex) => {
+                imagesHtml += `
+                    <div style="position: relative; width: 150px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
+                        <img src="${imgUrl}" style="width: 100%; height: 100px; object-fit: cover; display: block;">
+                        <button data-card-id="${card._id}" data-img-index="${imgIndex}" class="delete-img-btn" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px;">X</button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML += `
+                <div style="background: #fdfdfd; border: 2px dashed #ccc; padding: 20px; border-radius: 8px; position: relative; margin-bottom: 20px;">
+                    <h3 style="margin-top:0;">Slider Card #${index + 1}</h3>
+                    <button data-id="${card._id}" class="delete-card-btn" style="position: absolute; top: 20px; right: 20px; background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Delete Entire Card</button>
+                    
+                    <div style="margin: 15px 0; background: #f1f1f1; padding: 10px; border-radius: 5px;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Card Heading Title:</label>
+                        <input type="text" id="heading-${card._id}" value="${card.heading || ''}" placeholder="e.g. Winter Collection" style="padding: 5px; width: 60%; border: 1px solid #ccc;">
+                        <button data-id="${card._id}" class="btn save-heading-btn" style="padding: 5px 15px; margin-top: 0; width: auto; background: #17a2b8;">Save Title</button>
+                    </div>
+
+                    <form data-id="${card._id}" class="upload-image-form" style="margin: 15px 0; display: flex; gap: 10px;">
+                        <input type="file" id="file-${card._id}" accept="image/*" required style="padding: 5px; border: 1px solid #ccc;">
+                        <button type="submit" class="btn" style="margin-top: 0; width: auto; padding: 5px 15px;">Add Image to this Slider</button>
+                    </form>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${imagesHtml || '<p style="color:#777; font-size:14px;">No images in this slider yet.</p>'}
+                    </div>
+                </div>
+            `;
+        });
+    } catch (err) {
+        console.error("Error loading banners:", err);
+    }
+}
+
+async function updateCardHeading(cardId) {
+    const headingValue = document.getElementById(`heading-${cardId}`).value;
+    try {
+        const response = await fetch(`/api/banner-cards/${cardId}/heading`, {
+            method: 'PATCH',
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ heading: headingValue })
+        });
+        const data = await response.json();
+        if(data.success) {
+            showToast('Heading saved successfully!');
+        }
+    } catch (err) {
+        console.error("Error saving heading:", err);
+        showToast('Error saving heading', 'error');
+    }
+}
+
+async function createNewCard() {
+    try {
+        await fetch('/api/banner-cards', { 
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders() 
+            }
+        });
+        loadAdminBanners();
+    } catch (err) { 
+        console.error("Error creating card:", err);
+        showToast('Error creating card', 'error'); 
+    }
+}
+
+async function deleteCard(cardId) {
+    if(!confirm("Delete this ENTIRE slider card and all its images?")) return;
+    try {
+        await fetch(`/api/banner-cards/${cardId}`, { 
+            method: 'DELETE',
+            headers: getAuthHeaders() 
+        });
+        loadAdminBanners();
+    } catch (err) { 
+        console.error("Error deleting card:", err);
+        showToast('Error deleting card', 'error'); 
+    }
+}
+
+async function uploadImageToCard(cardId) {
+    const fileInput = document.getElementById(`file-${cardId}`);
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    try {
+        const base64 = await fileToBase64(file);
+        const response = await fetch(`/api/banner-cards/${cardId}/images`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ image: base64 })
+        });
+        const data = await response.json();
+        if (data.success) {
+            loadAdminBanners(); 
+        } else {
+            showToast('Failed to upload banner: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) { 
+        console.error("Error uploading image:", err);
+        showToast('Error uploading image', 'error'); 
+    }
+}
+
+async function deleteImageFromCard(cardId, imageIndex) {
+    if(!confirm("Remove this image?")) return;
+    try {
+        await fetch(`/api/banner-cards/${cardId}/images/${imageIndex}`, { 
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        loadAdminBanners();
+    } catch (err) { 
+        console.error("Error deleting image:", err);
+        showToast('Error deleting image', 'error'); 
+    }
+}
+
+
+
+// ==========================================
+// 🏷️ CATEGORY MANAGEMENT HELPERS
+// ==========================================
+let localCategories = [];
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        if (data.success) {
+            localCategories = data.categories;
+            populateAddProductCategories();
+        }
+    } catch (err) {
+        console.error("Error loading categories:", err);
+    }
+}
+
+async function populateAddProductCategories() {
+    const catSelect = document.getElementById('prod-category');
+    if (!catSelect) return;
+
+    if (localCategories.length === 0) {
+        await loadCategories();
+    }
+
+    catSelect.innerHTML = `<option value="" disabled selected>Select Category</option>`;
+    localCategories.forEach(cat => {
+        catSelect.innerHTML += `<option value="${cat.slug}">${cat.displayName}</option>`;
+    });
+
+    const subSelect = document.getElementById('prod-subcategory');
+    if (subSelect) {
+        subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
+    }
+}
+
+function populateSubcategories(categorySlug) {
+    const subSelect = document.getElementById('prod-subcategory');
+    if (!subSelect) return;
+
+    const category = localCategories.find(c => c.slug === categorySlug);
+    if (!category || !category.subcategories || category.subcategories.length === 0) {
+        subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
+        return;
+    }
+
+    subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
+    category.subcategories.forEach(sub => {
+        subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    });
+}
+
+async function renderCategoriesTab() {
+    const container = document.getElementById('categories-list-container');
+    if (!container) return;
+
+    await loadCategories(); // Refresh categories list
+
+    container.innerHTML = '';
+    
+    if (localCategories.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#666;">No categories found. Add one above.</p>`;
+        return;
+    }
+
+    localCategories.forEach(cat => {
+        let subListHtml = '';
+        if (cat.subcategories && cat.subcategories.length > 0) {
+            cat.subcategories.forEach(sub => {
+                subListHtml += `
+                    <span style="display: inline-flex; align-items: center; background: #ffe6eb; border: 1px solid #e60050; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #e60050;">
+                        ${escapeHTML(sub)}
+                        <i class="fas fa-times" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
+                    </span>
+                `;
+            });
+        } else {
+            subListHtml = `<p style="margin: 0; color: #888; font-size: 13px; font-style: italic;">No subcategories added yet.</p>`;
+        }
+
+        const iconSrc = cat.iconUrl || './img/profile_image.jpg';
+        const redirectText = cat.redirectUrl || `category.html?cat=${cat.slug}`;
+
+        container.innerHTML += `
+            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #111111; color: #333;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <img src="${iconSrc}" alt="${escapeHTML(cat.displayName)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                        <div>
+                            <h3 style="margin: 0; color: #111;">${escapeHTML(cat.displayName)} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 6px;">(Slug: ${escapeHTML(cat.slug)})</span></h3>
+                            <p style="margin: 3px 0 0; font-size: 12px; color: #666;"><i class="fas fa-link"></i> Link: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">${escapeHTML(redirectText)}</code></p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" onclick="openEditCategoryModal('${cat._id}')" style="margin-top:0; width:auto; padding: 6px 14px; font-size: 12px; background: #0d6efd; color: #fff;"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn" onclick="deleteCategory('${cat._id}')" style="margin-top:0; width:auto; padding: 6px 14px; font-size: 12px; background: #dc3545; color: #fff;"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #555;">Subcategories:</h4>
+                    <div style="display: flex; flex-wrap: wrap; align-items: center;">
+                        ${subListHtml}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <input type="text" id="new-sub-${cat._id}" placeholder="New Subcategory name" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    <button class="btn" onclick="handleAddSubcategory('${cat._id}')" style="margin-top:0; width:auto; padding: 8px 15px; font-size: 13px; background: #111111; color: #fff;">Add Subcategory</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+async function handleAddCategory(e) {
+    e.preventDefault();
+    const nameInput = document.getElementById('new-cat-name');
+    const iconFileInput = document.getElementById('new-cat-icon-file');
+    const iconUrlInput = document.getElementById('new-cat-icon-url');
+    const redirectInput = document.getElementById('new-cat-redirect');
+
+    const name = nameInput.value.trim();
+    if (!name) return;
+
+    let iconUrl = iconUrlInput ? iconUrlInput.value.trim() : '';
+
+    if (iconFileInput && iconFileInput.files && iconFileInput.files[0]) {
+        try {
+            iconUrl = await fileToBase64(iconFileInput.files[0]);
+        } catch (err) {
+            console.error("Error reading category icon image file:", err);
+        }
+    }
+
+    const redirectUrl = redirectInput ? redirectInput.value.trim() : '';
+
+    const submitBtn = document.getElementById('add-cat-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Creating...';
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                displayName: name,
+                iconUrl,
+                redirectUrl
+            })
+        });
+
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
+        }
+
+        if (!response) return;
+        const data = await response.json();
+        if (data.success) {
+            showToast('Category added successfully!');
+            nameInput.value = '';
+            if (iconFileInput) iconFileInput.value = '';
+            if (iconUrlInput) iconUrlInput.value = '';
+            if (redirectInput) redirectInput.value = '';
+            renderCategoriesTab();
+        } else {
+            showToast('Failed to add category: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
+        }
+        console.error("Error adding category:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+async function handleAddSubcategory(catId) {
+    const input = document.getElementById(`new-sub-${catId}`);
+    if (!input) return;
+    const name = input.value.trim();
+    if (!name) {
+        showToast("Please enter a subcategory name.", 'error');
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/categories/${catId}/subcategories`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ subcategory: name })
+        });
+        if (!response) return;
+        const data = await response.json();
+        if (data.success) {
+            input.value = '';
+            renderCategoriesTab();
+        } else {
+            showToast('Failed to add subcategory: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error adding subcategory:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+async function deleteSubcategory(catId, subName) {
+    if (!confirm(`Remove subcategory "${subName}"?`)) return;
+    try {
+        const response = await fetchWithAuth(`/api/admin/categories/${catId}/subcategories/${encodeURIComponent(subName)}`, {
+            method: 'DELETE'
+        });
+        if (!response) return;
+        const data = await response.json();
+        if (data.success) {
+            renderCategoriesTab();
+        } else {
+            showToast('Failed to remove subcategory: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error deleting subcategory:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+async function deleteCategory(catId) {
+    if (!confirm("Are you sure you want to delete this Category? All its subcategories will be removed.")) return;
+    try {
+        const response = await fetchWithAuth(`/api/admin/categories/${catId}`, {
+            method: 'DELETE'
+        });
+        if (!response) return;
+        const data = await response.json();
+        if (data.success) {
+            renderCategoriesTab();
+        } else {
+            showToast('Failed to delete category: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error deleting category:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+function openEditCategoryModal(catId) {
+    const cat = localCategories.find(c => c._id === catId);
+    if (!cat) return;
+
+    document.getElementById('edit-cat-id').value = cat._id;
+    document.getElementById('edit-cat-name').value = cat.displayName || '';
+    document.getElementById('edit-cat-icon-url').value = cat.iconUrl || '';
+    document.getElementById('edit-cat-redirect').value = cat.redirectUrl || '';
+    
+    const preview = document.getElementById('edit-cat-icon-preview');
+    if (preview) {
+        preview.src = cat.iconUrl || './img/profile_image.jpg';
+    }
+
+    const modal = document.getElementById('edit-category-modal');
+    if (modal) modal.style.display = 'block';
+}
+
+function closeEditCategoryModal() {
+    const modal = document.getElementById('edit-category-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleEditCategorySubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-cat-id').value;
+    const name = document.getElementById('edit-cat-name').value.trim();
+    const iconFileInput = document.getElementById('edit-cat-icon-file');
+    const iconUrlInput = document.getElementById('edit-cat-icon-url');
+    const redirectInput = document.getElementById('edit-cat-redirect');
+
+    if (!id || !name) return;
+
+    let iconUrl = iconUrlInput ? iconUrlInput.value.trim() : '';
+
+    if (iconFileInput && iconFileInput.files && iconFileInput.files[0]) {
+        try {
+            iconUrl = await fileToBase64(iconFileInput.files[0]);
+        } catch (err) {
+            console.error("Error reading edit category icon file:", err);
+        }
+    }
+
+    const redirectUrl = redirectInput ? redirectInput.value.trim() : '';
+
+    const saveBtn = document.getElementById('update-category-btn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+    }
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/categories/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                displayName: name,
+                iconUrl,
+                redirectUrl
+            })
+        });
+
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Category';
+        }
+
+        if (!response) return;
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Category updated successfully!');
+            closeEditCategoryModal();
+            renderCategoriesTab();
+        } else {
+            showToast('Failed to update category: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Category';
+        }
+        console.error("Error updating category:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+// Attach actions to global context
+window.deleteCategory = deleteCategory;
+window.deleteSubcategory = deleteSubcategory;
+window.handleAddSubcategory = handleAddSubcategory;
+window.openEditCategoryModal = openEditCategoryModal;
+window.closeEditCategoryModal = closeEditCategoryModal;
+
+// ==========================================
+// 🎟️ PROMO CODE MANAGEMENT
+// ==========================================
+async function fetchPromoCodes() {
+    try {
+        const response = await fetch('/api/admin/promocodes', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        const tbody = document.getElementById('promos-table-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!data.success || !data.promos || data.promos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No promo codes created yet.</td></tr>';
+            return;
+        }
+
+        data.promos.forEach(promo => {
+            const statusLabel = promo.isActive 
+                ? '<span style="color:green; font-weight:bold;">Active</span>' 
+                : '<span style="color:red; font-weight:bold;">Inactive</span>';
+            const valueDisplay = promo.discountType === 'percentage' 
+                ? `${promo.discountValue}%` 
+                : `৳${promo.discountValue}`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHTML(promo.code)}</strong></td>
+                    <td style="text-transform: capitalize;">${escapeHTML(promo.discountType)}</td>
+                    <td>${valueDisplay}</td>
+                    <td>${statusLabel}</td>
+                    <td>
+                        <button onclick="deletePromoCode('${promo._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error loading promo codes:", err);
+    }
+}
+
+async function handleAddPromoCode(e) {
+    e.preventDefault();
+    
+    const code = document.getElementById('new-promo-code').value.trim();
+    const discountType = document.getElementById('new-promo-type').value;
+    const discountValue = Number(document.getElementById('new-promo-value').value);
+
+    if (!code || isNaN(discountValue) || discountValue <= 0) {
+        showToast("Please enter valid promo code information.", 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/promocodes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ code, discountType, discountValue })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Promo Code created successfully!');
+            document.getElementById('add-promo-form').reset();
+            fetchPromoCodes();
+        } else {
+            showToast('Failed to create promo code: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error saving promo code:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    }
+}
+
+async function deletePromoCode(promoId) {
+    if (!confirm("Are you sure you want to delete this Promo Code?")) return;
+    try {
+        const response = await fetch(`/api/admin/promocodes/${promoId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (data.success) {
+            fetchPromoCodes();
+        } else {
+            showToast('Failed to delete promo code: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error deleting promo code:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+// Expose actions to global context
+window.deletePromoCode = deletePromoCode;
+
+// ==========================================
+// NAVBAR PROMO SLIDER MANAGEMENT
+// ==========================================
+
+async function loadAdminNavSliders() {
+    const tbody = document.getElementById('nav-sliders-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch('/api/nav-sliders');
+        const data = await response.json();
+
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.sliders || data.sliders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No navbar slider images configured yet.</td></tr>';
+            return;
+        }
+
+        data.sliders.forEach(slider => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${formatImageUrl(slider.imageUrl)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" style="max-height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;"></td>
+                    <td>${slider.link || '<span style="color:#aaa; font-style:italic;">None</span>'}</td>
+                    <td><strong>${slider.order}</strong></td>
+                    <td>
+                        <button class="btn" style="background:#e60050; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching navbar sliders:", err);
+    }
+}
+
+async function handleAddNavSlider(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('nav-slider-image-file');
+    const linkInput = document.getElementById('nav-slider-link');
+    const orderInput = document.getElementById('nav-slider-order');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showToast("Please select a promo image file.", 'error');
+        return;
+    }
+
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Uploading...";
+
+        const base64Image = await fileToBase64(fileInput.files[0]);
+        const payload = {
+            imageData: base64Image,
+            link: linkInput.value.trim(),
+            order: parseInt(orderInput.value) || 0
+        };
+
+        const response = await fetch('/api/nav-sliders', {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Navbar promo image uploaded successfully!");
+            e.target.reset();
+            loadAdminNavSliders();
+        } else {
+            showToast("Failed to upload promo image: " + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error uploading nav slider image:", err);
+        showToast("An error occurred during upload.", 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Upload & Add to Navbar";
+    }
+}
+
+async function deleteNavSlider(id) {
+    if (!confirm("Are you sure you want to delete this navbar promotional slider image?")) return;
+
+    try {
+        const response = await fetch(`/api/nav-sliders/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            loadAdminNavSliders();
+        } else {
+            showToast("Failed to delete nav slider: " + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error deleting nav slider:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    }
+}
+
+// Expose actions to global context
+window.deleteNavSlider = deleteNavSlider;
+
+// ==========================================
+// CUSTOMER RETURN REQUESTS MANAGEMENT
+// ==========================================
+
+async function fetchReturnRequests() {
+    const tbody = document.getElementById('returns-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch('/api/admin/returns', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.returns || data.returns.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No return requests submitted yet.</td></tr>';
+            return;
+        }
+
+        data.returns.forEach(ret => {
+            const date = new Date(ret.createdAt).toLocaleString();
+            
+            // Format status label with color badge
+            let statusBadge = '';
+            if (ret.status === 'pending') {
+                statusBadge = '<span style="color:#ffc107; font-weight:bold; background:#fff9e6; padding:4px 8px; border-radius:4px;">Pending</span>';
+            } else if (ret.status === 'approved') {
+                statusBadge = '<span style="color:#28a745; font-weight:bold; background:#e6f9ed; padding:4px 8px; border-radius:4px;">Approved</span>';
+            } else if (ret.status === 'rejected') {
+                statusBadge = '<span style="color:#dc3545; font-weight:bold; background:#ffe8e8; padding:4px 8px; border-radius:4px;">Rejected</span>';
+            }
+
+            // Display buttons only if status is pending
+            const actionButtons = ret.status === 'pending'
+                ? `
+                    <button class="btn" style="background:#28a745; padding:6px 12px; font-size:12px; margin:0 5px 0 0; width:auto; display:inline-block;" onclick="updateReturnStatus('${ret._id}', 'approved')"><i class="fas fa-check"></i> Approve</button>
+                    <button class="btn" style="background:#dc3545; padding:6px 12px; font-size:12px; margin:0; width:auto; display:inline-block;" onclick="updateReturnStatus('${ret._id}', 'rejected')"><i class="fas fa-times"></i> Reject</button>
+                  `
+                : `<span style="color:#aaa; font-style:italic;">No Actions Available</span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td style="color:#007bff; font-weight:bold;">${escapeHTML(ret.orderNumber)}</td>
+                    <td>${escapeHTML(ret.email)}</td>
+                    <td><strong>${escapeHTML(ret.reason)}</strong></td>
+                    <td style="font-size:13px; color:#555; max-width:250px; word-wrap:break-word;">${escapeHTML(ret.details || '-')}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionButtons}</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching return requests:", err);
+    }
+}
+
+async function updateReturnStatus(requestId, status) {
+    const statusText = status === 'approved' ? 'approve' : 'reject';
+    if (!confirm(`Are you sure you want to ${statusText} this return request?`)) return;
+
+    try {
+        const response = await fetch(`/api/admin/returns/${requestId}/status`, {
+            method: 'PATCH',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(`Return request was ${status} successfully! Customer has been notified by email.`);
+            fetchReturnRequests(); // Refresh the list
+        } else {
+            showToast("Failed to update status: " + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error updating return request status:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    }
+}
+
+// Expose actions to global context
+window.fetchReturnRequests = fetchReturnRequests;
+window.updateReturnStatus = updateReturnStatus;
+
+// ==========================================
+// CUSTOMER CONTACT MESSAGES MANAGEMENT
+// ==========================================
+
+async function fetchContactMessages() {
+    const tbody = document.getElementById('messages-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetch('/api/admin/messages', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.messages || data.messages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No contact messages received yet.</td></tr>';
+            return;
+        }
+
+        data.messages.forEach(msg => {
+            const date = new Date(msg.createdAt).toLocaleString();
+            
+            // Format status badge
+            let statusBadge = '';
+            if (msg.status === 'unread') {
+                statusBadge = '<span style="color:#0d6efd; font-weight:bold; background:#e3f2fd; padding:4px 8px; border-radius:4px;">Unread</span>';
+            } else if (msg.status === 'read') {
+                statusBadge = '<span style="color:#6c757d; font-weight:bold; background:#e2e3e5; padding:4px 8px; border-radius:4px;">Read</span>';
+            }
+
+            // Read/Delete actions
+            const markReadButton = msg.status === 'unread'
+                ? `<button class="btn" style="background:#0d6efd; padding:6px 12px; font-size:12px; margin:0 5px 0 0; width:auto; display:inline-block;" onclick="markMessageRead('${msg._id}')"><i class="fas fa-envelope-open"></i> Read</button>`
+                : '';
+
+            const deleteButton = `<button class="btn" style="background:#dc3545; padding:6px 12px; font-size:12px; margin:0; width:auto; display:inline-block;" onclick="deleteMessage('${msg._id}')"><i class="fas fa-trash-alt"></i> Delete</button>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${escapeHTML(msg.name)}</strong></td>
+                    <td>${escapeHTML(msg.email)}</td>
+                    <td style="font-size:13px; color:#555; max-width:350px; word-wrap:break-word;">${escapeHTML(msg.message)}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        ${markReadButton}
+                        ${deleteButton}
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching contact messages:", err);
+    }
+}
+
+async function markMessageRead(messageId) {
+    try {
+        const response = await fetch(`/api/admin/messages/${messageId}/read`, {
+            method: 'PATCH',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            fetchContactMessages(); // Refresh the list
+            fetchDashboardStats();  // Update dashboard unread counter
+        } else {
+            showToast("Failed to mark message as read: " + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error marking message as read:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    }
+}
+
+async function deleteMessage(messageId) {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+
+    try {
+        const response = await fetch(`/api/admin/messages/${messageId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Message deleted successfully!");
+            fetchContactMessages(); // Refresh the list
+            fetchDashboardStats();  // Update dashboard counter
+        } else {
+            showToast("Failed to delete message: " + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error deleting message:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    }
+}
+
+// Expose actions to global context
+window.fetchContactMessages = fetchContactMessages;
+window.markMessageRead = markMessageRead;
+window.deleteMessage = deleteMessage;
+
+// ==========================================
+// EDIT PRODUCT MODAL HANDLERS
+// ==========================================
+
+async function openEditModal(id) {
+    const prod = currentInventoryProducts.find(p => p._id === id);
+    if (!prod) {
+        showToast("Product details not found. Please refresh the inventory table.", 'error');
+        return;
+    }
+
+    document.getElementById('edit-prod-id').value = prod._id;
+    document.getElementById('edit-prod-name').value = prod.name;
+    document.getElementById('edit-prod-price').value = prod.price;
+    document.getElementById('edit-prod-stock').value = prod.stockQuantity;
+    document.getElementById('edit-prod-size').value = prod.size || '';
+    document.getElementById('edit-prod-colour').value = prod.colour || '';
+    document.getElementById('edit-prod-brand').value = prod.brand || '';
+    document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
+    document.getElementById('edit-prod-image').value = '';
+
+    // Populate Category & Subcategory dropdowns
+    if (typeof localCategories === 'undefined' || localCategories.length === 0) {
+        await loadCategories();
+    }
+
+    const catSelect = document.getElementById('edit-prod-category');
+    if (catSelect) {
+        catSelect.innerHTML = `<option value="" disabled>Select Category</option>`;
+        localCategories.forEach(cat => {
+            const selected = cat.slug === prod.category ? 'selected' : '';
+            catSelect.innerHTML += `<option value="${cat.slug}" ${selected}>${cat.displayName}</option>`;
+        });
+    }
+
+    populateEditSubcategories(prod.category, prod.subcategory);
+
+    const modal = document.getElementById('edit-product-modal');
+    if (modal) modal.style.display = 'block';
+}
+
+function populateEditSubcategories(categorySlug, selectedSubcat = '') {
+    const subSelect = document.getElementById('edit-prod-subcategory');
+    if (!subSelect) return;
+
+    const category = localCategories.find(c => c.slug === categorySlug);
+    if (!category || !category.subcategories || category.subcategories.length === 0) {
+        subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
+        return;
+    }
+
+    subSelect.innerHTML = `<option value="" ${!selectedSubcat ? 'selected' : ''}>None (Optional)</option>`;
+    category.subcategories.forEach(sub => {
+        const selected = sub === selectedSubcat ? 'selected' : '';
+        subSelect.innerHTML += `<option value="${sub}" ${selected}>${sub}</option>`;
+    });
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-product-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleEditProductSubmit(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('edit-prod-id').value;
+    const saveBtn = document.getElementById('update-product-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Saving Changes...';
+
+    const imageFile = document.getElementById('edit-prod-image').files[0];
+    let imageBase64 = "";
+
+    if (imageFile) {
+        try {
+            imageBase64 = await fileToBase64(imageFile);
+        } catch (err) {
+            console.error("Error reading image:", err);
+            showToast("Failed to read new image file.", 'error');
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Changes';
+            return;
+        }
+    }
+
+    const payload = {
+        name: document.getElementById('edit-prod-name').value,
+        price: document.getElementById('edit-prod-price').value,
+        category: document.getElementById('edit-prod-category').value,
+        subcategory: document.getElementById('edit-prod-subcategory').value,
+        size: document.getElementById('edit-prod-size').value,
+        colour: document.getElementById('edit-prod-colour').value,
+        brand: document.getElementById('edit-prod-brand').value,
+        stock: document.getElementById('edit-prod-stock').value,
+        image: imageBase64
+    };
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/products/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response) return;
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Product updated successfully!');
+            closeEditModal();
+            fetchManageProducts();
+        } else {
+            showToast('Failed to update product: ' + (data.message || 'Unknown error', 'error'));
+        }
+    } catch (err) {
+        console.error("Error updating product:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Changes';
+    }
+}
+
+// Expose modal handlers to global context
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+
+// ==========================================
+// CUSTOMER REVIEWS MANAGEMENT
+// ==========================================
+async function fetchAdminReviews() {
+    const tbody = document.getElementById('reviews-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/reviews');
+        if (!response) return;
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!data.reviews || data.reviews.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No customer reviews submitted yet.</td></tr>';
+            return;
+        }
+
+        data.reviews.forEach(rev => {
+            const date = new Date(rev.createdAt).toLocaleString();
+            const stars = '⭐'.repeat(rev.rating);
+            const isPub = rev.isPublished;
+            
+            const statusBadge = isPub 
+                ? '<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Published</span>' 
+                : '<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending Approval</span>';
+
+            const publishBtn = isPub
+                ? `<button onclick="togglePublishReview('${rev._id}', false)" class="btn" style="background:#6c757d; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:4px;" title="Unpublish from Homepage"><i class="fas fa-eye-slash"></i> Unpublish</button>`
+                : `<button onclick="togglePublishReview('${rev._id}', true)" class="btn" style="background:#28a745; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:4px;" title="Post to Homepage Slider"><i class="fas fa-paper-plane"></i> Post to Slider</button>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${escapeHTML(rev.productName || 'General')}</strong></td>
+                    <td>${escapeHTML(rev.reviewerName)}</td>
+                    <td style="font-size:14px;">${stars} (${rev.rating}/5)</td>
+                    <td style="max-width:250px; word-break:break-word;">${escapeHTML(rev.comment)}</td>
+                    <td>${statusBadge}</td>
+                    <td style="white-space:nowrap;">
+                        ${publishBtn}
+                        <button onclick="deleteAdminReview('${rev._id}')" class="btn" style="background:#dc3545; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px;" title="Delete Review"><i class="fas fa-trash"></i> Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching admin reviews:", err);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Failed to load reviews.</td></tr>';
+    }
+}
+
+async function togglePublishReview(reviewId, isPublished) {
+    const actionText = isPublished ? "post this review to the homepage slider" : "unpublish this review";
+    if (!confirm(`Are you sure you want to ${actionText}?`)) return;
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/reviews/${reviewId}/publish`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isPublished })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message);
+            fetchAdminReviews();
+        } else {
+            showToast(data.message || "Failed to update review.", 'error');
+        }
+    } catch (err) {
+        console.error("Error toggling review status:", err);
+        showToast("Failed to connect to server.", 'error');
+    }
+}
+
+async function deleteAdminReview(reviewId) {
+    if (!confirm("Are you sure you want to permanently delete this review?")) return;
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/reviews/${reviewId}`, {
+            method: 'DELETE'
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message);
+            fetchAdminReviews();
+        } else {
+            showToast(data.message || "Failed to delete review.", 'error');
+        }
+    } catch (err) {
+        console.error("Error deleting review:", err);
+        showToast("Failed to connect to server.", 'error');
+    }
+}
+
+window.togglePublishReview = togglePublishReview;
+window.deleteAdminReview = deleteAdminReview;
+
+// ==========================================
+// ⚙️ ADMIN SETTINGS & USER ACCESS MANAGEMENT
+// ==========================================
+
+async function initSettingsTab() {
+    try {
+        const response = await fetchWithAuth('/api/user-data');
+        if (response && response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+                const currentEmailInput = document.getElementById('setting-current-email');
+                if (currentEmailInput) currentEmailInput.value = data.user.email || '';
+            }
+        }
+    } catch (err) {
+        console.error("Error loading user profile data:", err);
+    }
+    fetchAdminUsers();
+}
+
+async function handleChangeEmail(e) {
+    e.preventDefault();
+    const currentPassword = document.getElementById('setting-email-confirm-pass').value;
+    const newEmail = document.getElementById('setting-new-email').value.trim();
+
+    if (!currentPassword || !newEmail) {
+        showToast("Please fill in both your current password and new email.", 'error');
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/email', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newEmail })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || "Email updated successfully!");
+            document.getElementById('change-email-form').reset();
+            const currentEmailInput = document.getElementById('setting-current-email');
+            if (currentEmailInput) currentEmailInput.value = data.email;
+        } else {
+            showToast(data.message || "Failed to update email.", 'error');
+        }
+    } catch (err) {
+        console.error("Change Email Error:", err);
+        showToast("Failed to connect to server.", 'error');
+    }
+}
+
+async function handleChangePassword(e) {
+    e.preventDefault();
+    const currentPassword = document.getElementById('setting-current-pass').value;
+    const newPassword = document.getElementById('setting-new-pass').value;
+    const confirmPassword = document.getElementById('setting-confirm-new-pass').value;
+
+    if (newPassword !== confirmPassword) {
+        showToast("New password and confirm password do not match!");
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast("New password must be at least 8 characters long.");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || "Password updated successfully!");
+            document.getElementById('change-password-form').reset();
+        } else {
+            showToast(data.message || "Failed to update password.", 'error');
+        }
+    } catch (err) {
+        console.error("Change Password Error:", err);
+        showToast("Failed to connect to server.", 'error');
+    }
+}
+
+async function fetchAdminUsers() {
+    const tbody = document.getElementById('users-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/users');
+        if (!response) return;
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.users || data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No user accounts found.</td></tr>';
+            return;
+        }
+
+        data.users.forEach(user => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHTML(user.username)}</strong></td>
+                    <td>${escapeHTML(user.email)}</td>
+                    <td>${escapeHTML(user.loginCount || 0)} times</td>
+                    <td><span style="background:#e6f9ed; color:#28a745; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">Administrator</span></td>
+                    <td>
+                        <button onclick="deleteUserAccess('${escapeHTML(user._id)}')" class="btn" style="background:#dc3545; color:white; width:auto; padding:5px 10px; font-size:12px;" title="Revoke User Access"><i class="fas fa-trash-alt"></i> Revoke Access</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching admin users:", err);
+    }
+}
+
+async function handleCreateUser(e) {
+    e.preventDefault();
+    const username = document.getElementById('new-user-name').value.trim();
+    const email = document.getElementById('new-user-email').value.trim();
+    const password = document.getElementById('new-user-pass').value;
+
+    if (!username || !email || !password) {
+        showToast("Please enter a username, email, and initial password.", 'error');
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || "User access granted successfully!");
+            document.getElementById('create-user-form').reset();
+            fetchAdminUsers();
+        } else {
+            showToast(data.message || "Failed to create user account.", 'error');
+        }
+    } catch (err) {
+        console.error("Create User Error:", err);
+        showToast("Failed to connect to server.", 'error');
+    }
+}
+
+async function deleteUserAccess(userId) {
+    if (!confirm("Are you sure you want to revoke access for this user account?")) return;
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/users/${userId}`, {
+            method: 'DELETE'
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || "User access revoked.");
+            fetchAdminUsers();
+        } else {
+            showToast(data.message || "Failed to revoke access.", 'error');
+        }
+    } catch (err) {
+        console.error("Delete User Error:", err);
+        showToast("Failed to connect to server.", 'error');
+    }
+}
+
+window.deleteUserAccess = deleteUserAccess;
+
+// ==========================================
+// ⚡ FLASH SALE COUNTDOWN BANNER — ADMIN TAB
+// ==========================================
+
+let flashSalePreviewInterval = null;
+
+async function initFlashSaleTab() {
+    // Load existing config from server
+    try {
+        const res = await fetch('/api/flash-sale');
+        const data = await res.json();
+        if (data.success && data.flashSale) {
+            const fs = data.flashSale;
+            document.getElementById('flash-title').value = fs.title || '';
+            document.getElementById('flash-subtitle').value = fs.subtitle || '';
+            document.getElementById('flash-button-text').value = fs.buttonText || '';
+            document.getElementById('flash-button-link').value = fs.buttonLink || '';
+            document.getElementById('flash-is-active').checked = !!fs.isActive;
+            updateFlashStatusLabel(!!fs.isActive);
+
+            // Convert stored UTC date to local datetime-local format
+            if (fs.endTime) {
+                const d = new Date(fs.endTime);
+                const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                    .toISOString().slice(0, 16);
+                document.getElementById('flash-end-time').value = local;
+            }
+            updateFlashPreview();
+        }
+    } catch (err) {
+        console.error('Flash sale load error:', err);
+    }
+
+    // Live-update preview whenever inputs change
+    ['flash-title','flash-subtitle','flash-button-text','flash-button-link','flash-end-time']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateFlashPreview);
+        });
+
+    const checkbox = document.getElementById('flash-is-active');
+    if (checkbox) {
+        checkbox.addEventListener('change', () => updateFlashStatusLabel(checkbox.checked));
+    }
+
+    // Start preview timer tick
+    if (flashSalePreviewInterval) clearInterval(flashSalePreviewInterval);
+    flashSalePreviewInterval = setInterval(updatePreviewTimerTick, 1000);
+
+    // Form submit
+    const form = document.getElementById('flash-sale-form');
+    if (form && !form.dataset.listenerAttached) {
+        form.dataset.listenerAttached = 'true';
+        form.addEventListener('submit', handleFlashSaleSubmit);
+    }
+}
+
+function updateFlashStatusLabel(active) {
+    const label = document.getElementById('flash-status-label');
+    if (!label) return;
+    if (active) {
+        label.textContent = 'Banner Active (Visible to Customers)';
+        label.style.color = '#28a745';
+    } else {
+        label.textContent = 'Banner Hidden (Inactive)';
+        label.style.color = '#999';
+    }
+}
+
+function updateFlashPreview() {
+    const title    = document.getElementById('flash-title')?.value || '⚡ Flash Sale Ends In:';
+    const subtitle = document.getElementById('flash-subtitle')?.value || '';
+    const btnText  = document.getElementById('flash-button-text')?.value || 'Shop Now';
+    const btnLink  = document.getElementById('flash-button-link')?.value || '#';
+
+    const previewTitle = document.getElementById('preview-title');
+    const previewSubtitle = document.getElementById('preview-subtitle');
+    const previewBtn = document.getElementById('preview-btn');
+
+    if (previewTitle) previewTitle.textContent = title;
+    if (previewSubtitle) {
+        previewSubtitle.textContent = subtitle;
+        previewSubtitle.style.display = subtitle ? 'inline' : 'none';
+    }
+    if (previewBtn) {
+        previewBtn.textContent = '';
+        previewBtn.innerHTML = btnText + ' <i class="fas fa-arrow-right" style="margin-left:5px;"></i>';
+        previewBtn.href = btnLink;
+    }
+    updatePreviewTimerTick();
+}
+
+function updatePreviewTimerTick() {
+    const endInput = document.getElementById('flash-end-time');
+    const timerEl = document.getElementById('preview-timer');
+    if (!endInput || !timerEl) return;
+
+    const endTime = endInput.value ? new Date(endInput.value).getTime() : 0;
+    const now = Date.now();
+    const diff = endTime - now;
+
+    if (!endInput.value || diff <= 0) {
+        timerEl.innerHTML = '<span style="color:#ff3b70;">00</span>h : <span style="color:#ff3b70;">00</span>m : <span style="color:#ff3b70;">00</span>s';
+        return;
+    }
+
+    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    timerEl.innerHTML = `<span style="color:#ff3b70;">${h}</span>h : <span style="color:#ff3b70;">${m}</span>m : <span style="color:#ff3b70;">${s}</span>s`;
+}
+
+async function handleFlashSaleSubmit(e) {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    const endTimeLocal = document.getElementById('flash-end-time').value;
+    if (!endTimeLocal) {
+        showToast('Please set a Countdown End Date & Time.', 'error');
+        return;
+    }
+
+    const payload = {
+        title:       document.getElementById('flash-title').value.trim() || '⚡ Flash Sale Ends In:',
+        subtitle:    document.getElementById('flash-subtitle').value.trim(),
+        buttonText:  document.getElementById('flash-button-text').value.trim() || 'Shop Now',
+        buttonLink:  document.getElementById('flash-button-link').value.trim() || 'index.html#products',
+        endTime:     new Date(endTimeLocal).toISOString(),
+        isActive:    document.getElementById('flash-is-active').checked,
+        bgColor:     '#111111',
+        textColor:   '#ffffff',
+        accentColor: '#e60050'
+    };
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+
+    try {
+        const res = await fetch('/api/admin/flash-sale', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            showToast('✅ Flash sale banner saved and published!');
+        } else {
+            showToast('❌ ' + (data.message || 'Failed to save flash sale banner.', 'error'));
+        }
+    } catch (err) {
+        console.error('Flash sale save error:', err);
+        showToast('Server connection error.', 'error');
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Publish Flash Sale Banner'; }
+    }
+}
+
+
+
