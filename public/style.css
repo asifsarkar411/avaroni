@@ -2948,3 +2948,42 @@ body.no-scroll #flash-sale-banner,
         font-size: 8px;
     }
 }
+/* =============================================
+   Order Success Actions
+   ============================================= */
+.order-success-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 25px;
+}
+.order-success-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+.order-success-btn.invoice-btn {
+    background-color: #111111;
+    color: #ffffff;
+}
+.order-success-btn.invoice-btn:hover {
+    background-color: #333333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.order-success-btn.home-btn {
+    background-color: #28a745;
+    color: #ffffff;
+    text-decoration: none;
+}
+.order-success-btn.home-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40,167,69,0.25);
+}
