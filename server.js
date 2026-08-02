@@ -25,6 +25,17 @@ const multer = require('multer');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
+// HTML Escaper Helper Function
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // --- MODELS ---
 const User = require('./models/User');           // Secure Login User Model
 const Order = require('./models/Order');         // E-commerce Order Model
