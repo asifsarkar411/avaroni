@@ -32,7 +32,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "client/"
+      "destination": "/client/$1"
     }
   ]
 }
