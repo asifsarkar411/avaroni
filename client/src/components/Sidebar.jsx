@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Sidebar({ isOpen, onClose }) {
   return (
     <div id="sidebar" className={'sidebar ' + (isOpen ? 'active' : '')}>
@@ -16,7 +18,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <a href="/return-product.html"><i className="fas fa-undo"></i> Return Product</a>
         <a href="/return-policy.html"><i className="fas fa-file-contract"></i> Return Policy</a>
         <a href="/about.html"><i className="fas fa-info-circle"></i> About Us</a>
-        <a href="/contact.html"><i className="fas fa-envelope"></i> Contact</a>
+        <Link href="/contact"><i className="fas fa-envelope"></i> Contact</Link>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -24,7 +26,7 @@ export default function Footer() {
                 <ul>
                     <li><a href="/track-order.html">Track Order</a></li>
                     <li><a href="/return-policy.html">Return Policy</a></li>
-                    <li><a href="/contact.html">Contact Us</a></li>
+                    <li><Link href="/contact">Contact Us</Link></li>
                 </ul>
             </div>
         </div>
