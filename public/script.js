@@ -884,11 +884,11 @@ function initFooterAndWidgets() {
             <a href="https://wa.me/8801743648510" target="_blank" class="floating-btn floating-whatsapp" title="WhatsApp Us">
                 <i class="fab fa-whatsapp"></i>
             </a>
+            <a href="https://m.me/61572879166588" target="_blank" class="floating-btn floating-messenger" title="Chat on Messenger">
+                <i class="fab fa-facebook-messenger"></i>
+            </a>
             <a href="tel:+8801628628300" class="floating-btn floating-phone" title="Call Us">
                 <i class="fas fa-phone-alt"></i>
-            </a>
-            <a href="https://m.me/61572879166588" class="floating-btn floating-messenger" title="Call Us">
-                <i class="fab fa-messenger"></i>
             </a>
         `;
         document.body.appendChild(floatingContainer);

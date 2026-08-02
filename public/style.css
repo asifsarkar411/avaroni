@@ -1580,11 +1580,11 @@ body.no-scroll {
     background-color: #007bff; /* Phone Blue */
 }
 .floating-messenger {
-    background-color: #0084FF; /* Official Messenger blue */
+    background: linear-gradient(135deg, #00B2FF 0%, #006AFF 50%, #A033FF 100%); /* Official Messenger gradient */
     color: #ffffff;
 }
 
-/* Pulsing micro-animation for WhatsApp to attract safe attention */
+/* Pulsing micro-animation for floating buttons */
 .floating-whatsapp::before {
     content: '';
     position: absolute;
@@ -1605,7 +1605,7 @@ body.no-scroll {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 2px solid #2b00ff;
+    border: 2px solid #007bff;
     animation: floatingPulse 2s infinite;
     opacity: 0.8;
 }
@@ -1617,7 +1617,7 @@ body.no-scroll {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 2px solid #0363ff;
+    border: 2px solid #0084FF;
     animation: floatingPulse 2s infinite;
     opacity: 0.8;
 }
