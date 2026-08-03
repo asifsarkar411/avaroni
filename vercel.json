@@ -29,10 +29,5 @@
                      {
                          "destination":  "/server.js",
                          "source":  "/uploads/(.*)"
-                     },
-                     {
-                         "destination":  "/client/$1",
-                         "source":  "/(.*)"
-                     }
                  ]
 }

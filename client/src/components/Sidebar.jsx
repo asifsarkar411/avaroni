@@ -40,8 +40,9 @@ export default function Sidebar({ isOpen, onClose }) {
                     url = url.replace(/\.html$/, '');
                     
                     // Special cases for categories that used to be root html files
-                    if (['/women', '/kids', '/ornament'].includes(url)) {
-                        url = `/category${url}`;
+                    if (['/women', '/kids', '/ornament', 'women', 'kids', 'ornament'].includes(url)) {
+                        // Ensure leading slash when constructing the route
+                        url = `/category/${url.replace(/^\//, '')}`;
                     }
                 }
                 
