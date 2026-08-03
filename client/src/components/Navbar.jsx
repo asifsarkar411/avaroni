@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 
 export default function Navbar({ onMenuClick }) {
     const { cartCount } = useCart();
+    const { wishlist } = useWishlist();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -100,14 +102,14 @@ export default function Navbar({ onMenuClick }) {
             </div>
 
             <div className="nav-links">
-                <a href="/cart.html" className="cart-icon" title="Cart">
+                <Link href="/cart" className="cart-icon" title="Cart">
                     <i className="fas fa-shopping-cart"></i>
                     <span className="cart-badge" style={{ display: cartCount > 0 ? 'inline-block' : 'none' }}>{cartCount}</span>
-                </a>
-                <a href="/wishlist.html" className="wishlist-icon" title="Wishlist">
+                </Link>
+                <Link href="/wishlist" className="wishlist-icon" title="Wishlist">
                     <i className="far fa-heart"></i>
-                    <span className="wishlist-badge">0</span>
-                </a>
+                    <span className="wishlist-badge" style={{ display: wishlist.length > 0 ? 'inline-block' : 'none' }}>{wishlist.length}</span>
+                </Link>
                 <i onClick={onMenuClick} className="fas fa-bars menu-icon" style={{cursor: 'pointer', fontSize: '24px', marginLeft: '15px', color: '#333'}}></i>
             </div>
         </nav>

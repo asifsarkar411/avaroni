@@ -1,10 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 
 export default function ProductModal() {
     const { addToCart } = useCart();
+    const { toggleWishlist, isInWishlist } = useWishlist();
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [product, setProduct] = useState(null);
@@ -82,16 +84,33 @@ export default function ProductModal() {
                                 <div style={{ margin: '15px 0', fontSize: '14px', lineHeight: '1.6', color: '#555', borderTop: '1px dotted #ddd', borderBottom: '1px dotted #ddd', padding: '10px 0' }}>
                                     {product.description || 'No description available.'}
                                 </div>
-                                <button 
-                                    className="btn add-to-cart-btn product-modal-cart-btn" 
-                                    disabled={product.stock <= 0}
-                                    onClick={() => {
-                                        addToCart(product);
-                                        close();
-                                    }}
-                                >
-                                    <i className="fas fa-cart-plus"></i> {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
+                                    <button 
+                                        className="btn add-to-cart-btn product-modal-cart-btn" 
+                                        disabled={product.stock <= 0}
+                                        onClick={() => {
+                                            addToCart(product);
+                                            close();
+                                        }}
+                                        style={{ flex: 1, marginRight: '10px' }}
+                                    >
+                                        <i className="fas fa-cart-plus"></i> {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                                    </button>
+                                    <button
+                                        onClick={() => toggleWishlist(product)}
+                                        style={{ 
+                                            padding: '10px 15px', 
+                                            borderRadius: '8px', 
+                                            border: '1px solid #ddd', 
+                                            background: isInWishlist(product._id) ? 'rgba(230,0,80,0.05)' : '#fff', 
+                                            cursor: 'pointer',
+                                            fontSize: '1.2rem',
+                                            color: isInWishlist(product._id) ? '#e60050' : '#888'
+                                        }}
+                                    >
+                                        <i className={isInWishlist(product._id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

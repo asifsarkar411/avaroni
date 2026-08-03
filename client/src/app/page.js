@@ -6,10 +6,12 @@ import HeroSlider from '@/components/HeroSlider';
 import FlashSaleBanner from '@/components/FlashSaleBanner';
 import ReviewsSlider from '@/components/ReviewsSlider';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 
 export default function Home() {
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function Home() {
             ) : (
                 <div className="category-grid" id="category-grid">
                     {categories.map(cat => (
-                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/${cat.name.toLowerCase()}.html`} style={{ cursor: 'pointer' }}>
+                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`} style={{ cursor: 'pointer' }}>
                             <div className="category-icon-wrap">
                                 <img src={getImageUrl(cat.iconUrl)} alt={cat.name} loading="lazy" className="category-icon-img" />
                             </div>
@@ -92,8 +94,8 @@ export default function Home() {
                     {products.map(prod => (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
                             <div className="product-image-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
-                                <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); alert('Wishlist added'); }}>
-                                    <i className="far fa-heart"></i>
+                                <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} style={{ color: isInWishlist(prod._id) ? '#e60050' : '#888' }}>
+                                    <i className={isInWishlist(prod._id) ? "fas fa-heart" : "far fa-heart"}></i>
                                 </button>
                                 <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
                             </div>

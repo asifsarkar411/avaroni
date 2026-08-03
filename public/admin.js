@@ -334,12 +334,12 @@ async function fetchAnalyticsCharts() {
                     datasets: [{
                         label: 'Sales (৳)',
                         data: analytics.monthlySalesTrend.data,
-                        borderColor: '#e60050',
+                        borderColor: '#111111',
                         backgroundColor: 'rgba(230, 0, 80, 0.1)',
                         fill: true,
                         tension: 0.35,
                         pointRadius: 5,
-                        pointBackgroundColor: '#e60050'
+                        pointBackgroundColor: '#111111'
                     }]
                 },
                 options: {
@@ -914,11 +914,11 @@ function renderFilteredOrders() {
                         <strong>${escapeHTML(order.customerName)}</strong> &bull; ${escapeHTML(order.phone)}
                     </div>
                     <div style="font-size: 12px; color: #666; margin-bottom: 8px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
-                        <i class="fas fa-map-marker-alt" style="color: #e60050;"></i> ${escapeHTML(order.address)}
+                        <i class="fas fa-map-marker-alt" style="color: #111111;"></i> ${escapeHTML(order.address)}
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 13px;">
                         <span>Payment: <strong>${escapeHTML(order.paymentMethod === 'cod' ? 'COD' : 'bKash')}</strong> (TxID: ${escapeHTML(order.transactionId || 'N/A')})</span>
-                        <span style="font-size: 16px; font-weight: 800; color: #e60050;">৳${order.totalAmount}</span>
+                        <span style="font-size: 16px; font-weight: 800; color: #111111;">৳${order.totalAmount}</span>
                     </div>
                     <div style="font-size: 12px; color: #444; margin-bottom: 12px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
                         <strong>Items:</strong> ${itemsList}
@@ -1274,7 +1274,7 @@ async function renderCategoriesTab() {
         if (cat.subcategories && cat.subcategories.length > 0) {
             cat.subcategories.forEach(sub => {
                 subListHtml += `
-                    <span style="display: inline-flex; align-items: center; background: #ffe6eb; border: 1px solid #e60050; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #e60050;">
+                    <span style="display: inline-flex; align-items: center; background: #f0f0f0; border: 1px solid #111111; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #111111;">
                         ${escapeHTML(sub)}
                         <i class="fas fa-times" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
                     </span>
@@ -1681,7 +1681,7 @@ async function loadAdminNavSliders() {
                     <td>${slider.link || '<span style="color:#aaa; font-style:italic;">None</span>'}</td>
                     <td><strong>${slider.order}</strong></td>
                     <td>
-                        <button class="btn" style="background:#e60050; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn" style="background:#111111; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
                     </td>
                 </tr>
             `;
@@ -2506,7 +2506,7 @@ async function handleFlashSaleSubmit(e) {
         isActive:    document.getElementById('flash-is-active').checked,
         bgColor:     '#111111',
         textColor:   '#ffffff',
-        accentColor: '#e60050'
+        accentColor: '#111111'
     };
 
     if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
