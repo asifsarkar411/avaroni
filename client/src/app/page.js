@@ -15,6 +15,14 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [subtitleIndex, setSubtitleIndex] = useState(0);
+  const [fadeKey, setFadeKey] = useState(0);
+
+  const dynamicSubtitles = [
+    "Step into a world of curated elegance. Discover exclusive designs crafted just for you.",
+    "Upgrade your wardrobe with stunning women's wear, sparkling jewellery, and cute kids' outfits.",
+    "Find your perfect style. Experience premium quality and unparalleled elegance every single day."
+  ];
 
   useEffect(() => {
     async function fetchData() {
@@ -37,6 +45,14 @@ export default function Home() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+      const interval = setInterval(() => {
+          setFadeKey(prev => prev + 1);
+          setSubtitleIndex(prev => (prev + 1) % dynamicSubtitles.length);
+      }, 5000);
+      return () => clearInterval(interval);
+  }, []);
+
   const openProduct = (id) => {
     window.dispatchEvent(new CustomEvent('openProductModal', { detail: id }));
   };
@@ -49,8 +65,8 @@ export default function Home() {
             <h2 data-aos="fade-down" style={{color: '#000000', fontWeight: '700', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', marginBottom: '12px', textAlign: 'center', lineHeight: '1.2'}}>
                 Elegance Redefined for Every Moment
             </h2>
-            <h3 data-aos="fade-up" data-aos-delay="200" style={{color: '#000000', fontWeight: '400', fontSize: 'clamp(0.95rem, 2vw, 1.25rem)', textAlign: 'center', lineHeight: '1.6', maxWidth: '750px', margin: '0 auto'}}>
-                Step into a world of curated elegance. From stunning women's wear to sparkling jewellery and cute kids' outfits, upgrade your wardrobe with exclusive designs crafted just for you.
+            <h3 key={fadeKey} data-aos="fade-up" data-aos-delay="200" style={{color: '#000000', fontWeight: '400', fontSize: 'clamp(0.95rem, 2vw, 1.25rem)', textAlign: 'center', lineHeight: '1.6', maxWidth: '750px', margin: '0 auto', minHeight: '60px', animation: 'fadeIn 1s ease-in-out'}}>
+                {dynamicSubtitles[subtitleIndex]}
             </h3>
             
             <HeroSlider />
