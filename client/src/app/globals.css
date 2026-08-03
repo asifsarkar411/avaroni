@@ -2772,10 +2772,10 @@ body.no-scroll #flash-sale-banner,
 
 .category-grid {
     display: grid;
-    /* Reduced minmax size from 110px to 80px */
-    grid-template-columns: repeat(auto-fit, minmax(80px, 100px));
-    gap: 12px;
-    justify-content: start;
+    /* Spread on big devices */
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px;
+    justify-content: center;
 }
 
 /* Compact Square Animated Card */
@@ -2839,7 +2839,7 @@ body.no-scroll #flash-sale-banner,
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
     .category-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
         gap: 8px;
     }
     .category-card {

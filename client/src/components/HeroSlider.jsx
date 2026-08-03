@@ -77,13 +77,13 @@ export default function HeroSlider() {
                             left: '20px',
                             background: 'rgba(255, 255, 255, 0.85)',
                             backdropFilter: 'blur(10px)',
-                            padding: '15px 25px',
+                            padding: 'clamp(10px, 3vw, 15px) clamp(15px, 4vw, 25px)',
                             borderRadius: '12px',
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                             maxWidth: '60%'
                         }}>
-                            <h2 style={{margin: '0 0 5px 0', color: '#111', fontSize: '1.5rem'}}>{banner.heading}</h2>
-                            {banner.subtitle && <p style={{margin: 0, color: '#444'}}>{banner.subtitle}</p>}
+                            <h2 style={{margin: '0 0 5px 0', color: '#111', fontSize: 'clamp(1rem, 4vw, 1.5rem)'}}>{banner.heading}</h2>
+                            {banner.subtitle && <p style={{margin: 0, color: '#444', fontSize: 'clamp(0.85rem, 2.5vw, 1rem)'}}>{banner.subtitle}</p>}
                         </div>
                     )}
                 </div>

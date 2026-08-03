@@ -56,7 +56,7 @@ export default function FlashSaleBanner() {
             background: 'linear-gradient(135deg, #111, #333)',
             color: 'white',
             borderRadius: '16px',
-            padding: '30px',
+            padding: 'clamp(15px, 4vw, 30px)',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
@@ -78,8 +78,8 @@ export default function FlashSaleBanner() {
                 }}>
                     <i className="fas fa-bolt"></i> FLASH SALE
                 </div>
-                <h2 style={{ margin: '0 0 10px 0', fontSize: '2rem' }}>{flashSale.title || 'Special Offer'}</h2>
-                <p style={{ margin: '0 0 20px 0', color: '#ccc', fontSize: '1.1rem' }}>{flashSale.description || 'Grab it before it\'s gone!'}</p>
+                <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.2rem, 5vw, 2rem)' }}>{flashSale.title || 'Special Offer'}</h2>
+                <p style={{ margin: '0 0 20px 0', color: '#ccc', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)' }}>{flashSale.description || 'Grab it before it\'s gone!'}</p>
                 <a href={flashSale.linkUrl || '#'} style={{
                     display: 'inline-block',
                     background: 'white',
@@ -108,13 +108,13 @@ export default function FlashSaleBanner() {
                     <div key={unit} style={{
                         background: 'rgba(255,255,255,0.1)',
                         backdropFilter: 'blur(10px)',
-                        padding: '15px',
+                        padding: 'clamp(8px, 2vw, 15px)',
                         borderRadius: '12px',
-                        minWidth: '80px',
+                        minWidth: 'clamp(50px, 15vw, 80px)',
                         textAlign: 'center',
                         border: '1px solid rgba(255,255,255,0.2)'
                     }}>
-                        <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{value.toString().padStart(2, '0')}</div>
+                        <div style={{ fontSize: 'clamp(1.2rem, 5vw, 2rem)', fontWeight: 'bold' }}>{value.toString().padStart(2, '0')}</div>
                         <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#aaa', marginTop: '5px' }}>
                             {unit === 'd' ? 'Days' : unit === 'h' ? 'Hours' : unit === 'm' ? 'Mins' : 'Secs'}
                         </div>
