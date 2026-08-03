@@ -33,10 +33,10 @@ export default function Sidebar({ isOpen, onClose }) {
             
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Categories</div>
             {categories.map(cat => (
-                <a key={cat._id} href={cat.redirectUrl || `/${cat.name.toLowerCase()}.html`} onClick={onClose}>
-                    <img src={getImageUrl(cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
+                <Link key={cat._id} href={cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`} onClick={onClose}>
+                    <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
                     {cat.name}
-                </a>
+                </Link>
             ))}
             
             <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.2)', margin: '15px 0' }} />

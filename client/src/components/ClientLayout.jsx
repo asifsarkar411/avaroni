@@ -34,7 +34,7 @@ export default function ClientLayout({ children }) {
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <ProductModal />
-      <main>{children}</main>
+      <main className="page-transition-wrap">{children}</main>
     </>
   );
 }
