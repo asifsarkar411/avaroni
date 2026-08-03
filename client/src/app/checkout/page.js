@@ -38,7 +38,7 @@ export default function CheckoutPage() {
         }
         
         try {
-            const res = await fetch('/api/promo/validate', {
+            const res = await fetch('/api/promocodes/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: promoCode.trim(), cartTotal })
@@ -47,10 +47,10 @@ export default function CheckoutPage() {
             
             if (data.success) {
                 let calculatedDiscount = 0;
-                if (data.promo.type === 'percentage') {
-                    calculatedDiscount = cartTotal * (data.promo.value / 100);
+                if (data.discountType === 'percentage') {
+                    calculatedDiscount = cartTotal * (data.discountValue / 100);
                 } else {
-                    calculatedDiscount = data.promo.value;
+                    calculatedDiscount = data.discountValue;
                 }
                 setDiscount(calculatedDiscount);
                 setPromoMessage(`Promo applied! You saved BDT ${calculatedDiscount}`);
@@ -80,7 +80,7 @@ export default function CheckoutPage() {
         setIsSubmitting(true);
 
         const orderData = {
-            customerName: shippingDetails.name,
+            name: shippingDetails.name,
             email: shippingDetails.email,
             phone: shippingDetails.phone,
             address: shippingDetails.address,
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
             discountAmount: discount,
             promoCode: discount > 0 ? promoCode : '',
             paymentMethod,
-            transactionId: paymentMethod === 'bkash' ? transactionId : ''
+            trxId: paymentMethod === 'bkash' ? transactionId : ''
         };
 
         try {
