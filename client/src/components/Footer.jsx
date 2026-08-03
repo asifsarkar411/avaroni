@@ -38,13 +38,13 @@ export default function Footer() {
 
     {/* Floating Action Buttons */}
     <div className="floating-actions">
-        <a href="tel:+8801234567890" className="fab phone" title="Call Us">
+        <a href="tel:+8801234567890" className="floating-btn phone" title="Call Us">
             <i className="fas fa-phone-alt"></i>
         </a>
-        <a href="https://wa.me/8801234567890" target="_blank" rel="noopener noreferrer" className="fab whatsapp" title="WhatsApp Us">
+        <a href="https://wa.me/8801234567890" target="_blank" rel="noopener noreferrer" className="floating-btn whatsapp" title="WhatsApp Us">
             <i className="fab fa-whatsapp"></i>
         </a>
-        <a href="https://m.me/avaroni" target="_blank" rel="noopener noreferrer" className="fab messenger" title="Message Us">
+        <a href="https://m.me/avaroni" target="_blank" rel="noopener noreferrer" className="floating-btn messenger" title="Message Us">
             <i className="fab fa-facebook-messenger"></i>
         </a>
     </div>
