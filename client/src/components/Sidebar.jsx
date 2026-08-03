@@ -32,12 +32,22 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
             
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Categories</div>
-            {categories.map(cat => (
-                <Link key={cat._id} href={cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`} onClick={onClose}>
-                    <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
-                    {cat.name}
-                </Link>
-            ))}
+            {categories.map(cat => {
+                const url = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`;
+                const isHtml = url.endsWith('.html');
+                
+                return isHtml ? (
+                    <a key={cat._id} href={url} onClick={onClose}>
+                        <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
+                        {cat.name}
+                    </a>
+                ) : (
+                    <Link key={cat._id} href={url} prefetch={false} onClick={onClose}>
+                        <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
+                        {cat.name}
+                    </Link>
+                );
+            })}
             
             <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.2)', margin: '15px 0' }} />
             
