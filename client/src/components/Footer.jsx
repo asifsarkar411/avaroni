@@ -16,16 +16,16 @@ export default function Footer() {
             <div className="footer-section">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="/women.html">Women</a></li>
-                    <li><a href="/kids.html">Kids</a></li>
-                    <li><a href="/ornament.html">Ornaments</a></li>
+                    <li><Link href="/category/women">Women</Link></li>
+                    <li><Link href="/category/kids">Kids</Link></li>
+                    <li><Link href="/category/ornament">Ornaments</Link></li>
                 </ul>
             </div>
             <div className="footer-section">
                 <h3>Customer Service</h3>
                 <ul>
-                    <li><a href="/track-order.html">Track Order</a></li>
-                    <li><a href="/return-policy.html">Return Policy</a></li>
+                    <li><a href="/track-order">Track Order</a></li>
+                    <li><a href="/return-policy">Return Policy</a></li>
                     <li><Link href="/contact">Contact Us</Link></li>
                 </ul>
             </div>

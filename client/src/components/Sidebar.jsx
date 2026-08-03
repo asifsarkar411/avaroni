@@ -33,32 +33,36 @@ export default function Sidebar({ isOpen, onClose }) {
             
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Categories</div>
             {categories.map(cat => {
-                const url = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`;
-                const isHtml = url.endsWith('.html');
+                let url = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`;
                 
-                return isHtml ? (
+                // Cleanup old HTML extensions
+                if (url.endsWith('.html')) {
+                    url = url.replace(/\.html$/, '');
+                    
+                    // Special cases for categories that used to be root html files
+                    if (['/women', '/kids', '/ornament'].includes(url)) {
+                        url = `/category${url}`;
+                    }
+                }
+                
+                return (
                     <a key={cat._id} href={url} onClick={onClose}>
                         <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
                         {cat.name}
                     </a>
-                ) : (
-                    <Link key={cat._id} href={url} prefetch={false} onClick={onClose}>
-                        <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
-                        {cat.name}
-                    </Link>
                 );
             })}
             
             <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.2)', margin: '15px 0' }} />
             
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Links</div>
-            <a href="/track-order.html"><i className="fas fa-truck"></i> Track Order</a>
-            <a href="/faq.html"><i className="fas fa-question-circle"></i> FAQ</a>
-            <a href="/blog.html"><i className="fas fa-newspaper"></i> Blog</a>
-            <a href="/sitemap.html"><i className="fas fa-sitemap"></i> Sitemap</a>
-            <a href="/return-product.html"><i className="fas fa-undo"></i> Return Product</a>
-            <a href="/return-policy.html"><i className="fas fa-file-contract"></i> Return Policy</a>
-            <a href="/about.html"><i className="fas fa-info-circle"></i> About Us</a>
+            <a href="/track-order"><i className="fas fa-truck"></i> Track Order</a>
+            <a href="/faq"><i className="fas fa-question-circle"></i> FAQ</a>
+            <a href="/blog"><i className="fas fa-newspaper"></i> Blog</a>
+            <a href="/sitemap"><i className="fas fa-sitemap"></i> Sitemap</a>
+            <a href="/return-product"><i className="fas fa-undo"></i> Return Product</a>
+            <a href="/return-policy"><i className="fas fa-file-contract"></i> Return Policy</a>
+            <a href="/about"><i className="fas fa-info-circle"></i> About Us</a>
             <Link href="/contact"><i className="fas fa-envelope"></i> Contact</Link>
         </div>
     );
