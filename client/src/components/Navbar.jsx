@@ -130,6 +130,12 @@ export default function Navbar({ onMenuClick }) {
             </div>
 
             <div className="nav-links">
+                <div className="desktop-only-links">
+                    <Link href="/about" className="dynamic-nav-link">About</Link>
+                    <Link href="/contact" className="dynamic-nav-link">Contact</Link>
+                    <Link href="/return-policy" className="dynamic-nav-link">Return Policy</Link>
+                    <Link href="/return-product" className="dynamic-nav-link">Return Product</Link>
+                </div>
                 <Link href="/cart" className="cart-icon" title="Cart">
                     <i className="fas fa-shopping-cart"></i>
                     <span className="cart-badge" style={{ display: cartCount > 0 ? 'inline-block' : 'none' }}>{cartCount}</span>

@@ -3162,3 +3162,52 @@ html {
     }
 }
 
+
+/* =========================================
+   Desktop Navbar Links
+   ========================================= */
+.desktop-only-links {
+    display: flex;
+    gap: 20px;
+    margin-right: 20px;
+    align-items: center;
+}
+.dynamic-nav-link {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333333;
+    text-decoration: none;
+    position: relative;
+    padding: 5px 0;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.dynamic-nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, #ff4d4f, #ff7875, #ff4d4f);
+    background-size: 200% 100%;
+    animation: gradientMove 2s linear infinite;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+.dynamic-nav-link:hover {
+    color: #ff4d4f;
+}
+.dynamic-nav-link:hover::after {
+    width: 100%;
+}
+@media (max-width: 992px) {
+    .desktop-only-links {
+        display: none !important;
+    }
+}
+@keyframes gradientMove {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
