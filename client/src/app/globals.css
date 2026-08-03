@@ -2761,6 +2761,7 @@ body.no-scroll #flash-sale-banner,
 .category-section {
     padding: 15px 20px;
     max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
 }
 
@@ -2771,8 +2772,8 @@ body.no-scroll #flash-sale-banner,
 
 .category-grid {
     display: grid;
-    /* Spread on big devices */
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    /* Spread on big devices but cap at 150px to prevent massive stretching */
+    grid-template-columns: repeat(auto-fit, minmax(120px, 150px));
     gap: 20px;
     justify-content: center;
 }
