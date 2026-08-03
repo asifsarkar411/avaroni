@@ -1,6 +1,7 @@
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
 import Footer from "@/components/Footer";
+import { CartProvider } from "@/context/CartContext";
 
 export const metadata = {
   title: "AVARONI",
@@ -16,10 +17,12 @@ export default function RootLayout({ children }) {
         <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet" />
       </head>
       <body>
-        <ClientLayout>
-            {children}
-        </ClientLayout>
-        <Footer />
+        <CartProvider>
+          <ClientLayout>
+              {children}
+          </ClientLayout>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

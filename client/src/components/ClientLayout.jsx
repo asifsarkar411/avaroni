@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import ProductModal from './ProductModal';
 import AOS from 'aos';
 
 export default function ClientLayout({ children }) {
@@ -15,6 +16,7 @@ export default function ClientLayout({ children }) {
     <>
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <ProductModal />
       <main>{children}</main>
     </>
   );

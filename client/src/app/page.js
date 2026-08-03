@@ -5,8 +5,10 @@ import NavPromoSlider from '@/components/NavPromoSlider';
 import HeroSlider from '@/components/HeroSlider';
 import FlashSaleBanner from '@/components/FlashSaleBanner';
 import ReviewsSlider from '@/components/ReviewsSlider';
+import { useCart } from '@/context/CartContext';
 
 export default function Home() {
+  const { addToCart } = useCart();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,10 @@ export default function Home() {
     }
     fetchData();
   }, []);
+
+  const openProduct = (id) => {
+    window.dispatchEvent(new CustomEvent('openProductModal', { detail: id }));
+  };
 
   return (
     <div className="home-container">
@@ -84,15 +90,15 @@ export default function Home() {
                 <div className="product-grid" id="new-arrivals-grid">
                     {products.map(prod => (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image-wrap">
-                                <button className="wishlist-card-btn" title="Save to Wishlist">
+                            <div className="product-image-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
+                                <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); alert('Wishlist added'); }}>
                                     <i className="far fa-heart"></i>
                                 </button>
                                 <img src={prod.images && prod.images[0] ? (prod.images[0].startsWith('http') ? prod.images[0] : `/uploads/${prod.images[0]}`) : './img/profile_image.jpg'} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
-                            <h3>{prod.name}</h3>
+                            <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
                             <p className="price">BDT {prod.price}</p>
-                            <button className="btn add-to-cart-btn" onClick={() => alert('Add to cart')} style={{ width: '100%' }}>Add to Cart</button>
+                            <button className="btn add-to-cart-btn" onClick={() => addToCart(prod)} style={{ width: '100%' }}>Add to Cart</button>
                         </div>
                     ))}
                 </div>
