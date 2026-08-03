@@ -3122,7 +3122,6 @@ html {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     text-decoration: none;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
-    animation: float-fab 3s ease-in-out infinite;
 }
 .fab:hover {
     transform: scale(1.15) translateY(-5px);
@@ -3131,21 +3130,12 @@ html {
 }
 .fab.phone {
     background: linear-gradient(135deg, #00c6ff, #0072ff);
-    animation-delay: 0s;
 }
 .fab.whatsapp {
     background: linear-gradient(135deg, #25D366, #128C7E);
-    animation-delay: 0.5s;
 }
 .fab.messenger {
     background: linear-gradient(135deg, #00B2FF, #006AFF);
-    animation-delay: 1s;
-}
-
-@keyframes float-fab {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-    100% { transform: translateY(0); }
 }
 
 @media (max-width: 768px) {
