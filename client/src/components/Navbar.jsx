@@ -110,6 +110,9 @@ export default function Navbar({ onMenuClick }) {
                     <i className="far fa-heart"></i>
                     <span className="wishlist-badge" style={{ display: wishlist.length > 0 ? 'inline-block' : 'none' }}>{wishlist.length}</span>
                 </Link>
+                <Link href="/profile" className="user-nav-btn" title="Profile">
+                    <i className="far fa-user"></i>
+                </Link>
                 <i onClick={onMenuClick} className="fas fa-bars menu-icon" style={{cursor: 'pointer', fontSize: '24px', marginLeft: '15px', color: '#333'}}></i>
             </div>
         </nav>

@@ -1,6 +1,7 @@
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
 import Footer from "@/components/Footer";
+import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 
@@ -18,14 +19,16 @@ export default function RootLayout({ children }) {
         <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet" />
       </head>
       <body>
-        <WishlistProvider>
-          <CartProvider>
-            <ClientLayout>
-                {children}
-            </ClientLayout>
-            <Footer />
-          </CartProvider>
-        </WishlistProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <ClientLayout>
+                  {children}
+              </ClientLayout>
+              <Footer />
+            </CartProvider>
+          </WishlistProvider>
+        </AuthProvider>
       </body>
     </html>
   );
