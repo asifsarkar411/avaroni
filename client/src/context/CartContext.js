@@ -5,9 +5,18 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
     const [cart, setCart] = useState([]);
-    
+    const [cartKey, setCartKey] = useState('cart');
+
     useEffect(() => {
-        const savedCart = localStorage.getItem('cart');
+        let sessionId = sessionStorage.getItem('cart_session_id');
+        if (!sessionId) {
+            sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
+            sessionStorage.setItem('cart_session_id', sessionId);
+        }
+        const key = `cart_${sessionId}`;
+        setCartKey(key);
+
+        const savedCart = localStorage.getItem(key);
         if (savedCart) {
             try {
                 setCart(JSON.parse(savedCart));
@@ -17,17 +26,17 @@ export function CartProvider({ children }) {
         }
     }, []);
 
-    const saveCart = (newCart) => {
+    const saveCart = (newCart, currentKey = cartKey) => {
         setCart(newCart);
-        localStorage.setItem('cart', JSON.stringify(newCart));
+        localStorage.setItem(currentKey, JSON.stringify(newCart));
     };
 
     const addToCart = (product) => {
         const existing = cart.find(item => item._id === product._id);
         if (existing) {
-            saveCart(cart.map(item => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item));
+            saveCart(cart.map(item => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item), cartKey);
         } else {
-            saveCart([...cart, { ...product, quantity: 1 }]);
+            saveCart([...cart, { ...product, quantity: 1 }], cartKey);
         }
         
         // Show native toast if available
