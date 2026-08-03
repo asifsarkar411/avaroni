@@ -78,8 +78,8 @@ export default function ProductModal() {
                                 <span className="product-modal-category">{product.category}</span>
                                 <h2>{product.name}</h2>
                                 <p className="product-modal-price">BDT {product.price}</p>
-                                <p className="product-modal-stock" style={{color: product.stock > 0 ? 'green' : 'red'}}>
-                                    {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                                <p className="product-modal-stock" style={{color: product.stockQuantity > 0 ? 'green' : 'red'}}>
+                                    {product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
                                 </p>
                                 <div style={{ margin: '15px 0', fontSize: '14px', lineHeight: '1.6', color: '#555', borderTop: '1px dotted #ddd', borderBottom: '1px dotted #ddd', padding: '10px 0' }}>
                                     {product.description || 'No description available.'}
@@ -87,14 +87,14 @@ export default function ProductModal() {
                                 <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
                                     <button 
                                         className="btn add-to-cart-btn product-modal-cart-btn" 
-                                        disabled={product.stock <= 0}
+                                        disabled={product.stockQuantity <= 0}
                                         onClick={() => {
                                             addToCart(product);
                                             close();
                                         }}
                                         style={{ flex: 1, marginRight: '10px' }}
                                     >
-                                        <i className="fas fa-cart-plus"></i> {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                                        <i className="fas fa-cart-plus"></i> {product.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
                                     </button>
                                     <button
                                         onClick={() => toggleWishlist(product)}
