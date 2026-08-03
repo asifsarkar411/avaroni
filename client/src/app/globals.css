@@ -678,7 +678,9 @@ body.no-scroll {
     z-index: 2000;
     top: 0;
     right: 0;
-    background: rgba(17, 17, 17, 0.95);
+    background: linear-gradient(135deg, rgba(17,17,17,0.95), rgba(40,10,30,0.95), rgba(10,30,40,0.95));
+    background-size: 300% 300%;
+    animation: sidebarGradient 12s ease infinite;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow: -4px 0 25px rgba(0, 0, 0, 0.2);
@@ -689,6 +691,12 @@ body.no-scroll {
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
     padding-top: 15px;
+}
+
+@keyframes sidebarGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .sidebar.active {
@@ -740,7 +748,7 @@ body.no-scroll {
     font-size: 18px;
     color: #ffffff;
     display: block;
-    transition: background 0.2s, color 0.2s;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -751,7 +759,9 @@ body.no-scroll {
 
 .sidebar a:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.15);
+    padding-left: 35px;
+    box-shadow: inset 6px 0 0 #ff4d4f;
 }
 .sidebar a i:hover {
     color: #ffffff;
