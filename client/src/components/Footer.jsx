@@ -16,9 +16,9 @@ export default function Footer() {
             <div className="footer-section">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><Link href="/category/women">Women</Link></li>
-                    <li><Link href="/category/kids">Kids</Link></li>
-                    <li><Link href="/category/ornament">Ornaments</Link></li>
+                    <li><Link href="/category/women" prefetch={false}>Women</Link></li>
+                    <li><Link href="/category/kids" prefetch={false}>Kids</Link></li>
+                    <li><Link href="/category/ornament" prefetch={false}>Ornaments</Link></li>
                 </ul>
             </div>
             <div className="footer-section">
