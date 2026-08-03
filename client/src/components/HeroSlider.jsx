@@ -65,12 +65,12 @@ export default function HeroSlider() {
                 }} onClick={() => {
                     if(banner.redirectUrl) window.location.href = banner.redirectUrl;
                 }}>
-                    <img src={getImageUrl(banner.imageUrl)} alt={banner.title || 'Promo Banner'} style={{
+                    <img src={getImageUrl(banner.images?.[0])} alt={banner.heading || 'Promo Banner'} style={{
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover'
                     }} />
-                    {banner.title && (
+                    {banner.heading && (
                         <div style={{
                             position: 'absolute',
                             bottom: '20px',
@@ -82,7 +82,7 @@ export default function HeroSlider() {
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                             maxWidth: '60%'
                         }}>
-                            <h2 style={{margin: '0 0 5px 0', color: '#111', fontSize: '1.5rem'}}>{banner.title}</h2>
+                            <h2 style={{margin: '0 0 5px 0', color: '#111', fontSize: '1.5rem'}}>{banner.heading}</h2>
                             {banner.subtitle && <p style={{margin: 0, color: '#444'}}>{banner.subtitle}</p>}
                         </div>
                     )}

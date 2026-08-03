@@ -70,7 +70,7 @@ export default function ProductModal() {
                     <>
                         <div className="product-modal-body">
                             <div className="product-modal-image">
-                                <img src={getImageUrl(product.images?.[0])} alt={product.name} />
+                                <img src={getImageUrl(product.imageUrl)} alt={product.name} />
                             </div>
                             <div className="product-modal-info">
                                 <span className="product-modal-category">{product.category}</span>
@@ -101,7 +101,7 @@ export default function ProductModal() {
                                 <div className="related-products-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px', marginTop: '15px'}}>
                                     {relatedProducts.map(rel => (
                                         <div key={rel._id} className="related-product-card" onClick={() => window.dispatchEvent(new CustomEvent('openProductModal', { detail: rel._id }))} style={{cursor: 'pointer', border: '1px solid #eee', borderRadius: '8px', padding: '10px', textAlign: 'center'}}>
-                                            <img src={getImageUrl(rel.images?.[0])} alt={rel.name} style={{width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px'}} />
+                                            <img src={getImageUrl(rel.imageUrl)} alt={rel.name} style={{width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px'}} />
                                             <h4 style={{fontSize: '14px', margin: '10px 0 5px'}}>{rel.name}</h4>
                                             <p style={{color: '#111111', fontWeight: 'bold', margin: 0}}>BDT {rel.price}</p>
                                         </div>

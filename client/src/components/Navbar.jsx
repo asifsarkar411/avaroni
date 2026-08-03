@@ -84,7 +84,7 @@ export default function Navbar({ onMenuClick }) {
                                     setSearchQuery('');
                                     setSearchResults([]);
                                 }}>
-                                    <img src={getImageUrl(product.images?.[0])} alt={product.name} />
+                                    <img src={getImageUrl(product.imageUrl)} alt={product.name} />
                                     <div className="search-result-info">
                                         <h4>{product.name}</h4>
                                         <p>BDT {product.price}</p>

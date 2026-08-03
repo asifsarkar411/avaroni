@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { getImageUrl } from '@/utils/image';
 
 export default function NavPromoSlider() {
     const [sliders, setSliders] = useState([]);
@@ -35,7 +36,7 @@ export default function NavPromoSlider() {
             {sliders.map((slider, index) => (
                 <a key={slider._id || index} href={slider.linkUrl || '#'}>
                     <img 
-                        src={slider.imageUrl} 
+                        src={getImageUrl(slider.imageUrl)} 
                         alt="Promo" 
                         className={index === currentIndex ? 'active' : ''} 
                     />

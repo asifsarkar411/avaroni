@@ -68,7 +68,7 @@ export default function Home() {
                     {categories.map(cat => (
                         <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/${cat.name.toLowerCase()}.html`} style={{ cursor: 'pointer' }}>
                             <div className="category-icon-wrap">
-                                <img src={getImageUrl(cat.icon || cat.image)} alt={cat.name} loading="lazy" className="category-icon-img" />
+                                <img src={getImageUrl(cat.iconUrl)} alt={cat.name} loading="lazy" className="category-icon-img" />
                             </div>
                             <p className="category-title">{cat.name}</p>
                         </div>
@@ -95,7 +95,7 @@ export default function Home() {
                                 <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); alert('Wishlist added'); }}>
                                     <i className="far fa-heart"></i>
                                 </button>
-                                <img src={getImageUrl(prod.images?.[0])} alt={prod.name} className="product-image" loading="lazy" />
+                                <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
                             <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
                             <p className="price">BDT {prod.price}</p>
