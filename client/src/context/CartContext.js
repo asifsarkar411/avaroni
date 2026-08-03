@@ -34,7 +34,7 @@ export function CartProvider({ children }) {
     const addToCart = (product) => {
         const existing = cart.find(item => item._id === product._id);
         if (existing) {
-            saveCart(cart.map(item => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item), cartKey);
+            saveCart(cart.map(item => item._id === product._id ? { ...item, quantity: Number(item.quantity || 0) + 1 } : item), cartKey);
         } else {
             saveCart([...cart, { ...product, quantity: 1 }], cartKey);
         }
@@ -50,7 +50,7 @@ export function CartProvider({ children }) {
     const updateQuantity = (productId, change) => {
         const existing = cart.find(item => item._id === productId);
         if (existing) {
-            const newQuantity = existing.quantity + change;
+            const newQuantity = Number(existing.quantity || 0) + change;
             if (newQuantity <= 0) {
                 removeFromCart(productId);
             } else {
@@ -67,8 +67,8 @@ export function CartProvider({ children }) {
         saveCart([], cartKey);
     };
 
-    const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-    const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const cartCount = cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
+    const cartTotal = cart.reduce((total, item) => total + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
 
     return (
         <CartContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal }}>

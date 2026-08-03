@@ -318,28 +318,33 @@ h6, .h6 {
 }
 
 .btn {
-    background-color: #111111;
+    background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
     color: #ffffff;
     border: none;
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
-    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-decoration: none;
     display: inline-block;
+    box-shadow: 0 4px 15px rgba(255, 77, 79, 0.3);
 }
 
 .btn:hover {
-    background-color: #333333;
+    background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
     color: #ffffff;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(255, 77, 79, 0.5);
     animation: btnPulse 1.5s infinite;
 }
 
 @keyframes btnPulse {
-    0% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 77, 79, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }
 }
 
 /* Cart Page */
@@ -939,11 +944,10 @@ body.no-scroll {
 .cart-icon {
     position: relative;
 }
-.cart-badge {
+.cart-badge, .wishlist-badge {
     position: absolute;
     top: -8px;
     right: -10px;
-    background-color: #111111;
     color: white;
     font-size: 11px;
     font-weight: bold;
@@ -953,6 +957,13 @@ body.no-scroll {
     min-width: 15px;
     text-align: center;
     line-height: 1;
+}
+.cart-badge {
+    background-color: #111111;
+}
+.wishlist-badge {
+    background-color: #ff4d4f;
+    box-shadow: 0 2px 5px rgba(255, 77, 79, 0.4);
 }
 
 /* Responsive Cart Page Styles (without inline styles) */
