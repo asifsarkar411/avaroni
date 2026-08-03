@@ -8,10 +8,10 @@ export default function Footer() {
             <div className="footer-section">
                 <h3>AVARONI</h3>
                 <p>Elegance Redefined for Every Moment.</p>
-                <div className="social-links">
-                    <a href="#"><i className="fab fa-facebook-f"></i></a>
-                    <a href="#"><i className="fab fa-twitter"></i></a>
-                    <a href="#"><i className="fab fa-instagram"></i></a>
+                <div className="social-icons">
+                    <a href="#" className="social-facebook"><i className="fab fa-facebook-f"></i></a>
+                    <a href="#" className="social-twitter"><i className="fab fa-twitter"></i></a>
+                    <a href="#" className="social-instagram"><i className="fab fa-instagram"></i></a>
                 </div>
             </div>
             <div className="footer-section">
