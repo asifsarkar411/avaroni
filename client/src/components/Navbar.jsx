@@ -11,7 +11,24 @@ export default function Navbar({ onMenuClick }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
     const searchRef = useRef(null);
+
+    useEffect(() => {
+        async function fetchCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                const data = await res.json();
+                if (data.success) {
+                    setCategories(data.categories);
+                }
+            } catch (err) {
+                console.error("Navbar category fetch error", err);
+            }
+        }
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -25,10 +42,11 @@ export default function Navbar({ onMenuClick }) {
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
-            if (searchQuery.trim().length >= 2) {
+            if (searchQuery.trim().length >= 2 || (selectedCategory && searchQuery.trim().length >= 1)) {
                 setIsSearching(true);
                 try {
-                    const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}`);
+                    const categoryParam = selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : '';
+                    const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}${categoryParam}`);
                     const data = await res.json();
                     if (data.success) {
                         setSearchResults(data.products.slice(0, 5));
@@ -55,8 +73,18 @@ export default function Navbar({ onMenuClick }) {
             
             <div className="search-bar-container" ref={searchRef}>
                 <div className="search-bar-inner">
-                    <div className="search-input-wrap">
-                        <i className="fas fa-search search-bar-icon"></i>
+                    <div className="search-input-wrap" style={{ display: 'flex', alignItems: 'center' }}>
+                        <select 
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="search-category-select"
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map(cat => (
+                                <option key={cat._id} value={cat.name}>{cat.name}</option>
+                            ))}
+                        </select>
+                        <i className="fas fa-search search-bar-icon" style={{ marginLeft: '10px' }}></i>
                         <input 
                             type="text" 
                             id="global-search-input" 
