@@ -2,8 +2,9 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
+    <>
     <footer className="site-footer">
-        <div className="footer-content">
+        <div className="footer-container">
             <div className="footer-section">
                 <h3>AVARONI</h3>
                 <p>Elegance Redefined for Every Moment.</p>
@@ -34,5 +35,19 @@ export default function Footer() {
             <p>&copy; {new Date().getFullYear()} AVARONI. All rights reserved.</p>
         </div>
     </footer>
+
+    {/* Floating Action Buttons */}
+    <div className="floating-actions">
+        <a href="tel:+8801234567890" className="fab phone" title="Call Us">
+            <i className="fas fa-phone-alt"></i>
+        </a>
+        <a href="https://wa.me/8801234567890" target="_blank" rel="noopener noreferrer" className="fab whatsapp" title="WhatsApp Us">
+            <i className="fab fa-whatsapp"></i>
+        </a>
+        <a href="https://m.me/avaroni" target="_blank" rel="noopener noreferrer" className="fab messenger" title="Message Us">
+            <i className="fab fa-facebook-messenger"></i>
+        </a>
+    </div>
+    </>
   );
 }
