@@ -100,10 +100,10 @@ export default function Navbar({ onMenuClick }) {
             </div>
 
             <div className="nav-links">
-                <Link href="/cart.html" className="cart-icon" title="Cart">
+                <a href="/cart.html" className="cart-icon" title="Cart">
                     <i className="fas fa-shopping-cart"></i>
                     <span className="cart-badge" style={{ display: cartCount > 0 ? 'inline-block' : 'none' }}>{cartCount}</span>
-                </Link>
+                </a>
                 <a href="/wishlist.html" className="wishlist-icon" title="Wishlist">
                     <i className="far fa-heart"></i>
                     <span className="wishlist-badge">0</span>
