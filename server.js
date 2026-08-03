@@ -562,13 +562,16 @@ function isEmailIdentifier(str) {
 // Customer Register (Email or Phone + Password)
 app.post('/api/user/auth/register', authLimiter, async (req, res) => {
     try {
-        const { name, identifier, password } = req.body;
-        if (!name || !identifier || !password) {
+        const reqName = req.body.name || req.body.username;
+        const reqIdentifier = req.body.identifier || req.body.email || req.body.phone;
+        const password = req.body.password;
+
+        if (!reqName || !reqIdentifier || !password) {
             return res.status(400).json({ success: false, message: "Name, email/phone, and password are required." });
         }
 
-        const cleanName = sanitize(name).trim();
-        const cleanId = sanitize(identifier).trim();
+        const cleanName = sanitize(reqName).trim();
+        const cleanId = sanitize(reqIdentifier).trim();
 
         const isEmail = isEmailIdentifier(cleanId);
         const query = isEmail ? { email: cleanId.toLowerCase() } : { phone: cleanId };
