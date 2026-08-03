@@ -24,6 +24,8 @@ const nextConfig = {
             { source: '/return-product', destination: '/return-product.html' },
             { source: '/sitemap', destination: '/sitemap.html' },
             { source: '/track-order', destination: '/track-order.html' },
+            { source: '/api/:path*', destination: 'http://localhost:5000/api/:path*' },
+            { source: '/uploads/:path*', destination: 'http://localhost:5000/uploads/:path*' }
         ]
     },
 };
