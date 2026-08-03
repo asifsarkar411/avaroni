@@ -1583,6 +1583,9 @@ body.no-scroll {
     border-radius: 50%;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+.footer-section .social-icons a i {
+    color: #ffffff !important;
+}
 .footer-section .social-icons a.social-facebook {
     background: #1877F2;
 }
