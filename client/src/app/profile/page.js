@@ -56,7 +56,7 @@ export default function ProfilePage() {
             const url = isLogin ? '/api/user/auth/login' : '/api/user/auth/register';
             const body = isLogin 
                 ? { identifier, password }
-                : { username: name, email, phone, password };
+                : { name, identifier, password };
 
             const res = await fetch(url, {
                 method: 'POST',
@@ -91,16 +91,10 @@ export default function ProfilePage() {
                     
                     <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         {!isLogin && (
-                            <>
-                                <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={inputStyle} />
-                                <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
-                                <input type="text" placeholder="Phone Number" value={phone} onChange={e => setPhone(e.target.value)} required style={inputStyle} />
-                            </>
+                            <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={inputStyle} />
                         )}
                         
-                        {isLogin && (
-                            <input type="text" placeholder="Email or Phone" value={identifier} onChange={e => setIdentifier(e.target.value)} required style={inputStyle} />
-                        )}
+                        <input type="text" placeholder="Email or Phone" value={identifier} onChange={e => setIdentifier(e.target.value)} required style={inputStyle} />
                         
                         <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={inputStyle} />
                         
