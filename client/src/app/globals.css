@@ -3117,25 +3117,20 @@ html {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: white;
-    font-size: 24px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background-color: #111111;
+    color: #ffffff;
+    font-size: 22px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     text-decoration: none;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+    border: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .fab:hover {
     transform: scale(1.15) translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    color: white;
-}
-.fab.phone {
-    background: linear-gradient(135deg, #00c6ff, #0072ff);
-}
-.fab.whatsapp {
-    background: linear-gradient(135deg, #25D366, #128C7E);
-}
-.fab.messenger {
-    background: linear-gradient(135deg, #00B2FF, #006AFF);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    background-color: #ffffff;
+    color: #ff4d4f;
+    border-color: #ff4d4f;
 }
 
 @media (max-width: 768px) {
