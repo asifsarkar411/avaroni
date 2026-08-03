@@ -43,9 +43,9 @@ export default function Home() {
             <h3 data-aos="fade-up" data-aos-delay="200" style={{color: '#000000', fontWeight: '400', fontSize: 'clamp(0.95rem, 2vw, 1.25rem)', textAlign: 'center', lineHeight: '1.6', maxWidth: '750px', margin: '0 auto'}}>
                 Step into a world of curated elegance. From stunning women's wear to sparkling jewellery and cute kids' outfits, upgrade your wardrobe with exclusive designs crafted just for you.
             </h3>
+            
+            <HeroSlider />
         </div>
-
-        <HeroSlider />
 
         <section className="category-section">
             <div className="category-header">
@@ -59,12 +59,11 @@ export default function Home() {
             ) : (
                 <div className="category-grid" id="category-grid">
                     {categories.map(cat => (
-                        <div key={cat._id} className="category-card" data-aos="fade-up" onClick={() => window.location.href = `/${cat.name.toLowerCase()}.html`}>
-                            <img src={cat.image} alt={cat.name} loading="lazy" />
-                            <div className="category-info">
-                                <h3>{cat.name}</h3>
-                                <button className="shop-btn">Explore</button>
+                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/${cat.name.toLowerCase()}.html`} style={{ cursor: 'pointer' }}>
+                            <div className="category-icon-wrap">
+                                <img src={cat.icon || cat.image || './img/profile_image.jpg'} alt={cat.name} loading="lazy" className="category-icon-img" />
                             </div>
+                            <p className="category-title">{cat.name}</p>
                         </div>
                     ))}
                 </div>
@@ -82,19 +81,18 @@ export default function Home() {
                     <div className="skeleton-loader skeleton-card"></div>
                 </div>
             ) : (
-                <div className="product-grid" style={{padding: '20px'}}>
+                <div className="product-grid" id="new-arrivals-grid">
                     {products.map(prod => (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image">
-                                <img src={prod.images && prod.images[0] ? prod.images[0] : './img/profile_image.jpg'} alt={prod.name} loading="lazy" />
+                            <div className="product-image-wrap">
+                                <button className="wishlist-card-btn" title="Save to Wishlist">
+                                    <i className="far fa-heart"></i>
+                                </button>
+                                <img src={prod.images && prod.images[0] ? (prod.images[0].startsWith('http') ? prod.images[0] : `/uploads/${prod.images[0]}`) : './img/profile_image.jpg'} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
-                            <div className="product-details">
-                                <h3 className="product-name">{prod.name}</h3>
-                                <div className="product-price">
-                                    <span className="price">BDT {prod.price}</span>
-                                </div>
-                                <button className="add-to-cart-btn btn" onClick={() => alert('Add to cart')}>Add to Cart</button>
-                            </div>
+                            <h3>{prod.name}</h3>
+                            <p className="price">BDT {prod.price}</p>
+                            <button className="btn add-to-cart-btn" onClick={() => alert('Add to cart')} style={{ width: '100%' }}>Add to Cart</button>
                         </div>
                     ))}
                 </div>
@@ -105,4 +103,3 @@ export default function Home() {
     </div>
   );
 }
-
