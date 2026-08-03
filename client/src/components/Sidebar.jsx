@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getImageUrl } from '@/utils/image';
 
 export default function Sidebar({ isOpen, onClose }) {
     const [categories, setCategories] = useState([]);
@@ -33,7 +34,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Categories</div>
             {categories.map(cat => (
                 <a key={cat._id} href={cat.redirectUrl || `/${cat.name.toLowerCase()}.html`} onClick={onClose}>
-                    <img src={cat.icon || cat.image || './img/profile_image.jpg'} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
+                    <img src={getImageUrl(cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
                     {cat.name}
                 </a>
             ))}

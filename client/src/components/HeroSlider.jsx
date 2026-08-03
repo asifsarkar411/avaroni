@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { getImageUrl } from '@/utils/image';
 
 export default function HeroSlider() {
     const [banners, setBanners] = useState([]);
@@ -64,7 +65,7 @@ export default function HeroSlider() {
                 }} onClick={() => {
                     if(banner.redirectUrl) window.location.href = banner.redirectUrl;
                 }}>
-                    <img src={banner.imageUrl} alt={banner.title || 'Promo Banner'} style={{
+                    <img src={getImageUrl(banner.imageUrl)} alt={banner.title || 'Promo Banner'} style={{
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover'

@@ -12,6 +12,17 @@ export default function ClientLayout({ children }) {
     AOS.init({ duration: 800, once: true, offset: 50 });
   }, []);
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isSidebarOpen]);
+
   return (
     <>
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />

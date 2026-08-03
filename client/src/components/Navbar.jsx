@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { getImageUrl } from '@/utils/image';
 
 export default function Navbar({ onMenuClick }) {
     const { cartCount } = useCart();
@@ -83,7 +84,7 @@ export default function Navbar({ onMenuClick }) {
                                     setSearchQuery('');
                                     setSearchResults([]);
                                 }}>
-                                    <img src={product.images && product.images[0] ? (product.images[0].startsWith('http') ? product.images[0] : `/uploads/${product.images[0]}`) : '/img/profile_image.jpg'} alt={product.name} />
+                                    <img src={getImageUrl(product.images?.[0])} alt={product.name} />
                                     <div className="search-result-info">
                                         <h4>{product.name}</h4>
                                         <p>BDT {product.price}</p>
