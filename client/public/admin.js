@@ -512,6 +512,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
+    if (tabName === 'manage-customers') fetchCustomerUsers();
     if (tabName === 'manage-reviews') fetchAdminReviews();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'admin-settings') initSettingsTab();
@@ -2344,6 +2345,38 @@ async function fetchAdminUsers() {
         });
     } catch (err) {
         console.error("Error fetching admin users:", err);
+    }
+}
+
+async function fetchCustomerUsers() {
+    const tbody = document.getElementById('customers-table-body');
+    if (!tbody) return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/customers');
+        if (!response) return;
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!data.success || !data.customers || data.customers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No customer accounts found.</td></tr>';
+            return;
+        }
+
+        data.customers.forEach(customer => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHTML(customer.username)}</strong></td>
+                    <td>${escapeHTML(customer.email || 'N/A')}</td>
+                    <td>${escapeHTML(customer.phone || 'N/A')}</td>
+                    <td><span style="background:#e3f2fd; color:#0d6efd; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">Customer</span></td>
+                    <td>${escapeHTML(customer.loginCount || 0)} times</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error fetching customer users:", err);
     }
 }
 

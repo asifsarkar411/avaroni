@@ -739,6 +739,7 @@
                 <button class="tab-btn" data-target="manage-nav-sliders"><i class="fas fa-sliders-h"></i> <span>Navbar Slider</span></button>
                 <button class="tab-btn" data-target="manage-returns"><i class="fas fa-undo"></i> <span>Return Requests</span></button>
                 <button class="tab-btn" data-target="manage-messages"><i class="fas fa-envelope"></i> <span>Contact Messages</span></button>
+                <button class="tab-btn" data-target="manage-customers"><i class="fas fa-users"></i> <span>Customer Users</span></button>
                 <button class="tab-btn" data-target="manage-reviews"><i class="fas fa-star"></i> <span>Customer Reviews</span></button>
                 <button class="tab-btn" data-target="admin-settings"><i class="fas fa-cog"></i> <span>Settings & Users</span></button>
             </nav>
@@ -1306,7 +1307,31 @@
                     </div>
                 </div>
 
-                <!-- 11. CUSTOMER REVIEWS TAB -->
+                <!-- 11. CUSTOMER USERS TAB -->
+                <div id="manage-customers-tab" class="tab-content">
+                    <div class="panel-box" data-aos="fade-up">
+                        <div class="panel-header">
+                            <h2>Registered Customer Users</h2>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                        <th>Logins</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customers-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 12. CUSTOMER REVIEWS TAB -->
                 <div id="manage-reviews-tab" class="tab-content">
                     <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">

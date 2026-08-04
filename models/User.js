@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
     password: { 
         type: String 
     },
+    role: {
+        type: String,
+        enum: ['customer', 'admin'],
+        default: 'customer'
+    },
     
     // --- SECURITY & 2FA FIELDS ---
     twoFactorCode: { 

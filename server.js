@@ -139,6 +139,7 @@ async function connectDB() {
         if (!process.env.VERCEL) {
             await seedCategories();
             await migrateBase64ToFiles();
+            await migrateUserRoles();
         }
     } catch (err) {
         console.error('MongoDB Connection Error:', err);
@@ -178,6 +179,19 @@ async function seedCategories() {
   } catch (err) {
     console.error('Error seeding categories:', err);
   }
+}
+
+async function migrateUserRoles() {
+    try {
+        const usersWithoutRole = await User.find({ role: { $exists: false } });
+        if (usersWithoutRole.length > 0) {
+            console.log(`Migrating ${usersWithoutRole.length} legacy users to admin role...`);
+            await User.updateMany({ role: { $exists: false } }, { $set: { role: 'admin' } });
+            console.log('User role migration completed.');
+        }
+    } catch (err) {
+        console.error('Error migrating user roles:', err);
+    }
 }
 
 // Helper function to handle image storage:
@@ -374,7 +388,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
         // Case-insensitive email search
         const user = await User.findOne({ email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') });
-        if (!user) return res.status(400).json({ message: "Invalid credentials" });
+        if (!user || user.role !== 'admin') return res.status(400).json({ message: "Invalid credentials" });
 
         // Check Lockout
         if (user.lockUntil && user.lockUntil > Date.now()) {
@@ -1551,15 +1565,7 @@ app.get('/api/user-data', verifyAdminToken, async (req, res) => {
 // ==========================================
 
 // Get All Users (Admin Protected)
-app.get('/api/admin/users', verifyAdminToken, async (req, res) => {
-    try {
-        const users = await User.find().select('-password').sort({ _id: -1 });
-        res.json({ success: true, users });
-    } catch (error) {
-        console.error("Get All Users Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch users." });
-    }
-});
+// (Duplicate removed)
 
 // 1. Change Admin Email
 app.put('/api/admin/settings/email', verifyAdminToken, async (req, res) => {
@@ -1624,11 +1630,22 @@ app.put('/api/admin/settings/password', verifyAdminToken, async (req, res) => {
 // 3. Get All Admin Users
 app.get('/api/admin/users', verifyAdminToken, async (req, res) => {
     try {
-        const users = await User.find().select('-password -twoFactorCode').sort({ _id: -1 });
+        const users = await User.find({ role: 'admin' }).select('-password -twoFactorCode').sort({ _id: -1 });
         res.json({ success: true, users });
     } catch (error) {
         console.error("Get Users Error:", error);
         res.status(500).json({ success: false, message: "Failed to fetch user accounts." });
+    }
+});
+
+// 3b. Get All Customer Users
+app.get('/api/admin/customers', verifyAdminToken, async (req, res) => {
+    try {
+        const customers = await User.find({ role: 'customer' }).select('-password -twoFactorCode').sort({ _id: -1 });
+        res.json({ success: true, customers });
+    } catch (error) {
+        console.error("Get Customers Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch customer accounts." });
     }
 });
 
@@ -1652,7 +1669,7 @@ app.post('/api/admin/users', verifyAdminToken, async (req, res) => {
             return res.status(400).json({ success: false, message: "An account with this email already exists." });
         }
 
-        const newUser = new User({ username, email, password });
+        const newUser = new User({ username, email, password, role: 'admin' });
         await newUser.save();
         res.status(201).json({ success: true, message: `Access granted for user "${username}" (${email}).` });
     } catch (error) {
