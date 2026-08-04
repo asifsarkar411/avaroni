@@ -2083,6 +2083,8 @@ async function handleEditProductSubmit(e) {
         colour: document.getElementById('edit-prod-colour').value,
         brand: document.getElementById('edit-prod-brand').value,
         stock: document.getElementById('edit-prod-stock').value,
+        discountType: document.getElementById('edit-prod-discount-type') ? document.getElementById('edit-prod-discount-type').value : 'none',
+        discountValue: document.getElementById('edit-prod-discount-value') ? document.getElementById('edit-prod-discount-value').value : 0,
         image: imageBase64
     };
 

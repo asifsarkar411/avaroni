@@ -496,7 +496,6 @@ function switchTab(tabName) {
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
-        if (tabName === 'manage-users') cleanTitle = "Customer Users List";
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
         titleElement.innerText = cleanTitle;
@@ -514,7 +513,6 @@ function switchTab(tabName) {
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-reviews') fetchAdminReviews();
-    if (tabName === 'manage-users') fetchManageUsers();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'admin-settings') initSettingsTab();
 }
@@ -602,6 +600,11 @@ async function fetchManageProducts() {
                     <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.colour || '-')}</span></td>
                     <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.brand || '-')}</span></td>
                     <td style="font-weight:700; color:#0f172a;">৳${prod.price}</td>
+                    <td>
+                        <span style="font-size:13px; font-weight:600; color:${prod.discountType === 'none' || !prod.discountType ? '#94a3b8' : '#ef4444'};">
+                            ${!prod.discountType || prod.discountType === 'none' ? '-' : (prod.discountType === 'percentage' ? prod.discountValue + '%' : '৳' + prod.discountValue)}
+                        </span>
+                    </td>
                     <td>
                         <span style="font-size:13px; font-weight:600; color:${prod.stockQuantity > 5 ? '#10b981' : '#f59e0b'};">
                             ${prod.stockQuantity} in stock
@@ -700,6 +703,8 @@ async function handleAddProduct(e) {
         colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
         brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
         stock: document.getElementById('prod-stock').value,
+        discountType: document.getElementById('prod-discount-type') ? document.getElementById('prod-discount-type').value : 'none',
+        discountValue: document.getElementById('prod-discount-value') ? document.getElementById('prod-discount-value').value : 0,
         image: imageBase64
     };
 
@@ -1998,6 +2003,11 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-brand').value = prod.brand || '';
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
+    
+    if (document.getElementById('edit-prod-discount-type')) {
+        document.getElementById('edit-prod-discount-type').value = prod.discountType || 'none';
+        document.getElementById('edit-prod-discount-value').value = prod.discountValue || 0;
+    }
 
     // Populate Category & Subcategory dropdowns
     if (typeof localCategories === 'undefined' || localCategories.length === 0) {
@@ -2073,6 +2083,8 @@ async function handleEditProductSubmit(e) {
         colour: document.getElementById('edit-prod-colour').value,
         brand: document.getElementById('edit-prod-brand').value,
         stock: document.getElementById('edit-prod-stock').value,
+        discountType: document.getElementById('edit-prod-discount-type') ? document.getElementById('edit-prod-discount-type').value : 'none',
+        discountValue: document.getElementById('edit-prod-discount-value') ? document.getElementById('edit-prod-discount-value').value : 0,
         image: imageBase64
     };
 
@@ -2551,50 +2563,3 @@ async function handleFlashSaleSubmit(e) {
 
 
 
-
-// ==========================================
-// CUSTOMER USERS MANAGEMENT
-// ==========================================
-async function fetchManageUsers() {
-    try {
-        const response = await fetchWithAuth('/api/admin/users');
-        if (!response) return;
-        const data = await response.json();
-        
-        const tbody = document.getElementById('users-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        if (!data.success || !data.users || data.users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found.</td></tr>';
-            return;
-        }
-        
-        data.users.forEach(user => {
-            let joinDate = '-';
-            if (user._id) {
-                const timestamp = parseInt(user._id.toString().substring(0, 8), 16) * 1000;
-                if (!isNaN(timestamp)) {
-                    joinDate = new Date(timestamp).toLocaleDateString();
-                }
-            }
-            tbody.innerHTML += `
-                <tr class="table-row-hover">
-                    <td style="font-weight:600; color:#1e293b;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <img src="${formatImageUrl(user.avatar)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="36" height="36" style="border-radius:50%; object-fit:cover; border: 2px solid var(--primary-light);">
-                            ${escapeHTML(user.username || 'N/A')}
-                        </div>
-                    </td>
-                    <td>${escapeHTML(user.email || '-')}</td>
-                    <td>${escapeHTML(user.phone || '-')}</td>
-                    <td>${joinDate}</td>
-                    <td><span class="badge badge-success">${user.loginCount || 0}</span></td>
-                </tr>
-            `;
-        });
-    } catch (err) {
-        console.error("Error fetching users:", err);
-        showToast("Failed to load user list.", 'error');
-    }
-}
