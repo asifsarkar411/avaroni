@@ -870,20 +870,19 @@ function renderFilteredOrders() {
         const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
         const displayOrderNum = order.orderNumber || 'N/A'; 
         const orderStatus = order.status || 'Pending';
-
-        let statusBadge = `<span style="background:#ffc107; color:#212529; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Pending</span>`;
+        let statusBadge = `<span class="badge badge-warning">Pending</span>`;
         if (orderStatus === 'Processing') {
-            statusBadge = `<span style="background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Processing</span>`;
+            statusBadge = `<span class="badge badge-primary" style="background:#dbeafe; color:#1e40af;">Processing</span>`;
         } else if (orderStatus === 'Approved') {
-            statusBadge = `<span style="background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Approved</span>`;
+            statusBadge = `<span class="badge badge-success">Approved</span>`;
         } else if (orderStatus === 'Delivered') {
-            statusBadge = `<span style="background:#20c997; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Delivered</span>`;
+            statusBadge = `<span class="badge badge-success" style="background:#bbf7d0; color:#166534;">Delivered</span>`;
         } else if (orderStatus === 'Cancelled') {
-            statusBadge = `<span style="background:#dc3545; color:white; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">Cancelled</span>`;
+            statusBadge = `<span class="badge badge-danger">Cancelled</span>`;
         }
 
         const statusSelectHtml = `
-            <select onchange="handleOrderStatusDropdownChange(this, '${order._id}', '${orderStatus}')" class="order-status-select ${orderStatus.toLowerCase()}-select">
+            <select onchange="handleOrderStatusDropdownChange(this, '${order._id}', '${orderStatus}')" class="order-status-select" style="padding:4px 8px; font-size:12px; border-radius:6px; border:1px solid #e2e8f0; outline:none; background:#f8fafc; color:#475569; font-weight:500; cursor:pointer;">
                 <option value="Pending" ${orderStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
                 <option value="Approved" ${orderStatus === 'Approved' ? 'selected' : ''}>✅ Approved</option>
                 <option value="Processing" ${orderStatus === 'Processing' ? 'selected' : ''}>⚙️ Processing</option>
@@ -894,20 +893,23 @@ function renderFilteredOrders() {
 
         // 1. Desktop Table Row
         tbody.innerHTML += `
-            <tr>
-                <td>${date}</td>
-                <td style="color: #007bff; font-weight: bold;">${escapeHTML(displayOrderNum)}</td> 
-                <td><strong>${escapeHTML(order.customerName)}</strong></td>
-                <td>${escapeHTML(order.phone)}<br>${escapeHTML(order.email)}</td>
-                <td>${escapeHTML(order.address)}</td>
-                <td><strong>${escapeHTML(order.transactionId || 'N/A')}</strong></td>
-                <td style="color:#111111; font-weight:bold;">৳${order.totalAmount}</td>
-                <td class="items-list">${itemsList}</td>
+            <tr class="table-row-hover">
+                <td><span style="color:#64748b; font-size:13px;">${date}</span></td>
+                <td><span style="color:#3b82f6; font-weight:700;">${escapeHTML(displayOrderNum)}</span></td> 
+                <td><div style="font-weight:600; color:#1e293b;">${escapeHTML(order.customerName)}</div></td>
+                <td>
+                    <div style="color:#475569; font-size:13px; font-weight:500;">${escapeHTML(order.phone)}</div>
+                    <div style="color:#94a3b8; font-size:12px;">${escapeHTML(order.email)}</div>
+                </td>
+                <td><span style="color:#64748b; font-size:13px;">${escapeHTML(order.address)}</span></td>
+                <td><span style="font-family:monospace; font-size:12px; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:4px;">${escapeHTML(order.transactionId || 'N/A')}</span></td>
+                <td style="font-weight:700; color:#0f172a;">৳${order.totalAmount}</td>
+                <td><span style="color:#64748b; font-size:12px; max-width:150px; display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${itemsList}">${itemsList}</span></td>
                 <td>${statusBadge}</td>
-                <td style="white-space: nowrap;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Download Tax Invoice"><i class="fas fa-file-invoice"></i> Invoice</button>
+                <td style="white-space:nowrap;">
+                    <div style="display:flex; align-items:center; gap:8px;">
                         ${statusSelectHtml}
+                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-icon btn-icon-secondary" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
                     </div>
                 </td>
             </tr>
