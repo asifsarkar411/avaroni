@@ -13,8 +13,7 @@ export default function ClientLayout({ children }) {
       duration: 600, 
       once: true, 
       offset: 30,
-      easing: 'ease-in-out',
-      disable: 'mobile'
+      easing: 'ease-in-out'
     });
   }, []);
 
