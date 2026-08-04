@@ -31,8 +31,13 @@ export default function Footer() {
                 </ul>
             </div>
         </div>
-        <div className="footer-bottom">
+        <div className="footer-bottom" style={{ textAlign: 'center', padding: '20px', color: '#777', fontSize: '14px' }}>
             <p>&copy; {new Date().getFullYear()} AVARONI. All rights reserved.</p>
+            <p style={{ marginTop: '5px' }}>
+                <a href="https://port-v-eno-m.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#777', textDecoration: 'underline' }}>
+                    Developed By "SM FERDOUS AHMMED"
+                </a>
+            </p>
         </div>
     </footer>
 
