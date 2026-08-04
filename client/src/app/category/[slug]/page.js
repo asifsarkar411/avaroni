@@ -4,7 +4,6 @@ import { useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
-import ProductModal from '@/components/ProductModal';
 
 export default function CategoryPage() {
     const params = useParams();
@@ -15,7 +14,10 @@ export default function CategoryPage() {
     const [categoryName, setCategoryName] = useState('Category');
     const { addToCart } = useCart();
     const { toggleWishlist, isInWishlist } = useWishlist();
-    const [selectedProductId, setSelectedProductId] = useState(null);
+
+    const openProduct = (id) => {
+        window.dispatchEvent(new CustomEvent('openProductModal', { detail: id }));
+    };
 
     useEffect(() => {
         if (!slug) return;
@@ -68,13 +70,13 @@ export default function CategoryPage() {
                 <div className="product-grid" id="product-list" style={{ marginTop: '30px' }}>
                     {products.map(prod => (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image-wrap" onClick={() => setSelectedProductId(prod._id)} style={{ cursor: 'pointer' }}>
+                            <div className="product-image-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
                                 <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} style={{ color: isInWishlist(prod._id) ? '#e60050' : '#888' }}>
                                     <i className={isInWishlist(prod._id) ? "fas fa-heart" : "far fa-heart"}></i>
                                 </button>
                                 <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
-                            <h3 onClick={() => setSelectedProductId(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
+                            <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
                             <p className="price">BDT {prod.price}</p>
                             <button className="btn add-to-cart-btn" onClick={() => addToCart(prod)} style={{ width: '100%' }}>Add to Cart</button>
                         </div>
@@ -85,13 +87,6 @@ export default function CategoryPage() {
                     <i className="fas fa-box-open" style={{ fontSize: '3rem', marginBottom: '15px', color: '#ccc' }}></i>
                     <h3>No products found in this category.</h3>
                 </div>
-            )}
-
-            {selectedProductId && (
-                <ProductModal 
-                    productId={selectedProductId} 
-                    onClose={() => setSelectedProductId(null)} 
-                />
             )}
         </div>
     );
