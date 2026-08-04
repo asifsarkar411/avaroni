@@ -2416,6 +2416,123 @@ app.delete('/api/admin/messages/:id', verifyAdminToken, async (req, res) => {
 });
 
 // ==========================================
+// 🎨 BANNER CARDS ROUTES
+// ==========================================
+app.get('/api/banner-cards', async (req, res) => {
+    try {
+        const cards = await BannerCard.find().sort({ createdAt: 1 });
+        res.json({ success: true, cards });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/banner-cards', verifyAdminToken, async (req, res) => {
+    try {
+        const newCard = new BannerCard();
+        await newCard.save();
+        res.json({ success: true, card: newCard });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.patch('/api/banner-cards/:id/heading', verifyAdminToken, async (req, res) => {
+    try {
+        const { heading } = req.body;
+        const card = await BannerCard.findByIdAndUpdate(req.params.id, { heading }, { new: true });
+        if (!card) return res.status(404).json({ success: false, message: 'Card not found' });
+        res.json({ success: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/banner-cards/:id/images', verifyAdminToken, async (req, res) => {
+    try {
+        const { image } = req.body;
+        if (!image) return res.status(400).json({ success: false, message: 'Image is required' });
+        
+        const card = await BannerCard.findById(req.params.id);
+        if (!card) return res.status(404).json({ success: false, message: 'Card not found' });
+        
+        card.images.push(image);
+        await card.save();
+        res.json({ success: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/banner-cards/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await BannerCard.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Card deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/banner-cards/:id/images/:imgIndex', verifyAdminToken, async (req, res) => {
+    try {
+        const card = await BannerCard.findById(req.params.id);
+        if (!card) return res.status(404).json({ success: false, message: 'Card not found' });
+        
+        const idx = parseInt(req.params.imgIndex);
+        if (idx >= 0 && idx < card.images.length) {
+            card.images.splice(idx, 1);
+            await card.save();
+        }
+        res.json({ success: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// ==========================================
+// 🎨 NAVBAR SLIDERS ROUTES
+// ==========================================
+app.get('/api/navbar-sliders', async (req, res) => {
+    try {
+        const sliders = await NavSlider.find().sort({ order: 1, createdAt: -1 });
+        res.json({ success: true, sliders });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/navbar-sliders', verifyAdminToken, async (req, res) => {
+    try {
+        const { image, link, order } = req.body;
+        if (!image) return res.status(400).json({ success: false, message: 'Image is required' });
+        
+        const newSlider = new NavSlider({ imageUrl: image, link, order: parseInt(order) || 0 });
+        await newSlider.save();
+        res.json({ success: true, slider: newSlider });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/navbar-sliders/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await NavSlider.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Slider deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// ==========================================
 // START SERVER
 // ==========================================
 // Only listen locally — Vercel handles this automatically in serverless mode
