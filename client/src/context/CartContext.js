@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
+import { calculateDiscountedPrice } from '@/utils/price';
 
 const CartContext = createContext();
 
@@ -79,7 +80,10 @@ export function CartProvider({ children }) {
     };
 
     const cartCount = cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
-    const cartTotal = cart.reduce((total, item) => total + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+    const cartTotal = cart.reduce((total, item) => {
+        const itemPrice = calculateDiscountedPrice(item.price, item.discountType, item.discountValue);
+        return total + (Number(itemPrice || 0) * Number(item.quantity || 0));
+    }, 0);
 
     return (
         <CartContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, cartTotal }}>

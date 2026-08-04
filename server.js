@@ -1735,6 +1735,8 @@ app.post('/api/admin/products', verifyAdminToken, async (req, res) => {
             colour: bodyData.colour || "",
             brand: bodyData.brand || "",
             stockQuantity: Number(bodyData.stock) || 1, 
+            discountType: bodyData.discountType || 'none',
+            discountValue: Number(bodyData.discountValue) || 0,
             imageUrl: imageUrl 
         };
         const newProduct = new Product(productData);
@@ -1766,7 +1768,7 @@ app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
 // Edit / Update Product (Admin)
 app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
     try {
-        const { name, price, category, subcategory, size, colour, brand, stock, image } = req.body;
+        const { name, price, category, subcategory, size, colour, brand, stock, discountType, discountValue, image } = req.body;
         
         const product = await Product.findById(req.params.id);
         if (!product) {
@@ -1781,6 +1783,8 @@ app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
         if (colour !== undefined) product.colour = colour.trim();
         if (brand !== undefined) product.brand = brand.trim();
         if (stock !== undefined) product.stockQuantity = Number(stock);
+        if (discountType !== undefined) product.discountType = discountType;
+        if (discountValue !== undefined) product.discountValue = Number(discountValue);
 
         // If a new image was uploaded (Base64 string), save as static high-res file
         if (image && image.trim() !== '' && image !== product.imageUrl) {

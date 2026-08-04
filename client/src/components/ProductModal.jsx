@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
+import { calculateDiscountedPrice, formatDiscountTag } from '@/utils/price';
 
 export default function ProductModal() {
     const { addToCart } = useCart();
@@ -71,13 +72,23 @@ export default function ProductModal() {
                 ) : product ? (
                     <>
                         <div className="product-modal-body">
-                            <div className="product-modal-image">
+                            <div className="product-modal-image" style={{position: 'relative'}}>
+                                {formatDiscountTag(product.discountType, product.discountValue) && <div style={{position: 'absolute', top: '15px', left: '15px', background: '#e60050', color: 'white', padding: '6px 12px', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold', zIndex: 2}}>{formatDiscountTag(product.discountType, product.discountValue)}</div>}
                                 <img src={getImageUrl(product.imageUrl)} alt={product.name} />
                             </div>
                             <div className="product-modal-info">
                                 <span className="product-modal-category">{product.category}</span>
                                 <h2>{product.name}</h2>
-                                <p className="product-modal-price">BDT {product.price}</p>
+                                <p className="product-modal-price">
+                                    {formatDiscountTag(product.discountType, product.discountValue) ? (
+                                        <>
+                                            <span style={{textDecoration: 'line-through', color: '#999', marginRight: '10px', fontSize: '1.2rem'}}>BDT {product.price}</span>
+                                            <span style={{color: '#e60050'}}>BDT {calculateDiscountedPrice(product.price, product.discountType, product.discountValue)}</span>
+                                        </>
+                                    ) : (
+                                        `BDT ${product.price}`
+                                    )}
+                                </p>
                                 <p className="product-modal-stock" style={{color: product.stockQuantity > 0 ? 'green' : 'red'}}>
                                     {product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
                                 </p>
@@ -118,13 +129,26 @@ export default function ProductModal() {
                             <div className="related-products-section">
                                 <h3><i className="fas fa-th-large"></i> Related Products</h3>
                                 <div className="related-products-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px', marginTop: '15px'}}>
-                                    {relatedProducts.map(rel => (
-                                        <div key={rel._id} className="related-product-card" onClick={() => window.dispatchEvent(new CustomEvent('openProductModal', { detail: rel._id }))} style={{cursor: 'pointer', border: '1px solid #eee', borderRadius: '8px', padding: '10px', textAlign: 'center'}}>
+                                    {relatedProducts.map(rel => {
+                                        const finalPrice = calculateDiscountedPrice(rel.price, rel.discountType, rel.discountValue);
+                                        const discountTag = formatDiscountTag(rel.discountType, rel.discountValue);
+                                        return (
+                                        <div key={rel._id} className="related-product-card" onClick={() => window.dispatchEvent(new CustomEvent('openProductModal', { detail: rel._id }))} style={{cursor: 'pointer', border: '1px solid #eee', borderRadius: '8px', padding: '10px', textAlign: 'center', position: 'relative'}}>
+                                            {discountTag && <div style={{position: 'absolute', top: '5px', left: '5px', background: '#e60050', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
                                             <img src={getImageUrl(rel.imageUrl)} alt={rel.name} style={{width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px'}} />
                                             <h4 style={{fontSize: '14px', margin: '10px 0 5px'}}>{rel.name}</h4>
-                                            <p style={{color: '#111111', fontWeight: 'bold', margin: 0}}>BDT {rel.price}</p>
+                                            <p style={{color: '#111111', fontWeight: 'bold', margin: 0}}>
+                                                {discountTag ? (
+                                                    <>
+                                                        <span style={{textDecoration: 'line-through', color: '#999', marginRight: '5px', fontSize: '12px'}}>BDT {rel.price}</span>
+                                                        <span style={{color: '#e60050'}}>BDT {finalPrice}</span>
+                                                    </>
+                                                ) : (
+                                                    `BDT ${rel.price}`
+                                                )}
+                                            </p>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             </div>
                         )}

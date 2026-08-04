@@ -8,6 +8,7 @@ import ReviewsSlider from '@/components/ReviewsSlider';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
+import { calculateDiscountedPrice, formatDiscountTag } from '@/utils/price';
 
 export default function Home() {
   const { addToCart } = useCart();
@@ -115,19 +116,32 @@ export default function Home() {
                 </div>
             ) : (
                 <div className="product-grid" id="new-arrivals-grid">
-                    {products.map(prod => (
+                    {products.map(prod => {
+                        const finalPrice = calculateDiscountedPrice(prod.price, prod.discountType, prod.discountValue);
+                        const discountTag = formatDiscountTag(prod.discountType, prod.discountValue);
+                        return (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
                             <div className="product-image-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
+                                {discountTag && <div style={{position: 'absolute', top: '10px', left: '10px', background: '#e60050', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
                                 <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} style={{ color: isInWishlist(prod._id) ? '#e60050' : '#888' }}>
                                     <i className={isInWishlist(prod._id) ? "fas fa-heart" : "far fa-heart"}></i>
                                 </button>
                                 <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
                             <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
-                            <p className="price">BDT {prod.price}</p>
+                            <p className="price">
+                                {discountTag ? (
+                                    <>
+                                        <span style={{textDecoration: 'line-through', color: '#999', marginRight: '8px', fontSize: '14px'}}>BDT {prod.price}</span>
+                                        <span style={{color: '#e60050'}}>BDT {finalPrice}</span>
+                                    </>
+                                ) : (
+                                    `BDT ${prod.price}`
+                                )}
+                            </p>
                             <button className="btn add-to-cart-btn" onClick={() => addToCart(prod)} style={{ width: '100%' }}>Add to Cart</button>
                         </div>
-                    ))}
+                    )})}
                 </div>
             )}
         </div>

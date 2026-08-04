@@ -601,6 +601,11 @@ async function fetchManageProducts() {
                     <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.brand || '-')}</span></td>
                     <td style="font-weight:700; color:#0f172a;">৳${prod.price}</td>
                     <td>
+                        <span style="font-size:13px; font-weight:600; color:${prod.discountType === 'none' || !prod.discountType ? '#94a3b8' : '#ef4444'};">
+                            ${!prod.discountType || prod.discountType === 'none' ? '-' : (prod.discountType === 'percentage' ? prod.discountValue + '%' : '৳' + prod.discountValue)}
+                        </span>
+                    </td>
+                    <td>
                         <span style="font-size:13px; font-weight:600; color:${prod.stockQuantity > 5 ? '#10b981' : '#f59e0b'};">
                             ${prod.stockQuantity} in stock
                         </span>
@@ -698,6 +703,8 @@ async function handleAddProduct(e) {
         colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
         brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
         stock: document.getElementById('prod-stock').value,
+        discountType: document.getElementById('prod-discount-type') ? document.getElementById('prod-discount-type').value : 'none',
+        discountValue: document.getElementById('prod-discount-value') ? document.getElementById('prod-discount-value').value : 0,
         image: imageBase64
     };
 
@@ -1996,6 +2003,11 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-brand').value = prod.brand || '';
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
+    
+    if (document.getElementById('edit-prod-discount-type')) {
+        document.getElementById('edit-prod-discount-type').value = prod.discountType || 'none';
+        document.getElementById('edit-prod-discount-value').value = prod.discountValue || 0;
+    }
 
     // Populate Category & Subcategory dropdowns
     if (typeof localCategories === 'undefined' || localCategories.length === 0) {

@@ -974,6 +974,7 @@
                                         <th>Colour</th>
                                         <th>Brand</th>
                                         <th>Price</th>
+                                        <th>Discount</th>
                                         <th>Stock</th> 
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -1029,6 +1030,21 @@
                                 <label for="prod-brand">Brand / Supplier</label>
                                 <input type="text" id="prod-brand" placeholder="Brand / Supplier Name">
                             </div>
+                            <fieldset style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+                                <legend style="padding: 0 10px; font-weight: bold; color: #555;">Discount (Optional)</legend>
+                                <div class="form-group">
+                                    <label for="prod-discount-type">Discount Type</label>
+                                    <select id="prod-discount-type">
+                                        <option value="none">None</option>
+                                        <option value="percentage">Percentage (%)</option>
+                                        <option value="flat">Flat Amount (৳)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-discount-value">Discount Value</label>
+                                    <input type="number" id="prod-discount-value" placeholder="Enter discount amount" value="0" min="0">
+                                </div>
+                            </fieldset>
                             <div class="form-group">
                                <label for="prod-image">Upload Product Photo (.jpg, .png, .jpeg):</label>
                                <input type="file" id="prod-image" accept="image/jpeg, image/png, image/jpg" required>
@@ -1467,6 +1483,24 @@
                         <input type="text" id="edit-prod-brand" placeholder="e.g. Avaroni" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
                     </div>
                 </div>
+
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+                    <legend style="padding: 0 10px; font-weight: bold; color: #555;">Discount (Optional)</legend>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Discount Type:</label>
+                            <select id="edit-prod-discount-type" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: white;">
+                                <option value="none">None</option>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="flat">Flat Amount (৳)</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Discount Value:</label>
+                            <input type="number" id="edit-prod-discount-value" placeholder="Enter amount" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" min="0">
+                        </div>
+                    </div>
+                </fieldset>
 
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600;">Product Image:</label>
