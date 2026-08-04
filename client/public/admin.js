@@ -2578,20 +2578,20 @@ async function fetchManageUsers() {
                     joinDate = new Date(timestamp).toLocaleDateString();
                 }
             }
-            tbody.innerHTML += \
+            tbody.innerHTML += `
                 <tr class="table-row-hover">
                     <td style="font-weight:600; color:#1e293b;">
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <img src="\" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="36" height="36" style="border-radius:50%; object-fit:cover; border: 2px solid var(--primary-light);">
-                            \
+                            <img src="${formatImageUrl(user.avatar)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="36" height="36" style="border-radius:50%; object-fit:cover; border: 2px solid var(--primary-light);">
+                            ${escapeHTML(user.username || 'N/A')}
                         </div>
                     </td>
-                    <td>\</td>
-                    <td>\</td>
-                    <td>\</td>
-                    <td><span class="badge badge-success">\</span></td>
+                    <td>${escapeHTML(user.email || '-')}</td>
+                    <td>${escapeHTML(user.phone || '-')}</td>
+                    <td>${joinDate}</td>
+                    <td><span class="badge badge-success">${user.loginCount || 0}</span></td>
                 </tr>
-            \;
+            `;
         });
     } catch (err) {
         console.error("Error fetching users:", err);
