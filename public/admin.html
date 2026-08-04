@@ -676,6 +676,43 @@
         .toast.success { border-left-color: #28a745; }
         .toast.error { border-left-color: #dc3545; }
         @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Modern Badges & Table Actions */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+
+        .table-action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .btn-icon-primary { background: #eff6ff; color: #1d4ed8; }
+        .btn-icon-primary:hover { background: #dbeafe; color: #1e40af; }
+        .btn-icon-secondary { background: #f1f5f9; color: #475569; }
+        .btn-icon-secondary:hover { background: #e2e8f0; color: #334155; }
+        .btn-icon-danger { background: #fef2f2; color: #ef4444; }
+        .btn-icon-danger:hover { background: #fee2e2; color: #dc2626; }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 </head>
@@ -931,8 +968,7 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Image</th>
-                                        <th>Name</th>
+                                        <th>Product</th>
                                         <th>Category</th>
                                         <th>Size</th>
                                         <th>Colour</th>

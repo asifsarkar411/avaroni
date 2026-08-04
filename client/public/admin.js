@@ -588,20 +588,34 @@ async function fetchManageProducts() {
         data.products.forEach(prod => {
             const imgUrl = formatImageUrl(prod.imageUrl);
             tbody.innerHTML += `
-                <tr>
-                    <td><img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="50" height="50" style="object-fit:cover; border-radius:4px;"></td>
-                    <td><strong>${escapeHTML(prod.name)}</strong></td>
-                    <td>${escapeHTML(prod.category)}</td>
-                    <td>${escapeHTML(prod.size || '-')}</td>
-                    <td>${escapeHTML(prod.colour || '-')}</td>
-                    <td>${escapeHTML(prod.brand || '-')}</td>
-                    <td style="color:#0d6efd; font-weight:bold;">৳${prod.price}</td>
-                    <td>${prod.stockQuantity} Left</td> 
-                    <td>${prod.isAvailable ? '<span style="color:green; font-weight:bold;">Available</span>' : '<span style="color:red; font-weight:bold;">Unavailable</span>'}</td>
+                <tr class="table-row-hover">
                     <td>
-                        <button data-id="${prod._id}" class="btn edit-btn" style="background:#0d6efd; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-edit"></i> Edit</button>
-                        <button data-id="${prod._id}" class="btn toggle-btn" style="background:#333; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-eye-slash"></i> Hide/Show</button>
-                        <button data-id="${prod._id}" class="btn delete-btn" style="background:#dc3545; font-size:12px; width:100%; padding:5px;"><i class="fas fa-trash-alt"></i> Delete</button>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="48" height="48" style="object-fit:cover; border-radius:8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight:600; color:#1e293b;">${escapeHTML(prod.name)}</span>
+                        </div>
+                    </td>
+                    <td><span style="color:#64748b; font-size:13px; font-weight:500;">${escapeHTML(prod.category)}</span></td>
+                    <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.size || '-')}</span></td>
+                    <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.colour || '-')}</span></td>
+                    <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.brand || '-')}</span></td>
+                    <td style="font-weight:700; color:#0f172a;">৳${prod.price}</td>
+                    <td>
+                        <span style="font-size:13px; font-weight:600; color:${prod.stockQuantity > 5 ? '#10b981' : '#f59e0b'};">
+                            ${prod.stockQuantity} in stock
+                        </span>
+                    </td> 
+                    <td>
+                        ${prod.isAvailable 
+                            ? '<span class="badge badge-success">Available</span>' 
+                            : '<span class="badge badge-danger">Hidden</span>'}
+                    </td>
+                    <td>
+                        <div class="table-action-btns">
+                            <button data-id="${prod._id}" class="btn-icon btn-icon-primary edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button data-id="${prod._id}" class="btn-icon btn-icon-secondary toggle-btn" title="Hide/Show"><i class="fas fa-eye-slash"></i></button>
+                            <button data-id="${prod._id}" class="btn-icon btn-icon-danger delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;

@@ -334,12 +334,12 @@ async function fetchAnalyticsCharts() {
                     datasets: [{
                         label: 'Sales (৳)',
                         data: analytics.monthlySalesTrend.data,
-                        borderColor: '#111111',
+                        borderColor: '#e60050',
                         backgroundColor: 'rgba(230, 0, 80, 0.1)',
                         fill: true,
                         tension: 0.35,
                         pointRadius: 5,
-                        pointBackgroundColor: '#111111'
+                        pointBackgroundColor: '#e60050'
                     }]
                 },
                 options: {
@@ -588,20 +588,34 @@ async function fetchManageProducts() {
         data.products.forEach(prod => {
             const imgUrl = formatImageUrl(prod.imageUrl);
             tbody.innerHTML += `
-                <tr>
-                    <td><img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="50" height="50" style="object-fit:cover; border-radius:4px;"></td>
-                    <td><strong>${escapeHTML(prod.name)}</strong></td>
-                    <td>${escapeHTML(prod.category)}</td>
-                    <td>${escapeHTML(prod.size || '-')}</td>
-                    <td>${escapeHTML(prod.colour || '-')}</td>
-                    <td>${escapeHTML(prod.brand || '-')}</td>
-                    <td style="color:#0d6efd; font-weight:bold;">৳${prod.price}</td>
-                    <td>${prod.stockQuantity} Left</td> 
-                    <td>${prod.isAvailable ? '<span style="color:green; font-weight:bold;">Available</span>' : '<span style="color:red; font-weight:bold;">Unavailable</span>'}</td>
+                <tr class="table-row-hover">
                     <td>
-                        <button data-id="${prod._id}" class="btn edit-btn" style="background:#0d6efd; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-edit"></i> Edit</button>
-                        <button data-id="${prod._id}" class="btn toggle-btn" style="background:#333; font-size:12px; width:100%; margin-bottom:4px; padding:5px;"><i class="fas fa-eye-slash"></i> Hide/Show</button>
-                        <button data-id="${prod._id}" class="btn delete-btn" style="background:#dc3545; font-size:12px; width:100%; padding:5px;"><i class="fas fa-trash-alt"></i> Delete</button>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="${imgUrl}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="48" height="48" style="object-fit:cover; border-radius:8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight:600; color:#1e293b;">${escapeHTML(prod.name)}</span>
+                        </div>
+                    </td>
+                    <td><span style="color:#64748b; font-size:13px; font-weight:500;">${escapeHTML(prod.category)}</span></td>
+                    <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.size || '-')}</span></td>
+                    <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.colour || '-')}</span></td>
+                    <td><span style="color:#64748b; font-size:13px;">${escapeHTML(prod.brand || '-')}</span></td>
+                    <td style="font-weight:700; color:#0f172a;">৳${prod.price}</td>
+                    <td>
+                        <span style="font-size:13px; font-weight:600; color:${prod.stockQuantity > 5 ? '#10b981' : '#f59e0b'};">
+                            ${prod.stockQuantity} in stock
+                        </span>
+                    </td> 
+                    <td>
+                        ${prod.isAvailable 
+                            ? '<span class="badge badge-success">Available</span>' 
+                            : '<span class="badge badge-danger">Hidden</span>'}
+                    </td>
+                    <td>
+                        <div class="table-action-btns">
+                            <button data-id="${prod._id}" class="btn-icon btn-icon-primary edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button data-id="${prod._id}" class="btn-icon btn-icon-secondary toggle-btn" title="Hide/Show"><i class="fas fa-eye-slash"></i></button>
+                            <button data-id="${prod._id}" class="btn-icon btn-icon-danger delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -914,11 +928,11 @@ function renderFilteredOrders() {
                         <strong>${escapeHTML(order.customerName)}</strong> &bull; ${escapeHTML(order.phone)}
                     </div>
                     <div style="font-size: 12px; color: #666; margin-bottom: 8px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
-                        <i class="fas fa-map-marker-alt" style="color: #111111;"></i> ${escapeHTML(order.address)}
+                        <i class="fas fa-map-marker-alt" style="color: #e60050;"></i> ${escapeHTML(order.address)}
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 13px;">
                         <span>Payment: <strong>${escapeHTML(order.paymentMethod === 'cod' ? 'COD' : 'bKash')}</strong> (TxID: ${escapeHTML(order.transactionId || 'N/A')})</span>
-                        <span style="font-size: 16px; font-weight: 800; color: #111111;">৳${order.totalAmount}</span>
+                        <span style="font-size: 16px; font-weight: 800; color: #e60050;">৳${order.totalAmount}</span>
                     </div>
                     <div style="font-size: 12px; color: #444; margin-bottom: 12px; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #eee;">
                         <strong>Items:</strong> ${itemsList}
@@ -1274,7 +1288,7 @@ async function renderCategoriesTab() {
         if (cat.subcategories && cat.subcategories.length > 0) {
             cat.subcategories.forEach(sub => {
                 subListHtml += `
-                    <span style="display: inline-flex; align-items: center; background: #f0f0f0; border: 1px solid #111111; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #111111;">
+                    <span style="display: inline-flex; align-items: center; background: #ffe6eb; border: 1px solid #e60050; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #e60050;">
                         ${escapeHTML(sub)}
                         <i class="fas fa-times" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
                     </span>
@@ -1681,7 +1695,7 @@ async function loadAdminNavSliders() {
                     <td>${slider.link || '<span style="color:#aaa; font-style:italic;">None</span>'}</td>
                     <td><strong>${slider.order}</strong></td>
                     <td>
-                        <button class="btn" style="background:#111111; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn" style="background:#e60050; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
                     </td>
                 </tr>
             `;
@@ -2506,7 +2520,7 @@ async function handleFlashSaleSubmit(e) {
         isActive:    document.getElementById('flash-is-active').checked,
         bgColor:     '#111111',
         textColor:   '#ffffff',
-        accentColor: '#111111'
+        accentColor: '#e60050'
     };
 
     if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
