@@ -194,8 +194,9 @@
         }
 
         .tab-btn.active {
-            background-color: var(--primary);
+            background: linear-gradient(90deg, var(--primary), var(--primary-hover));
             color: var(--white);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
         .sidebar-footer {
@@ -285,54 +286,60 @@
 
         /* Form Inputs */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             margin-bottom: 8px;
-            color: #555;
+            color: var(--text-dark);
+            letter-spacing: -0.01em;
         }
 
         .form-group input, .form-group select {
             width: 100%;
-            padding: 12px 14px;
+            padding: 14px 16px;
             box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            background-color: var(--white);
-            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
         }
 
         .form-group input:focus, .form-group select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(230, 0, 80, 0.1);
+            background-color: var(--white);
+            box-shadow: 0 0 0 4px var(--primary-light);
             outline: none;
+            transform: translateY(-1px);
         }
 
         .btn {
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             width: 100%;
-            padding: 12px 20px;
-            background: var(--primary);
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: var(--white);
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             cursor: pointer;
             font-size: 15px;
             font-weight: 600;
-            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px var(--primary-light);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .btn:hover {
-            background: var(--primary-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
         }
 
         /* Responsive Tables */
@@ -340,10 +347,10 @@
             width: 100%;
             overflow-x: auto;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             background-color: var(--white);
-            margin-top: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            margin-top: 20px;
+            box-shadow: var(--shadow-sm);
         }
 
         table {
@@ -353,23 +360,33 @@
         }
 
         th, td {
-            padding: 14px 18px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
             text-align: left;
             font-size: 14px;
+            vertical-align: middle;
         }
 
         th {
-            background-color: #fafafa;
-            color: #555555;
+            background-color: var(--bg-main);
+            color: var(--text-muted);
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.8px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        tr {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafbfc;
         }
 
         tr:hover {
-            background-color: #fbfbfb;
+            background-color: #f1f5f9;
         }
 
         .items-list {
@@ -1360,9 +1377,9 @@
     </div>
 
     <!-- EDIT PRODUCT MODAL -->
-    <div id="edit-product-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); overflow-y: auto;">
-        <div style="background-color: #fff; margin: 30px auto; padding: 25px; border-radius: 12px; max-width: 600px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;">
-            <span onclick="closeEditModal()" style="position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+    <div id="edit-product-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow-y: auto;">
+        <div style="background-color: var(--white); margin: 30px auto; padding: 30px; border-radius: var(--radius-lg); max-width: 600px; width: 90%; box-shadow: var(--shadow-hover); position: relative; border: 1px solid rgba(255,255,255,0.2);">
+            <span onclick="closeEditModal()" style="position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #a1a1aa; transition: color 0.2s;">&times;</span>
             <h2 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Product Details</h2>
             
             <form id="edit-product-form" style="display: flex; flex-direction: column; gap: 15px;">
@@ -1430,9 +1447,9 @@
     </div>
 
     <!-- EDIT CATEGORY MODAL -->
-    <div id="edit-category-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); overflow-y: auto;">
-        <div style="background-color: #fff; margin: 50px auto; padding: 25px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;">
-            <span onclick="closeEditCategoryModal()" style="position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+    <div id="edit-category-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow-y: auto;">
+        <div style="background-color: var(--white); margin: 50px auto; padding: 30px; border-radius: var(--radius-lg); max-width: 500px; width: 90%; box-shadow: var(--shadow-hover); position: relative; border: 1px solid rgba(255,255,255,0.2);">
+            <span onclick="closeEditCategoryModal()" style="position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #a1a1aa; transition: color 0.2s;">&times;</span>
             <h2 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Category Card</h2>
             
             <form id="edit-category-form" style="display: flex; flex-direction: column; gap: 15px;">
