@@ -13,6 +13,13 @@ export default function ProductModal() {
     const [product, setProduct] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
 
+    // Review state
+    const [reviewName, setReviewName] = useState('');
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewRating, setReviewRating] = useState(5);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
     useEffect(() => {
         const handleOpenModal = async (e) => {
             const productId = e.detail;
@@ -53,7 +60,47 @@ export default function ProductModal() {
         setIsOpen(false);
         setProduct(null);
         setRelatedProducts([]);
+        setReviewName('');
+        setReviewComment('');
+        setReviewRating(5);
         document.body.style.overflow = 'auto';
+    };
+
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        if (!reviewName.trim() || !reviewComment.trim()) {
+            alert("Please enter your name and comment.");
+            return;
+        }
+
+        setIsSubmittingReview(true);
+        try {
+            const response = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId: product._id,
+                    productName: product.name,
+                    reviewerName: reviewName.trim(),
+                    rating: reviewRating,
+                    comment: reviewComment.trim()
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(data.message || "Thank you! Your review has been submitted for admin approval.");
+                setReviewName('');
+                setReviewComment('');
+                setReviewRating(5);
+            } else {
+                alert(data.message || "Failed to submit review.");
+            }
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            alert("Failed to submit review.");
+        } finally {
+            setIsSubmittingReview(false);
+        }
     };
 
     useEffect(() => {
@@ -121,6 +168,69 @@ export default function ProductModal() {
                                     >
                                         <i className={isInWishlist(product._id) ? "fas fa-heart" : "far fa-heart"}></i>
                                     </button>
+                                </div>
+
+                                {/* Review Form Section */}
+                                <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px dashed #e2b0c5' }}>
+                                    <h4 style={{ fontSize: '16px', color: '#111', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <i className="fas fa-star" style={{ color: '#ffc107' }}></i> Rate & Review Product
+                                    </h4>
+                                    <p style={{ fontSize: '12px', color: '#666', margin: '0 0 15px 0' }}>Share your star rating and honest opinion</p>
+                                    
+                                    <form onSubmit={handleReviewSubmit}>
+                                        <div style={{ marginBottom: '15px' }}>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '8px' }}>Star Rating:</label>
+                                            <div style={{ display: 'flex', gap: '8px', fontSize: '24px', color: '#ffc107', cursor: 'pointer' }}>
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <i 
+                                                        key={star}
+                                                        className={star <= (hoverRating || reviewRating) ? "fas fa-star" : "far fa-star"}
+                                                        onMouseEnter={() => setHoverRating(star)}
+                                                        onMouseLeave={() => setHoverRating(0)}
+                                                        onClick={() => setReviewRating(star)}
+                                                        style={{ 
+                                                            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                                            transform: star <= hoverRating ? 'scale(1.3)' : 'scale(1)'
+                                                        }}
+                                                    ></i>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginBottom: '15px' }}>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Your Name:</label>
+                                            <input 
+                                                type="text" 
+                                                value={reviewName}
+                                                onChange={(e) => setReviewName(e.target.value)}
+                                                placeholder="Enter your full name" 
+                                                required 
+                                                style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #ffccd8', borderRadius: '8px', fontSize: '13px', outline: 'none' }}
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: '20px' }}>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Review Comment:</label>
+                                            <textarea 
+                                                value={reviewComment}
+                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                placeholder="Write your review comments here..." 
+                                                required 
+                                                rows="3" 
+                                                style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(0,0,0,0.15)', borderRadius: '8px', fontSize: '13px', outline: 'none', resize: 'vertical' }}
+                                            ></textarea>
+                                        </div>
+
+                                        <button 
+                                            type="submit" 
+                                            disabled={isSubmittingReview}
+                                            style={{ 
+                                                background: '#111111', color: '#fff', border: 'none', padding: '10px 24px', fontSize: '13px', fontWeight: '700', borderRadius: '25px', cursor: isSubmittingReview ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', opacity: isSubmittingReview ? 0.7 : 1
+                                            }}
+                                        >
+                                            <i className="fas fa-paper-plane"></i> {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

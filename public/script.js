@@ -1779,17 +1779,41 @@ function initStarSelectorLogic() {
     const stars = selector.querySelectorAll('i');
     const valInput = document.getElementById('modal-review-rating-val');
 
+    const updateStars = (rating) => {
+        stars.forEach((s, idx) => {
+            if (idx < rating) {
+                s.className = "fas fa-star";
+            } else {
+                s.className = "far fa-star";
+            }
+        });
+    };
+
     stars.forEach(star => {
+        // Hover effects
+        star.addEventListener('mouseenter', () => {
+            const hoverRating = parseInt(star.getAttribute('data-rating'));
+            updateStars(hoverRating);
+        });
+
+        // Restore actual rating on mouse leave
+        star.addEventListener('mouseleave', () => {
+            const currentRating = parseInt(valInput.value) || 5;
+            updateStars(currentRating);
+        });
+
+        // Click effects with animation
         star.addEventListener('click', () => {
             const rating = parseInt(star.getAttribute('data-rating'));
             valInput.value = rating;
-            stars.forEach((s, idx) => {
-                if (idx < rating) {
-                    s.className = "fas fa-star";
-                } else {
-                    s.className = "far fa-star";
-                }
-            });
+            
+            // Add animation class
+            star.classList.add('animating');
+            setTimeout(() => {
+                star.classList.remove('animating');
+            }, 400); // matches CSS animation duration
+            
+            updateStars(rating);
         });
     });
 }
