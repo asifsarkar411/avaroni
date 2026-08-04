@@ -1550,6 +1550,17 @@ app.get('/api/user-data', verifyAdminToken, async (req, res) => {
 // ⚙️ ADMIN SETTINGS & USER MANAGEMENT ROUTES
 // ==========================================
 
+// Get All Users (Admin Protected)
+app.get('/api/admin/users', verifyAdminToken, async (req, res) => {
+    try {
+        const users = await User.find().select('-password').sort({ _id: -1 });
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error("Get All Users Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch users." });
+    }
+});
+
 // 1. Change Admin Email
 app.put('/api/admin/settings/email', verifyAdminToken, async (req, res) => {
     try {

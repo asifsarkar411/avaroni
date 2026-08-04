@@ -496,6 +496,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
+        if (tabName === 'manage-users') cleanTitle = "Customer Users List";
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
         titleElement.innerText = cleanTitle;
@@ -513,6 +514,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-reviews') fetchAdminReviews();
+    if (tabName === 'manage-users') fetchManageUsers();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'admin-settings') initSettingsTab();
 }
@@ -2549,3 +2551,50 @@ async function handleFlashSaleSubmit(e) {
 
 
 
+
+// ==========================================
+// CUSTOMER USERS MANAGEMENT
+// ==========================================
+async function fetchManageUsers() {
+    try {
+        const response = await fetchWithAuth('/api/admin/users');
+        if (!response) return;
+        const data = await response.json();
+        
+        const tbody = document.getElementById('users-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (!data.success || !data.users || data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found.</td></tr>';
+            return;
+        }
+        
+        data.users.forEach(user => {
+            let joinDate = '-';
+            if (user._id) {
+                const timestamp = parseInt(user._id.toString().substring(0, 8), 16) * 1000;
+                if (!isNaN(timestamp)) {
+                    joinDate = new Date(timestamp).toLocaleDateString();
+                }
+            }
+            tbody.innerHTML += \
+                <tr class="table-row-hover">
+                    <td style="font-weight:600; color:#1e293b;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="\" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" width="36" height="36" style="border-radius:50%; object-fit:cover; border: 2px solid var(--primary-light);">
+                            \
+                        </div>
+                    </td>
+                    <td>\</td>
+                    <td>\</td>
+                    <td>\</td>
+                    <td><span class="badge badge-success">\</span></td>
+                </tr>
+            \;
+        });
+    } catch (err) {
+        console.error("Error fetching users:", err);
+        showToast("Failed to load user list.", 'error');
+    }
+}
