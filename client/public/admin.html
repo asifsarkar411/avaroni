@@ -21,16 +21,21 @@
         }
 
         :root {
-            --primary: #111111;
-            --primary-hover: #333333;
-            --primary-light: rgba(0, 0, 0, 0.05);
-            --dark: #1e1e2d;
-            --dark-light: #2c2c3e;
-            --bg-main: #f5f6fa;
-            --text-dark: #333333;
-            --text-muted: #888888;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: rgba(79, 70, 229, 0.1);
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --bg-main: #f8fafc;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
             --white: #ffffff;
-            --border-color: #eaeaea;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 4px 15px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 35px rgba(0,0,0,0.08);
+            --radius-md: 12px;
+            --radius-lg: 16px;
         }
 
         .charts-grid {
@@ -44,16 +49,16 @@
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 22px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            border: 1px solid var(--border-color);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
         }
 
         .chart-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
         }
 
         .chart-card-header {
@@ -228,13 +233,16 @@
 
         .admin-topbar {
             height: 70px;
-            background-color: var(--white);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 30px;
             flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
         }
 
         .admin-topbar h1 {
@@ -378,20 +386,35 @@
         }
 
         .stat-card {
-            background-color: var(--white);
-            border-radius: 12px;
+            background: linear-gradient(145deg, #ffffff, #fdfdfd);
+            border-radius: var(--radius-md);
             padding: 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--primary), #818cf8);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card:hover::after {
+            opacity: 1;
         }
 
         .stat-info h3 {
@@ -427,12 +450,18 @@
 
         /* Recent Activity / Panel blocks */
         .panel-box {
-            background-color: var(--white);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             margin-bottom: 30px;
+            transition: box-shadow 0.3s ease;
+        }
+        .panel-box:hover {
+            box-shadow: var(--shadow-hover);
         }
 
         .panel-header {
@@ -683,7 +712,7 @@
                 <!-- 1. DASHBOARD OVERVIEW TAB -->
                 <div id="dashboard-tab" class="tab-content active">
                     <div class="dashboard-grid">
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Total Orders</h3>
                                 <div class="stat-value" id="count-orders">0</div>
@@ -692,7 +721,7 @@
                                 <i class="fas fa-shopping-bag"></i>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Total Products</h3>
                                 <div class="stat-value" id="count-products">0</div>
@@ -701,7 +730,7 @@
                                 <i class="fas fa-boxes"></i>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Homepage Banners</h3>
                                 <div class="stat-value" id="count-banners">0</div>
@@ -710,7 +739,7 @@
                                 <i class="fas fa-images"></i>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Navbar Sliders</h3>
                                 <div class="stat-value" id="count-sliders">0</div>
@@ -719,7 +748,7 @@
                                 <i class="fas fa-sliders-h"></i>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Return Requests</h3>
                                 <div class="stat-value" id="count-returns">0</div>
@@ -728,7 +757,7 @@
                                 <i class="fas fa-undo"></i>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Contact Messages</h3>
                                 <div class="stat-value" id="count-messages">0</div>
@@ -737,7 +766,7 @@
                                 <i class="fas fa-envelope"></i>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card" data-aos="fade-up">
                             <div class="stat-info">
                                 <h3>Total Revenue</h3>
                                 <div class="stat-value">৳<span id="total-revenue">0</span></div>
@@ -751,7 +780,7 @@
                     <!-- 📊 ADMIN ANALYTICS GRAPHS GRID -->
                     <div class="charts-grid">
                         <!-- Graph 1: Order Overview -->
-                        <div class="chart-card">
+                        <div class="chart-card" data-aos="zoom-in">
                             <div class="chart-card-header">
                                 <h3><i class="fas fa-chart-pie"></i> Order Overview</h3>
                             </div>
@@ -761,7 +790,7 @@
                         </div>
 
                         <!-- Graph 2: Monthly Sales Trend -->
-                        <div class="chart-card">
+                        <div class="chart-card" data-aos="zoom-in">
                             <div class="chart-card-header">
                                 <h3><i class="fas fa-chart-line"></i> Monthly Sales Trend (৳)</h3>
                             </div>
@@ -771,7 +800,7 @@
                         </div>
 
                         <!-- Graph 3: Monthly Payment Record -->
-                        <div class="chart-card">
+                        <div class="chart-card" data-aos="zoom-in">
                             <div class="chart-card-header">
                                 <h3><i class="fas fa-wallet"></i> Monthly Payment Record</h3>
                             </div>
@@ -781,7 +810,7 @@
                         </div>
 
                         <!-- Graph 4: Top Selling Products -->
-                        <div class="chart-card">
+                        <div class="chart-card" data-aos="zoom-in">
                             <div class="chart-card-header">
                                 <h3><i class="fas fa-fire"></i> Top Selling Products</h3>
                             </div>
@@ -791,7 +820,7 @@
                         </div>
                     </div>
 
-                    <div class="panel-box" style="margin-top: 25px;">
+                    <div class="panel-box" data-aos="fade-up" style="margin-top: 25px;">
                         <div class="panel-header">
                             <h2>Welcome back, Admin!</h2>
                         </div>
@@ -801,7 +830,7 @@
 
                 <!-- 2. CUSTOMER ORDERS TAB (DYNAMIC & RESPONSIVE FOR ALL DEVICES) -->
                 <div id="orders-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header" style="flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center;">
                             <h2><i class="fas fa-shopping-bag" style="color: #111111;"></i> All Customer Orders</h2>
                             
@@ -874,7 +903,7 @@
 
                 <!-- 3. MANAGE PRODUCTS INVENTORY TAB -->
                 <div id="manage-products-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Manage Products Inventory</h2>
                         </div>
@@ -903,7 +932,7 @@
 
                 <!-- 4. ADD PRODUCT TAB -->
                 <div id="add-product-tab" class="tab-content">
-                    <div class="panel-box" style="max-width: 600px; margin: auto;">
+                    <div class="panel-box" data-aos="fade-up" style="max-width: 600px; margin: auto;">
                         <div class="panel-header">
                             <h2>Add Product to Store</h2>
                         </div>
@@ -955,7 +984,7 @@
 
                 <!-- 5. MANAGE CATEGORIES TAB -->
                 <div id="manage-categories-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Manage Categories & Subcategories</h2>
                         </div>
@@ -989,7 +1018,7 @@
 
                 <!-- 6. MANAGE PROMOCODES TAB -->
                 <div id="manage-promocodes-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Manage Promocodes & Discounts</h2>
                         </div>
@@ -1035,7 +1064,7 @@
 
                 <!-- FLASH SALE TIMER TAB PANEL -->
                 <div id="manage-flash-sale-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2><i class="fas fa-bolt" style="color: #111111;"></i> Flash Sale Sticky Countdown Banner Settings</h2>
                         </div>
@@ -1091,18 +1120,18 @@
                                         </div>
                                         <span id="preview-subtitle" style="font-size: 13px; opacity: 0.9;">Get 20% OFF Everything!</span>
                                     </div>
-                                    <a id="preview-btn" href="#" style="background: #e60050; color: white; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 13px; text-decoration: none;">Shop Now <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></a>
+                                    <a id="preview-btn" href="#" style="background: #111111; color: white; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 13px; text-decoration: none;">Shop Now <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></a>
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn" style="background: #e60050; height: 48px; font-size: 16px; font-weight: 700; margin-top: 10px;"><i class="fas fa-save"></i> Save & Publish Flash Sale Banner</button>
+                            <button type="submit" class="btn" style="background: #111111; height: 48px; font-size: 16px; font-weight: 700; margin-top: 10px;"><i class="fas fa-save"></i> Save & Publish Flash Sale Banner</button>
                         </form>
                     </div>
                 </div>
 
                 <!-- 7. MANAGE HOMEPAGE SLIDER CARDS TAB -->
                 <div id="manage-banners-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Manage Homepage Slider Cards</h2>
                             <button id="add-card-btn" class="btn" style="background: #28a745; width: auto; padding: 10px 20px;">+ Add Carousel Card</button>
@@ -1114,7 +1143,7 @@
 
                 <!-- 8. MANAGE NAVBAR SLIDER TAB -->
                 <div id="manage-nav-sliders-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Manage Navbar Promotional Slider Images</h2>
                         </div>
@@ -1156,7 +1185,7 @@
 
                 <!-- 9. MANAGE RETURNS TAB -->
                 <div id="manage-returns-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Customer Return Requests</h2>
                         </div>
@@ -1182,7 +1211,7 @@
 
                 <!-- 10. MANAGE MESSAGES TAB -->
                 <div id="manage-messages-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Customer Contact Messages</h2>
                         </div>
@@ -1207,7 +1236,7 @@
 
                 <!-- 11. CUSTOMER REVIEWS TAB -->
                 <div id="manage-reviews-tab" class="tab-content">
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2>Customer Reviews & Ratings</h2>
                         </div>
@@ -1233,7 +1262,7 @@
 
                 <!-- SETTINGS & ADMIN USERS TAB PANEL -->
                 <div id="admin-settings-tab" class="tab-content">
-                    <div class="panel-box" style="margin-bottom: 25px;">
+                    <div class="panel-box" data-aos="fade-up" style="margin-bottom: 25px;">
                         <div class="panel-header">
                             <h2><i class="fas fa-user-cog" style="color: var(--primary);"></i> Admin Profile & Account Settings</h2>
                         </div>
@@ -1274,14 +1303,14 @@
                                         <label for="setting-confirm-new-pass">Confirm New Password:</label>
                                         <input type="password" id="setting-confirm-new-pass" placeholder="••••••••" minlength="8" required>
                                     </div>
-                                    <button type="submit" class="btn" style="background: #e60050;"><i class="fas fa-key"></i> Update Password</button>
+                                    <button type="submit" class="btn" style="background: #111111;"><i class="fas fa-key"></i> Update Password</button>
                                 </form>
                             </div>
                         </div>
                     </div>
 
                     <!-- Card 3: Create Access for Another User & Manage Users -->
-                    <div class="panel-box">
+                    <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
                             <h2><i class="fas fa-user-plus" style="color: var(--primary);"></i> User Access & Admin Accounts</h2>
                         </div>
