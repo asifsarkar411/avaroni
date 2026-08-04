@@ -1870,8 +1870,8 @@ app.get('/api/admin/analytics', verifyAdminToken, async (req, res) => {
         }
 
         orders.forEach(o => {
-            if (o.status !== 'Cancelled' && o.createdAt) {
-                const d = new Date(o.createdAt);
+            if (o.status !== 'Cancelled' && o.orderDate) {
+                const d = new Date(o.orderDate);
                 const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
                 if (monthlySalesMap[key] !== undefined) {
                     monthlySalesMap[key] += (o.totalAmount || 0);
@@ -1900,8 +1900,8 @@ app.get('/api/admin/analytics', verifyAdminToken, async (req, res) => {
         // 4. Top Selling Products
         const productSalesMap = {};
         orders.forEach(o => {
-            if (o.status !== 'Cancelled' && Array.isArray(o.items)) {
-                o.items.forEach(item => {
+            if (o.status !== 'Cancelled' && Array.isArray(o.cartItems)) {
+                o.cartItems.forEach(item => {
                     const pName = item.name || 'Product';
                     const qty = Number(item.quantity) || 1;
                     productSalesMap[pName] = (productSalesMap[pName] || 0) + qty;
