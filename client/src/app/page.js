@@ -15,6 +15,7 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [subtitleIndex, setSubtitleIndex] = useState(0);
   const [fadeKey, setFadeKey] = useState(0);
 
@@ -27,10 +28,16 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const headers = { 'ngrok-skip-browser-warning': 'true' };
         const [catRes, prodRes] = await Promise.all([
-          fetch('/api/categories'),
-          fetch('/api/products')
+          fetch('/api/categories', { headers }),
+          fetch('/api/products', { headers })
         ]);
+        
+        if (!catRes.ok || !prodRes.ok) {
+           throw new Error(`API returned ${catRes.status} / ${prodRes.status}`);
+        }
+        
         const catData = await catRes.json();
         const prodData = await prodRes.json();
         
@@ -38,6 +45,7 @@ export default function Home() {
         if (prodData.success) setProducts(prodData.products.slice(0, 10)); // Just 10 new arrivals
       } catch (err) {
         console.error("Error fetching data:", err);
+        setErrorMsg(err.message || "Failed to load data. If you are using Ngrok, Vercel, or Local IP, check your network or backend connection.");
       } finally {
         setLoading(false);
       }
@@ -86,7 +94,7 @@ export default function Home() {
                     {categories.map(cat => (
                         <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`} style={{ cursor: 'pointer' }}>
                             <div className="category-icon-wrap">
-                                <img src={getImageUrl(cat.iconUrl)} alt={cat.name} loading="lazy" className="category-icon-img" />
+                                <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt={cat.name} loading="lazy" className="category-icon-img" />
                             </div>
                             <p className="category-title">{cat.name}</p>
                         </div>

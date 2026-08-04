@@ -8,27 +8,38 @@ export function CartProvider({ children }) {
     const [cartKey, setCartKey] = useState('cart');
 
     useEffect(() => {
-        let sessionId = sessionStorage.getItem('cart_session_id');
-        if (!sessionId) {
-            sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
-            sessionStorage.setItem('cart_session_id', sessionId);
+        let sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
+        try {
+            const stored = sessionStorage.getItem('cart_session_id');
+            if (stored) {
+                sessionId = stored;
+            } else {
+                sessionStorage.setItem('cart_session_id', sessionId);
+            }
+        } catch (e) {
+            console.warn('sessionStorage is not available', e);
         }
+
         const key = `cart_${sessionId}`;
         setCartKey(key);
 
-        const savedCart = localStorage.getItem(key);
-        if (savedCart) {
-            try {
+        try {
+            const savedCart = localStorage.getItem(key);
+            if (savedCart) {
                 setCart(JSON.parse(savedCart));
-            } catch (e) {
-                console.error('Error parsing cart from localStorage', e);
             }
+        } catch (e) {
+            console.warn('localStorage is not available or parsing failed', e);
         }
     }, []);
 
     const saveCart = (newCart, currentKey = cartKey) => {
         setCart(newCart);
-        localStorage.setItem(currentKey, JSON.stringify(newCart));
+        try {
+            localStorage.setItem(currentKey, JSON.stringify(newCart));
+        } catch (e) {
+            console.warn('localStorage is not available', e);
+        }
     };
 
     const addToCart = (product) => {

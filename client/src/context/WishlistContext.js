@@ -7,19 +7,23 @@ export function WishlistProvider({ children }) {
     const [wishlist, setWishlist] = useState([]);
     
     useEffect(() => {
-        const savedWishlist = localStorage.getItem('wishlist_items');
-        if (savedWishlist) {
-            try {
+        try {
+            const savedWishlist = localStorage.getItem('wishlist_items');
+            if (savedWishlist) {
                 setWishlist(JSON.parse(savedWishlist));
-            } catch (e) {
-                console.error('Error parsing wishlist', e);
             }
+        } catch (e) {
+            console.warn('localStorage is not available or parsing failed', e);
         }
     }, []);
 
     const saveWishlist = (newList) => {
         setWishlist(newList);
-        localStorage.setItem('wishlist_items', JSON.stringify(newList));
+        try {
+            localStorage.setItem('wishlist_items', JSON.stringify(newList));
+        } catch (e) {
+            console.warn('localStorage is not available', e);
+        }
     };
 
     const toggleWishlist = (product) => {
