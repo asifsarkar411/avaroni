@@ -734,6 +734,7 @@
                 <button class="tab-btn" data-target="add-product"><i class="fas fa-plus-circle"></i> <span>Add Product</span></button>
                 <button class="tab-btn" data-target="manage-categories"><i class="fas fa-folder-open"></i> <span>Categories</span></button>
                 <button class="tab-btn" data-target="manage-promocodes"><i class="fas fa-ticket-alt"></i> <span>Promocodes</span></button>
+                <button class="tab-btn" data-target="manage-vouchers"><i class="fas fa-tags"></i> <span>Public Vouchers</span></button>
                 <button class="tab-btn" data-target="manage-flash-sale"><i class="fas fa-bolt"></i> <span>Flash Sale Timer</span></button>
                 <button class="tab-btn" data-target="manage-banners"><i class="fas fa-images"></i> <span>Homepage Slider</span></button>
                 <button class="tab-btn" data-target="manage-nav-sliders"><i class="fas fa-sliders-h"></i> <span>Navbar Slider</span></button>
@@ -1093,7 +1094,7 @@
                 <div id="manage-promocodes-tab" class="tab-content">
                     <div class="panel-box" data-aos="fade-up">
                         <div class="panel-header">
-                            <h2>Manage Promocodes & Discounts</h2>
+                            <h2>Manage Secret Promocodes</h2>
                         </div>
                         <div style="background: var(--bg-main); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px;">
                             <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 15px;">Create New Promo Code</h3>
@@ -1129,6 +1130,61 @@
                                     </tr>
                                 </thead>
                                 <tbody id="promos-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MANAGE PUBLIC VOUCHERS TAB -->
+                <div id="manage-vouchers-tab" class="tab-content">
+                    <div class="panel-box" data-aos="fade-up">
+                        <div class="panel-header">
+                            <h2>Manage Public Vouchers</h2>
+                        </div>
+                        <div style="background: var(--bg-main); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px;">
+                            <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 15px;">Create New Public Voucher</h3>
+                            <form id="add-voucher-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                                <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
+                                    <label for="new-voucher-title">Voucher Title (Shown to users)</label>
+                                    <input type="text" id="new-voucher-title" placeholder="e.g. Shop for ৳3000 to get 10% discount" required style="width:100%;">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="new-voucher-code">Voucher Code (Hidden processing code)</label>
+                                    <input type="text" id="new-voucher-code" placeholder="e.g. SUMMER3000" required style="width:100%;">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="new-voucher-min-amount">Min Order Amount (৳)</label>
+                                    <input type="number" id="new-voucher-min-amount" placeholder="e.g. 3000" min="0" value="0" required style="width:100%;">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="new-voucher-type">Discount Type</label>
+                                    <select id="new-voucher-type" required style="width:100%;">
+                                        <option value="percentage">Percentage (%)</option>
+                                        <option value="fixed">Fixed Amount (৳)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="new-voucher-value">Discount Value</label>
+                                    <input type="number" id="new-voucher-value" placeholder="e.g. 10" min="1" required style="width:100%;">
+                                </div>
+                                <button type="submit" class="btn" style="margin-top: 0; height: 46px; grid-column: span 2;">Create Voucher</button>
+                            </form>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Code</th>
+                                        <th>Discount</th>
+                                        <th>Min Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vouchers-table-body">
                                 </tbody>
                             </table>
                         </div>

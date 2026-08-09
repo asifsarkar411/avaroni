@@ -48,6 +48,7 @@ const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Mode
 const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
 const Review = require('./models/Review');               // Customer Reviews Model
 const FlashSale = require('./models/FlashSale');           // Flash Sale Sticky Countdown Model
+const Voucher = require('./models/Voucher');             // Public Vouchers Model
 
 // ==========================================
 // STARTUP ENVIRONMENT VARIABLE GUARD
@@ -1113,22 +1114,32 @@ app.post('/api/promocodes/validate', async (req, res) => {
         const { code, cartTotal } = req.body;
         if (!code) return res.status(400).json({ success: false, message: "Promo code is required" });
 
-        // Case-insensitive match
-        const promo = await PromoCode.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') }, isActive: true });
-        if (!promo) {
-            return res.status(404).json({ success: false, message: "Invalid or inactive promo code" });
+        const codeRegex = new RegExp(`^${code}$`, 'i');
+
+        // Check Voucher first
+        let discountSource = await Voucher.findOne({ code: codeRegex, isActive: true });
+        let isValid = false;
+        
+        if (discountSource) {
+            if (discountSource.minOrderAmount && cartTotal < discountSource.minOrderAmount) {
+                return res.status(400).json({ success: false, message: `Cart total must be at least ৳${discountSource.minOrderAmount} to use this voucher.` });
+            }
+            isValid = true;
+        } else {
+            // Fallback to Promo Code
+            discountSource = await PromoCode.findOne({ code: codeRegex, isActive: true });
+            if (discountSource) isValid = true;
         }
 
-        if (promo.minOrderAmount && cartTotal < promo.minOrderAmount) {
-            return res.status(400).json({ success: false, message: `Cart total must be at least ৳${promo.minOrderAmount} to use this promo code.` });
+        if (!isValid || !discountSource) {
+            return res.status(404).json({ success: false, message: "Invalid or inactive promo code" });
         }
 
         res.json({
             success: true,
-            code: promo.code,
-            discountType: promo.discountType,
-            discountValue: promo.discountValue,
-            minOrderAmount: promo.minOrderAmount
+            code: discountSource.code,
+            discountType: discountSource.discountType,
+            discountValue: discountSource.discountValue
         });
     } catch (error) {
         console.error("Validate Promo Code Error:", error);
@@ -1136,14 +1147,47 @@ app.post('/api/promocodes/validate', async (req, res) => {
     }
 });
 
-// Get Active Promo Codes (Public)
-app.get('/api/promocodes/active', async (req, res) => {
+// ==========================================
+// 🎟️ PUBLIC VOUCHERS ROUTES
+// ==========================================
+
+// Validate Voucher (Public)
+app.post('/api/vouchers/validate', async (req, res) => {
     try {
-        const promos = await PromoCode.find({ isActive: true });
-        res.json({ success: true, promos });
+        const { code, cartTotal } = req.body;
+        if (!code) return res.status(400).json({ success: false, message: "Voucher code is required" });
+
+        const voucher = await Voucher.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') }, isActive: true });
+        if (!voucher) {
+            return res.status(404).json({ success: false, message: "Invalid or inactive voucher" });
+        }
+
+        if (voucher.minOrderAmount && cartTotal < voucher.minOrderAmount) {
+            return res.status(400).json({ success: false, message: `Cart total must be at least ৳${voucher.minOrderAmount} to use this voucher.` });
+        }
+
+        res.json({
+            success: true,
+            code: voucher.code,
+            title: voucher.title,
+            discountType: voucher.discountType,
+            discountValue: voucher.discountValue,
+            minOrderAmount: voucher.minOrderAmount
+        });
     } catch (error) {
-        console.error("Get Active Promo Codes Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch active promo codes" });
+        console.error("Validate Voucher Error:", error);
+        res.status(500).json({ success: false, message: "Validation failed" });
+    }
+});
+
+// Get Active Vouchers (Public)
+app.get('/api/vouchers/active', async (req, res) => {
+    try {
+        const vouchers = await Voucher.find({ isActive: true });
+        res.json({ success: true, vouchers });
+    } catch (error) {
+        console.error("Get Active Vouchers Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch active vouchers" });
     }
 });
 
@@ -1208,7 +1252,7 @@ app.get('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
 // Create Promo Code (Admin)
 app.post('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
     try {
-        const { code, discountType, discountValue, minOrderAmount } = req.body;
+        const { code, discountType, discountValue } = req.body;
         if (!code || !discountType || !discountValue) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
@@ -1224,7 +1268,6 @@ app.post('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
             code: upperCode,
             discountType,
             discountValue: Number(discountValue),
-            minOrderAmount: Number(minOrderAmount) || 0,
             isActive: true
         });
 
@@ -1244,6 +1287,64 @@ app.delete('/api/admin/promocodes/:id', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Delete Promo Code Error:", error);
         res.status(500).json({ success: false, message: "Failed to delete promo code" });
+    }
+});
+
+// ==========================================
+// 🎟️ ADMIN VOUCHERS ROUTES
+// ==========================================
+
+// List Vouchers (Admin)
+app.get('/api/admin/vouchers', verifyAdminToken, async (req, res) => {
+    try {
+        const vouchers = await Voucher.find();
+        res.json({ success: true, vouchers });
+    } catch (error) {
+        console.error("Get Vouchers Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch vouchers" });
+    }
+});
+
+// Create Voucher (Admin)
+app.post('/api/admin/vouchers', verifyAdminToken, async (req, res) => {
+    try {
+        const { code, title, discountType, discountValue, minOrderAmount } = req.body;
+        if (!code || !title || !discountType || !discountValue) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const upperCode = code.toUpperCase().replace(/\s+/g, '');
+        
+        let existing = await Voucher.findOne({ code: upperCode });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "Voucher code already exists" });
+        }
+
+        const voucher = new Voucher({
+            code: upperCode,
+            title,
+            discountType,
+            discountValue: Number(discountValue),
+            minOrderAmount: Number(minOrderAmount) || 0,
+            isActive: true
+        });
+
+        await voucher.save();
+        res.status(201).json({ success: true, voucher });
+    } catch (error) {
+        console.error("Create Voucher Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create voucher" });
+    }
+});
+
+// Delete Voucher (Admin)
+app.delete('/api/admin/vouchers/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Voucher.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Voucher Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete voucher" });
     }
 });
 
@@ -1362,27 +1463,36 @@ app.post(['/api/orders', '/api/checkout'], async (req, res) => {
             productsToUpdate.push({ dbProduct, requestedQty });
         }
 
-        // 2. Validate & Recalculate Promo Code Discount on Server
+        // 2. Validate & Recalculate Promo Code / Voucher Discount on Server
         let serverDiscount = 0;
         let appliedPromoCode = '';
 
         if (promoCode && typeof promoCode === 'string' && promoCode.trim()) {
             const cleanCode = promoCode.trim();
-            const promo = await PromoCode.findOne({ 
-                code: { $regex: new RegExp(`^${cleanCode}$`, 'i') }, 
-                isActive: true 
-            });
+            const codeRegex = new RegExp(`^${cleanCode}$`, 'i');
+            
+            // Check Voucher first
+            let discountSource = await Voucher.findOne({ code: codeRegex, isActive: true });
+            let isValid = false;
 
-            if (promo) {
-                if (!promo.minOrderAmount || serverSubtotal >= promo.minOrderAmount) {
-                    appliedPromoCode = promo.code;
-                    if (promo.discountType === 'percentage') {
-                        serverDiscount = serverSubtotal * (Number(promo.discountValue) / 100);
-                    } else if (promo.discountType === 'fixed') {
-                        serverDiscount = Number(promo.discountValue);
-                    }
-                    serverDiscount = Math.min(serverSubtotal, Math.max(0, serverDiscount));
+            if (discountSource) {
+                if (!discountSource.minOrderAmount || serverSubtotal >= discountSource.minOrderAmount) {
+                    isValid = true;
                 }
+            } else {
+                // Fallback to Promo Code (secret code)
+                discountSource = await PromoCode.findOne({ code: codeRegex, isActive: true });
+                if (discountSource) isValid = true; // Secret codes don't have minOrderAmount
+            }
+
+            if (isValid && discountSource) {
+                appliedPromoCode = discountSource.code;
+                if (discountSource.discountType === 'percentage') {
+                    serverDiscount = serverSubtotal * (Number(discountSource.discountValue) / 100);
+                } else if (discountSource.discountType === 'fixed') {
+                    serverDiscount = Number(discountSource.discountValue);
+                }
+                serverDiscount = Math.min(serverSubtotal, Math.max(0, serverDiscount));
             }
         }
 

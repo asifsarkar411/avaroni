@@ -508,6 +508,7 @@ function switchTab(tabName) {
     if (tabName === 'add-product') populateAddProductCategories();
     if (tabName === 'manage-categories') renderCategoriesTab();
     if (tabName === 'manage-promocodes') fetchPromoCodes();
+    if (tabName === 'manage-vouchers') fetchVouchers();
     if (tabName === 'manage-banners') loadAdminBanners();
     if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
     if (tabName === 'manage-returns') fetchReturnRequests();
@@ -1679,7 +1680,7 @@ async function handleAddPromoCode(e) {
             document.getElementById('add-promo-form').reset();
             fetchPromoCodes();
         } else {
-            showToast('Failed to create promo code: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to create promo code: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         console.error("Error saving promo code:", err);
@@ -1698,7 +1699,7 @@ async function deletePromoCode(promoId) {
         if (data.success) {
             fetchPromoCodes();
         } else {
-            showToast('Failed to delete promo code: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to delete promo code: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         console.error("Error deleting promo code:", err);
@@ -1708,6 +1709,114 @@ async function deletePromoCode(promoId) {
 
 // Expose actions to global context
 window.deletePromoCode = deletePromoCode;
+
+// ==========================================
+// PUBLIC VOUCHERS MANAGEMENT
+// ==========================================
+
+async function fetchVouchers() {
+    try {
+        const response = await fetch('/api/admin/vouchers', {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        const tbody = document.getElementById('vouchers-table-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!data.success || !data.vouchers || data.vouchers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No vouchers created yet.</td></tr>';
+            return;
+        }
+
+        data.vouchers.forEach(voucher => {
+            const statusLabel = voucher.isActive 
+                ? '<span style="color:green; font-weight:bold;">Active</span>' 
+                : '<span style="color:red; font-weight:bold;">Inactive</span>';
+            const valueDisplay = voucher.discountType === 'percentage' 
+                ? `${voucher.discountValue}%` 
+                : `৳${voucher.discountValue}`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHTML(voucher.title)}</strong></td>
+                    <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${escapeHTML(voucher.code)}</span></td>
+                    <td>${valueDisplay} (${escapeHTML(voucher.discountType)})</td>
+                    <td>৳${voucher.minOrderAmount}</td>
+                    <td>${statusLabel}</td>
+                    <td>
+                        <button onclick="deleteVoucher('${voucher._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error loading vouchers:", err);
+    }
+}
+
+async function handleAddVoucher(e) {
+    e.preventDefault();
+    
+    const title = document.getElementById('new-voucher-title').value.trim();
+    const code = document.getElementById('new-voucher-code').value.trim();
+    const minOrderAmount = Number(document.getElementById('new-voucher-min-amount').value);
+    const discountType = document.getElementById('new-voucher-type').value;
+    const discountValue = Number(document.getElementById('new-voucher-value').value);
+
+    if (!code || !title || isNaN(discountValue) || discountValue <= 0) {
+        showToast("Please enter valid voucher information.", 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/vouchers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ code, title, minOrderAmount, discountType, discountValue })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Voucher created successfully!');
+            document.getElementById('add-voucher-form').reset();
+            fetchVouchers();
+        } else {
+            showToast('Failed to create voucher: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        console.error("Error saving voucher:", err);
+        showToast("An error occurred connecting to the server.", 'error');
+    }
+}
+
+async function deleteVoucher(voucherId) {
+    if (!confirm("Are you sure you want to delete this Voucher?")) return;
+    try {
+        const response = await fetch(`/api/admin/vouchers/${voucherId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (data.success) {
+            fetchVouchers();
+        } else {
+            showToast('Failed to delete voucher: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        console.error("Error deleting voucher:", err);
+        showToast('An error occurred connecting to the server.', 'error');
+    }
+}
+
+window.deleteVoucher = deleteVoucher;
+
+
 
 // ==========================================
 // NAVBAR PROMO SLIDER MANAGEMENT
