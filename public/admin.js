@@ -918,6 +918,7 @@ function renderFilteredOrders() {
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${statusSelectHtml}
                         <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-icon btn-icon-secondary" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
+                        <button onclick="deleteOrder('${order._id}')" class="btn-icon btn-icon-danger" title="Delete Order"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
             </tr>
@@ -949,7 +950,10 @@ function renderFilteredOrders() {
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
                         <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
-                        ${statusSelectHtml}
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            ${statusSelectHtml}
+                            <button onclick="deleteOrder('${order._id}')" class="btn-icon btn-icon-danger" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;" title="Delete Order"><i class="fas fa-trash" style="font-size: 12px;"></i></button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1070,6 +1074,32 @@ async function updateOrderStatus(orderId, newStatus) {
         }
     } catch (err) {
         console.error("Error updating order status:", err);
+        showToast("Failed to connect to server. Please try again.", 'error');
+    }
+}
+
+async function deleteOrder(orderId) {
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}`, {
+            method: 'DELETE',
+            headers: {
+                ...getAuthHeaders()
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message || 'Order deleted successfully!');
+            fetchOrders(); // Refresh order table
+        } else {
+            showToast(data.message || 'Failed to delete order.', 'error');
+        }
+    } catch (err) {
+        console.error("Error deleting order:", err);
         showToast("Failed to connect to server. Please try again.", 'error');
     }
 }
