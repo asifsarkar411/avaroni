@@ -2088,6 +2088,20 @@ app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Delete Order API (Admin Only)
+app.delete('/api/admin/orders/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+        res.json({ success: true, message: "Order deleted successfully." });
+    } catch (error) {
+        console.error("Delete Order Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete order." });
+    }
+});
+
 // Track Order API (Public - Search by orderNumber or MongoDB _id)
 app.get('/api/orders/track/:orderId', async (req, res) => {
     try {
