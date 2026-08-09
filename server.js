@@ -1110,7 +1110,7 @@ app.delete('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
 // Validate Promo Code (Public)
 app.post('/api/promocodes/validate', async (req, res) => {
     try {
-        const { code } = req.body;
+        const { code, cartTotal } = req.body;
         if (!code) return res.status(400).json({ success: false, message: "Promo code is required" });
 
         // Case-insensitive match
@@ -1119,15 +1119,31 @@ app.post('/api/promocodes/validate', async (req, res) => {
             return res.status(404).json({ success: false, message: "Invalid or inactive promo code" });
         }
 
+        if (promo.minOrderAmount && cartTotal < promo.minOrderAmount) {
+            return res.status(400).json({ success: false, message: `Cart total must be at least ৳${promo.minOrderAmount} to use this promo code.` });
+        }
+
         res.json({
             success: true,
             code: promo.code,
             discountType: promo.discountType,
-            discountValue: promo.discountValue
+            discountValue: promo.discountValue,
+            minOrderAmount: promo.minOrderAmount
         });
     } catch (error) {
         console.error("Validate Promo Code Error:", error);
         res.status(500).json({ success: false, message: "Validation failed" });
+    }
+});
+
+// Get Active Promo Codes (Public)
+app.get('/api/promocodes/active', async (req, res) => {
+    try {
+        const promos = await PromoCode.find({ isActive: true });
+        res.json({ success: true, promos });
+    } catch (error) {
+        console.error("Get Active Promo Codes Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch active promo codes" });
     }
 });
 
@@ -1192,7 +1208,7 @@ app.get('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
 // Create Promo Code (Admin)
 app.post('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
     try {
-        const { code, discountType, discountValue } = req.body;
+        const { code, discountType, discountValue, minOrderAmount } = req.body;
         if (!code || !discountType || !discountValue) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
@@ -1208,6 +1224,7 @@ app.post('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
             code: upperCode,
             discountType,
             discountValue: Number(discountValue),
+            minOrderAmount: Number(minOrderAmount) || 0,
             isActive: true
         });
 
