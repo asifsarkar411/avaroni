@@ -918,6 +918,7 @@ function renderFilteredOrders() {
                 <td style="white-space:nowrap;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${statusSelectHtml}
+                        <a href="invoice.html?orderNumber=${escapeHTML(order.orderNumber)}" target="_blank" class="btn-icon btn-icon-secondary" title="View Invoice" style="color: #475569; text-decoration: none; display: flex; align-items: center; justify-content: center;"><i class="fas fa-external-link-alt"></i></a>
                         <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-icon btn-icon-secondary" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
                         <button onclick="deleteOrder('${order._id}')" class="btn-icon btn-icon-danger" title="Delete Order"><i class="fas fa-trash"></i></button>
                     </div>
@@ -950,7 +951,10 @@ function renderFilteredOrders() {
                         <strong>Items:</strong> ${itemsList}
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
-                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
+                        <div style="display: flex; gap: 5px;">
+                            <a href="invoice.html?orderNumber=${escapeHTML(order.orderNumber)}" target="_blank" class="btn-invoice-sm" style="background:#f1f5f9; color:#475569; text-decoration:none;" title="View Invoice"><i class="fas fa-external-link-alt"></i> View</a>
+                            <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Download Invoice"><i class="fas fa-file-invoice"></i> DL</button>
+                        </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
                             ${statusSelectHtml}
                             <button onclick="deleteOrder('${order._id}')" class="btn-icon btn-icon-danger" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;" title="Delete Order"><i class="fas fa-trash" style="font-size: 12px;"></i></button>

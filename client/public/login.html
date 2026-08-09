@@ -804,7 +804,10 @@
                                     <span>Payment: <strong>${escapeHTML(order.paymentMethod)}</strong></span> • 
                                     <span>Address: <strong>${escapeHTML(order.address)}</strong></span>
                                 </div>
-                                <button onclick="downloadOrderReceipt('${escapeHTML(order.orderNumber)}')" style="background: #111111; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-file-pdf"></i> Download Invoice</button>
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="invoice.html?orderNumber=${escapeHTML(order.orderNumber)}" target="_blank" style="background: #ffffff; color: #111111; border: 1px solid #eaeaea; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;"><i class="fas fa-external-link-alt"></i> View</a>
+                                    <button onclick="downloadOrderReceipt('${escapeHTML(order.orderNumber)}')" style="background: #111111; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-file-pdf"></i> Download</button>
+                                </div>
                             </div>
                         </div>
                     `;

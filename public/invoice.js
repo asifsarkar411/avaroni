@@ -2,7 +2,157 @@
 // DOWNLOADABLE INVOICE GENERATOR
 // ==========================================
 
+async function generatePDFInvoice(order) {
+    if (!order) return;
+    
+    const orderDate = new Date(order.orderDate || Date.now()).toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    });
+
+    let itemsHtml = '';
+    let subtotal = 0;
+    
+    const cartItems = order.cartItems || [];
+    cartItems.forEach((item, index) => {
+        const price = Number(item.price);
+        const quantity = Number(item.quantity);
+        const itemTotal = price * quantity;
+        subtotal += itemTotal;
+        itemsHtml += `
+            <tr style="border-bottom: 1px solid #eaeaea;">
+                <td style="padding: 12px 15px; font-size: 13px; color: #555;">${index + 1}</td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #111; font-weight: 500;">${item.name}</td>
+                <td style="padding: 12px 15px; text-align: center; font-size: 13px; color: #555;">${quantity}</td>
+                <td style="padding: 12px 15px; text-align: right; font-size: 13px; color: #555;">৳${price.toLocaleString()}</td>
+                <td style="padding: 12px 15px; text-align: right; font-size: 13px; color: #111; font-weight: 600;">৳${itemTotal.toLocaleString()}</td>
+            </tr>
+        `;
+    });
+
+    const discount = order.discountAmount !== undefined ? Number(order.discountAmount) : 0;
+    const delivery = order.shippingFee !== undefined ? Number(order.shippingFee) : (order.totalAmount - subtotal + discount > 0 ? order.totalAmount - subtotal + discount : 0);
+
+    const invoiceHtml = `
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px; color: #333; box-sizing: border-box;">
+            <!-- Header Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 30px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 32px; color: #111; letter-spacing: 1px; text-transform: uppercase;">AVARONI</h1>
+                    <p style="margin: 5px 0 0; color: #888; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Premium Fashion & Beauty</p>
+                </div>
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 28px; color: #111; font-weight: 300; letter-spacing: 2px;">INVOICE</h2>
+                    <p style="margin: 8px 0 0; font-size: 13px; color: #666;"><strong>Order No:</strong> ${order.orderNumber}</p>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;"><strong>Date:</strong> ${orderDate}</p>
+                </div>
+            </div>
+
+            <!-- Customer & Payment Details -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 40px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <div>
+                    <h3 style="margin: 0 0 10px; font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px;">Billed To</h3>
+                    <p style="margin: 0 0 4px; font-size: 14px; color: #111; font-weight: 600;">${order.customerName}</p>
+                    <p style="margin: 0 0 4px; font-size: 13px; color: #555;">${order.phone}</p>
+                    <p style="margin: 0 0 4px; font-size: 13px; color: #555;">${order.email}</p>
+                    <p style="margin: 0; font-size: 13px; color: #555; max-width: 250px; line-height: 1.4;">${order.address}</p>
+                </div>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0 0 10px; font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px;">Payment Information</h3>
+                    <p style="margin: 0 0 4px; font-size: 13px; color: #111;"><strong>Method:</strong> ${order.paymentMethod || 'Cash on Delivery'}</p>
+                    <p style="margin: 0 0 4px; font-size: 13px; color: #111;"><strong>TrxID:</strong> ${order.transactionId || 'N/A'}</p>
+                    <p style="margin: 0; font-size: 13px; color: #111;"><strong>Status:</strong> <span style="color: #28a745;">${order.status || 'Pending'}</span></p>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <thead>
+                    <tr style="background: #111; color: #fff;">
+                        <th style="padding: 12px 15px; text-align: left; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">#</th>
+                        <th style="padding: 12px 15px; text-align: left; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">Item Description</th>
+                        <th style="padding: 12px 15px; text-align: center; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">Qty</th>
+                        <th style="padding: 12px 15px; text-align: right; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">Price</th>
+                        <th style="padding: 12px 15px; text-align: right; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+
+            <!-- Totals Section -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 50px;">
+                <div style="width: 320px;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid #eaeaea;">
+                        <span style="font-size: 13px; color: #555;">Subtotal</span>
+                        <span style="font-size: 13px; color: #111; font-weight: 500;">৳${subtotal.toLocaleString()}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid #eaeaea;">
+                        <span style="font-size: 13px; color: #555;">Delivery Fee</span>
+                        <span style="font-size: 13px; color: #111; font-weight: 500;">৳${delivery.toLocaleString()}</span>
+                    </div>
+                    ${discount > 0 ? `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid #eaeaea;">
+                        <span style="font-size: 13px; color: #e60050; font-weight: 500;">Discount ${order.promoCode ? `(${order.promoCode})` : ''}</span>
+                        <span style="font-size: 13px; color: #e60050; font-weight: 500;">-৳${discount.toLocaleString()}</span>
+                    </div>
+                    ` : ''}
+                    <div style="display: flex; justify-content: space-between; padding: 15px; background: #111; color: #fff; margin-top: 10px; border-radius: 4px;">
+                        <span style="font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Grand Total</span>
+                        <span style="font-size: 18px; font-weight: 700;">৳${Number(order.totalAmount).toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; border-top: 1px solid #eaeaea; padding-top: 20px;">
+                <p style="margin: 0 0 5px; font-size: 14px; color: #111; font-weight: 500;">Thank you for shopping with AVARONI!</p>
+                <p style="margin: 0; font-size: 11px; color: #888;">This is a computer-generated invoice and does not require a signature.</p>
+                <p style="margin: 5px 0 0; font-size: 11px; color: #888;">If you have any questions concerning this invoice, contact support@avaroni.com.</p>
+            </div>
+        </div>
+    `;
+
+    await triggerPDFDownload(invoiceHtml, `Invoice_${order.orderNumber}.pdf`);
+}
+
+async function triggerPDFDownload(htmlContent, fileName) {
+    if (!window.html2pdf) {
+        // Dynamically load html2pdf
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        document.head.appendChild(script);
+        await new Promise(resolve => script.onload = resolve);
+    }
+    
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlContent;
+    
+    // We append it to body temporarily off-screen so html2pdf can render it correctly
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '-9999px';
+    wrapper.style.top = '0';
+    document.body.appendChild(wrapper);
+
+    const opt = {
+      margin:       0,
+      filename:     fileName,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(wrapper).save().then(() => {
+        document.body.removeChild(wrapper);
+    });
+}
+
 function downloadInvoice(orderNumber) {
+    // Show a loading toast if available
+    if (typeof showToast === 'function') {
+        showToast('Preparing invoice for download...', 'info');
+    }
+
     fetch(`/api/orders/${orderNumber}`)
         .then(res => res.json())
         .then(data => {
@@ -10,131 +160,7 @@ function downloadInvoice(orderNumber) {
                 alert('Could not load order details for invoice.');
                 return;
             }
-            const order = data.order;
-            const orderDate = new Date(order.orderDate).toLocaleDateString('en-GB', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
-
-            let itemsHtml = '';
-            let subtotal = 0;
-            order.cartItems.forEach((item, index) => {
-                const itemTotal = Number(item.price) * Number(item.quantity);
-                subtotal += itemTotal;
-                itemsHtml += `
-                    <tr>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;">${index + 1}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px;">${item.name}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px;">${item.quantity}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px;">৳${Number(item.price).toLocaleString()}</td>
-                        <td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; font-size: 13px; font-weight: 600;">৳${itemTotal.toLocaleString()}</td>
-                    </tr>
-                `;
-            });
-
-            const discount = order.discountAmount !== undefined ? Number(order.discountAmount) : 0;
-            const delivery = order.shippingFee !== undefined ? Number(order.shippingFee) : (order.totalAmount - subtotal + discount > 0 ? order.totalAmount - subtotal + discount : 0);
-
-            const invoiceHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Invoice - ${order.orderNumber}</title>
-    <style>
-        @media print {
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 30px; color: #333; background: #fff; }
-        .invoice-container { max-width: 700px; margin: 0 auto; }
-        .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #e60050; padding-bottom: 20px; margin-bottom: 25px; }
-        .invoice-brand h1 { margin: 0; font-size: 28px; color: #e60050; }
-        .invoice-brand p { margin: 5px 0 0; color: #888; font-size: 13px; }
-        .invoice-meta { text-align: right; }
-        .invoice-meta h2 { margin: 0; font-size: 22px; color: #333; letter-spacing: 2px; }
-        .invoice-meta p { margin: 4px 0; font-size: 13px; color: #666; }
-        .invoice-details { display: flex; justify-content: space-between; margin-bottom: 25px; }
-        .invoice-details div { flex: 1; }
-        .invoice-details h3 { font-size: 12px; text-transform: uppercase; color: #e60050; margin: 0 0 8px; letter-spacing: 1px; }
-        .invoice-details p { margin: 3px 0; font-size: 13px; color: #555; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        thead tr { background: #ffe6ef; }
-        thead th { padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #e60050; font-weight: 700; letter-spacing: 0.5px; }
-        thead th:nth-child(3), thead th:nth-child(4), thead th:nth-child(5) { text-align: right; }
-        .totals-section { display: flex; justify-content: flex-end; }
-        .totals-table { width: 280px; }
-        .totals-table .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #555; }
-        .totals-table .row.grand-total { border-top: 2px solid #e60050; margin-top: 8px; padding-top: 10px; font-size: 18px; font-weight: 700; color: #e60050; }
-        .invoice-footer { margin-top: 40px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 15px; }
-    </style>
-</head>
-<body>
-    <div class="invoice-container">
-        <div class="invoice-header">
-            <div class="invoice-brand">
-                <h1>আভরণী</h1>
-                <p>Your one-stop shop for fashion and beauty</p>
-            </div>
-            <div class="invoice-meta">
-                <h2>INVOICE</h2>
-                <p><strong>Order:</strong> ${order.orderNumber}</p>
-                <p><strong>Date:</strong> ${orderDate}</p>
-                <p><strong>Payment:</strong> ${order.paymentMethod || 'N/A'}</p>
-            </div>
-        </div>
-
-        <div class="invoice-details">
-            <div>
-                <h3>Billed To</h3>
-                <p><strong>${order.customerName}</strong></p>
-                <p>${order.phone}</p>
-                <p>${order.email}</p>
-                <p>${order.address}</p>
-            </div>
-            <div style="text-align: right;">
-                <h3>Transaction</h3>
-                <p><strong>TrxID:</strong> ${order.transactionId || 'N/A'}</p>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Item</th>
-                    <th style="text-align: center;">Qty</th>
-                    <th style="text-align: right;">Price</th>
-                    <th style="text-align: right;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${itemsHtml}
-            </tbody>
-        </table>
-
-        <div class="totals-section">
-            <div class="totals-table">
-                <div class="row"><span>Subtotal</span><span>৳${subtotal.toLocaleString()}</span></div>
-                <div class="row"><span>Delivery</span><span>৳${delivery.toLocaleString()}</span></div>
-                ${discount > 0 ? `<div class="row" style="color: #28a745; font-weight: 600;"><span>Discount ${order.promoCode ? `(${order.promoCode})` : ''}</span><span>-৳${discount.toLocaleString()}</span></div>` : ''}
-                <div class="row grand-total"><span>Total</span><span>৳${Number(order.totalAmount).toLocaleString()}</span></div>
-            </div>
-        </div>
-
-        <div class="invoice-footer">
-            <p>Thank you for shopping with আভরণী!</p>
-            <p>This is a computer-generated invoice. No signature required.</p>
-        </div>
-    </div>
-</body>
-</html>`;
-
-            // Open invoice in a new window and trigger print/save as PDF
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(invoiceHtml);
-            printWindow.document.close();
-            printWindow.onload = function() {
-                printWindow.print();
-            };
+            generatePDFInvoice(data.order);
         })
         .catch(err => {
             console.error('Invoice generation error:', err);
@@ -142,7 +168,7 @@ function downloadInvoice(orderNumber) {
         });
 }
 
-function generatePDFInvoice(order) {
-    if (!order) return;
-    downloadInvoice(order.orderNumber || order._id);
+// Export for ES modules (Next.js)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { generatePDFInvoice, triggerPDFDownload, downloadInvoice };
 }

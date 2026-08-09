@@ -139,99 +139,20 @@ export default function CheckoutPage() {
     const downloadInvoice = () => {
         if (!placedOrderDetails) return;
         
-        // Use the old logic or just a simplified React one
-        // For now, we will open a new window to print the invoice since it's the most responsive way
-        const orderDate = new Date(placedOrderDetails.orderDate || Date.now()).toLocaleDateString('en-GB', {
-            day: '2-digit', month: 'short', year: 'numeric'
-        });
-
-        let itemsHtml = '';
-        placedOrderDetails.cartItems.forEach((item, index) => {
-            itemsHtml += `
-                <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${index + 1}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">BDT ${item.price}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">BDT ${item.price * item.quantity}</td>
-                </tr>
-            `;
-        });
-
-        const invoiceHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Invoice - ${placedOrderDetails.orderNumber}</title>
-                <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 30px; color: #333; background: #fff; }
-                    .invoice-container { max-width: 700px; margin: 0 auto; }
-                    .invoice-header { display: flex; justify-content: space-between; border-bottom: 3px solid #111; padding-bottom: 20px; margin-bottom: 25px; }
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                    th { background: #f8f9fa; padding: 10px; text-align: left; }
-                    .totals-section { display: flex; justify-content: flex-end; }
-                    .row { display: flex; justify-content: space-between; padding: 6px 0; width: 250px; }
-                    .row.total { border-top: 2px solid #111; font-weight: bold; font-size: 1.2rem; margin-top: 10px; padding-top: 10px;}
-                </style>
-            </head>
-            <body>
-                <div class="invoice-container">
-                    <div class="invoice-header">
-                        <div>
-                            <h1 style="margin: 0; color: #111;">আভরণী (AVARONI)</h1>
-                            <p style="margin: 5px 0; color: #666;">Your one-stop shop for fashion and beauty</p>
-                        </div>
-                        <div style="text-align: right;">
-                            <h2 style="margin: 0;">INVOICE</h2>
-                            <p><strong>Order:</strong> ${placedOrderDetails.orderNumber}</p>
-                            <p><strong>Date:</strong> ${orderDate}</p>
-                            <p><strong>Payment:</strong> ${placedOrderDetails.paymentMethod}</p>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 30px;">
-                        <h3>Billed To:</h3>
-                        <p style="margin: 3px 0;"><strong>${placedOrderDetails.customerName}</strong></p>
-                        <p style="margin: 3px 0;">${placedOrderDetails.phone}</p>
-                        <p style="margin: 3px 0;">${placedOrderDetails.email}</p>
-                        <p style="margin: 3px 0;">${placedOrderDetails.address}</p>
-                    </div>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Item</th>
-                                <th style="text-align: center;">Qty</th>
-                                <th style="text-align: right;">Price</th>
-                                <th style="text-align: right;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>${itemsHtml}</tbody>
-                    </table>
-
-                    <div class="totals-section">
-                        <div>
-                            <div class="row"><span>Subtotal:</span><span>BDT ${cartTotal}</span></div>
-                            <div class="row"><span>Delivery:</span><span>BDT ${placedOrderDetails.shippingFee}</span></div>
-                            ${discount > 0 ? `<div class="row" style="color: #28a745;"><span>Discount:</span><span>-BDT ${discount}</span></div>` : ''}
-                            <div class="row total"><span>Total:</span><span>BDT ${placedOrderDetails.totalAmount}</span></div>
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 50px; color: #888; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px;">
-                        Thank you for your purchase! This is a computer-generated invoice.
-                    </div>
-                </div>
-                <script>window.onload = function() { window.print(); }</script>
-            </body>
-            </html>
-        `;
-
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(invoiceHtml);
-        printWindow.document.close();
+        if (typeof window !== 'undefined') {
+            if (window.generatePDFInvoice) {
+                window.generatePDFInvoice(placedOrderDetails);
+            } else {
+                const script = document.createElement('script');
+                script.src = '/invoice.js';
+                script.onload = () => {
+                    if (window.generatePDFInvoice) {
+                        window.generatePDFInvoice(placedOrderDetails);
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        }
     };
 
     if (orderPlaced) {
