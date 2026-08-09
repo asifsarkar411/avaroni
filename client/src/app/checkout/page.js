@@ -21,6 +21,7 @@ export default function CheckoutPage() {
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [placedOrderDetails, setPlacedOrderDetails] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activePromos, setActivePromos] = useState([]);
 
     const shippingFee = shippingDetails.deliveryLocation === 'inside' ? 80 : 150;
     const finalTotal = Math.max(0, cartTotal + shippingFee - discount);
@@ -31,17 +32,36 @@ export default function CheckoutPage() {
         }
     }, [orderPlaced]);
 
-    const handleApplyPromo = async () => {
-        if (!promoCode.trim()) {
+    useEffect(() => {
+        const fetchPromos = async () => {
+            try {
+                const res = await fetch('/api/promocodes/active');
+                const data = await res.json();
+                if (data.success && data.promos) {
+                    setActivePromos(data.promos);
+                }
+            } catch (err) {
+                console.error('Failed to fetch active promos', err);
+            }
+        };
+        fetchPromos();
+    }, []);
+
+    const handleApplyPromo = async (codeToApply) => {
+        const code = (typeof codeToApply === 'string' ? codeToApply : promoCode).trim();
+        if (!code) {
             setPromoMessage('Please enter a promo code');
             return;
+        }
+        if (typeof codeToApply === 'string') {
+            setPromoCode(code);
         }
         
         try {
             const res = await fetch('/api/promocodes/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: promoCode.trim(), cartTotal })
+                body: JSON.stringify({ code, cartTotal })
             });
             const data = await res.json();
             
@@ -323,10 +343,29 @@ export default function CheckoutPage() {
                             ))}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                             <input type="text" placeholder="Promo Code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} />
                             <button type="button" onClick={handleApplyPromo} className="btn" style={{ background: '#333', padding: '10px 20px' }}>Apply</button>
                         </div>
+                        {activePromos.length > 0 && (
+                            <div style={{ marginBottom: '15px' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Available Promos:</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {activePromos.map(promo => (
+                                        <div 
+                                            key={promo._id} 
+                                            onClick={() => handleApplyPromo(promo.code)}
+                                            style={{ padding: '8px 12px', background: '#f8f9fa', border: '1px dashed #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                        >
+                                            <div>
+                                                <strong>{promo.code}</strong> - {promo.minOrderAmount > 0 ? `Shop for ৳${promo.minOrderAmount} or more to get ` : 'Get '}{promo.discountType === 'percentage' ? `${promo.discountValue}%` : `৳${promo.discountValue}`} discount!
+                                            </div>
+                                            <span style={{ color: '#007bff', fontWeight: '500' }}>Apply</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                         {promoMessage && <div style={{ color: discount > 0 ? '#28a745' : '#e60050', fontSize: '0.85rem', marginBottom: '15px' }}>{promoMessage}</div>}
 
                         <div style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>

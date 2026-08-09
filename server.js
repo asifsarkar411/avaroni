@@ -1357,13 +1357,15 @@ app.post(['/api/orders', '/api/checkout'], async (req, res) => {
             });
 
             if (promo) {
-                appliedPromoCode = promo.code;
-                if (promo.discountType === 'percentage') {
-                    serverDiscount = serverSubtotal * (Number(promo.discountValue) / 100);
-                } else if (promo.discountType === 'fixed') {
-                    serverDiscount = Number(promo.discountValue);
+                if (!promo.minOrderAmount || serverSubtotal >= promo.minOrderAmount) {
+                    appliedPromoCode = promo.code;
+                    if (promo.discountType === 'percentage') {
+                        serverDiscount = serverSubtotal * (Number(promo.discountValue) / 100);
+                    } else if (promo.discountType === 'fixed') {
+                        serverDiscount = Number(promo.discountValue);
+                    }
+                    serverDiscount = Math.min(serverSubtotal, Math.max(0, serverDiscount));
                 }
-                serverDiscount = Math.min(serverSubtotal, Math.max(0, serverDiscount));
             }
         }
 
