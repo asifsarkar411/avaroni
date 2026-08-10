@@ -497,6 +497,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
+        if (tabName === 'manage-blogs') cleanTitle = "Manage Blogs";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
         titleElement.innerText = cleanTitle;
     }
@@ -516,6 +517,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-customers') fetchCustomerUsers();
     if (tabName === 'manage-reviews') fetchAdminReviews();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
+    if (tabName === 'manage-blogs') fetchAdminBlogs();
     if (tabName === 'admin-settings') initSettingsTab();
 }
 
@@ -2737,5 +2739,147 @@ async function handleFlashSaleSubmit(e) {
     }
 }
 
+// ==========================================
+// BLOG MANAGEMENT LOGIC
+// ==========================================
 
+let quillEditor = null;
 
+// Initialize Quill Editor if not already initialized
+function initBlogEditor() {
+    if (!quillEditor && document.getElementById('blog-editor-container')) {
+        quillEditor = new Quill('#blog-editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['link', 'image', 'video'],
+                    ['clean']
+                ]
+            }
+        });
+    }
+}
+
+// Fetch and display admin blogs
+async function fetchAdminBlogs() {
+    initBlogEditor();
+    
+    const tbody = document.getElementById('blogs-table-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+    
+    try {
+        const res = await fetch('/api/blogs');
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+            renderAdminBlogs(data.blogs);
+        } else {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Failed to load blogs.</td></tr>';
+        }
+    } catch (err) {
+        console.error("fetchAdminBlogs error:", err);
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Connection error.</td></tr>';
+    }
+}
+
+function renderAdminBlogs(blogs) {
+    const tbody = document.getElementById('blogs-table-body');
+    if (!tbody) return;
+    
+    if (!blogs || blogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No blogs found. Create one above!</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = blogs.map(blog => `
+        <tr>
+            <td>
+                <img src="${formatImageUrl(blog.imageUrl)}" alt="${escapeHTML(blog.title)}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+            </td>
+            <td><strong>${escapeHTML(blog.title)}</strong></td>
+            <td>${new Date(blog.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-icon-danger" onclick="deleteAdminBlog('${blog._id}')" title="Delete Blog">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Handle Add Blog Form Submission
+document.addEventListener('DOMContentLoaded', () => {
+    const addBlogForm = document.getElementById('add-blog-form');
+    if (addBlogForm) {
+        addBlogForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('adminToken');
+            
+            const title = document.getElementById('blog-title').value.trim();
+            const imageFile = document.getElementById('blog-image').files[0];
+            const descriptionHTML = quillEditor ? quillEditor.root.innerHTML : '';
+            
+            if (!title) return showToast('Please enter a blog title', 'error');
+            if (!descriptionHTML || descriptionHTML === '<p><br></p>') return showToast('Please enter a blog description', 'error');
+            if (!imageFile) return showToast('Please attach a blog image', 'error');
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...'; }
+            
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', descriptionHTML);
+            formData.append('image', imageFile);
+            
+            try {
+                const res = await fetch('/api/admin/blogs', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('✅ Blog created successfully!');
+                    addBlogForm.reset();
+                    if (quillEditor) quillEditor.root.innerHTML = '';
+                    fetchAdminBlogs(); // Refresh list
+                } else {
+                    showToast('❌ ' + (data.message || 'Failed to create blog'), 'error');
+                }
+            } catch (err) {
+                console.error("Create blog error:", err);
+                showToast('❌ Connection error. Please try again.', 'error');
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Upload Blog'; }
+            }
+        });
+    }
+});
+
+// Delete a blog
+async function deleteAdminBlog(id) {
+    if (!confirm("Are you sure you want to delete this blog? This action cannot be undone.")) return;
+    
+    const token = localStorage.getItem('adminToken');
+    try {
+        const res = await fetch(`/api/admin/blogs/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        const data = await res.json();
+        if (res.ok && data.success) {
+            showToast('✅ Blog deleted successfully!');
+            fetchAdminBlogs();
+        } else {
+            showToast('❌ ' + (data.message || 'Failed to delete blog'), 'error');
+        }
+    } catch (err) {
+        console.error("Delete blog error:", err);
+        showToast('❌ Connection error.', 'error');
+    }
+}

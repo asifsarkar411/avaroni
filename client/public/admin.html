@@ -715,6 +715,7 @@
         .btn-icon-danger:hover { background: #fee2e2; color: #dc2626; }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body>
     <div id="toast-container"></div>
@@ -738,6 +739,7 @@
                 <button class="tab-btn" data-target="manage-flash-sale"><i class="fas fa-bolt"></i> <span>Flash Sale Timer</span></button>
                 <button class="tab-btn" data-target="manage-banners"><i class="fas fa-images"></i> <span>Homepage Slider</span></button>
                 <button class="tab-btn" data-target="manage-nav-sliders"><i class="fas fa-sliders-h"></i> <span>Navbar Slider</span></button>
+                <button class="tab-btn" data-target="manage-blogs"><i class="fas fa-blog"></i> <span>Manage Blogs</span></button>
                 <button class="tab-btn" data-target="manage-returns"><i class="fas fa-undo"></i> <span>Return Requests</span></button>
                 <button class="tab-btn" data-target="manage-messages"><i class="fas fa-envelope"></i> <span>Contact Messages</span></button>
                 <button class="tab-btn" data-target="manage-customers"><i class="fas fa-users"></i> <span>Customer Users</span></button>
@@ -1506,6 +1508,49 @@
                                 </tbody>
                             </table>
                         </div>
+                <!-- Manage Blogs Section -->
+                <div id="manage-blogs-tab" class="tab-content">
+                    <h2>Manage Blogs</h2>
+                    
+                    <div class="form-container" style="max-width: 900px; margin-bottom: 40px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <h3 style="text-align: center; margin-bottom: 25px; color: #111;">Add Blog</h3>
+                        <form id="add-blog-form">
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="blog-title" style="font-weight: 600; color: #333;">Blog Title *</label>
+                                <input type="text" id="blog-title" placeholder="Enter your blog title" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label style="font-weight: 600; color: #333;">Blog Description *</label>
+                                <div id="blog-editor-container" style="height: 300px; border-radius: 0 0 8px 8px; background: #fff;"></div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <button type="submit" class="btn" style="background: #4f46e5; color: white; border-radius: 8px; padding: 12px 25px;">Upload Blog</button>
+                            </div>
+
+                            <div class="form-group" style="border: 1px dashed #ccc; padding: 25px; border-radius: 8px; text-align: center; background: #fafafa;">
+                                <label style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Attach Blog Image *</label>
+                                <span style="color: #777; font-size: 13px; display: block; margin-bottom: 15px;">(Recommended size: 1000 x 1000)</span>
+                                <input type="file" id="blog-image" accept="image/*" required style="max-width: 300px; margin: 0 auto; display: block; padding: 10px; border: 1px solid #ddd; background: #fff; border-radius: 5px;">
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-container" style="background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blogs-table-body">
+                                <!-- Blogs dynamically populated here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1639,6 +1684,8 @@
     </div>
 
     <script src="invoice.js"></script>
+    <!-- Quill Editor -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="admin.js?v=6.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
