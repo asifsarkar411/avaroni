@@ -164,9 +164,28 @@ function escapeHTML(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
 }
 
+let addProdDescEditor = null;
+let editProdDescEditor = null;
+
 document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById('add-prod-desc-editor')) {
+        addProdDescEditor = new Quill('#add-prod-desc-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
+            placeholder: 'Write product description here...'
+        });
+    }
+    if (document.getElementById('edit-prod-desc-editor')) {
+        editProdDescEditor = new Quill('#edit-prod-desc-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
+            placeholder: 'Write product description here...'
+        });
+    }
+
     // 1. Check if user is logged in
     if (!localStorage.getItem('adminToken')) {
         window.location.href = 'admin-login.html';
@@ -833,6 +852,7 @@ async function handleAddProduct(e) {
         size: document.getElementById('prod-size') ? document.getElementById('prod-size').value : '',
         colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
         brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
+        description: addProdDescEditor ? addProdDescEditor.root.innerHTML : '',
         stock: document.getElementById('prod-stock').value,
         discountType: document.getElementById('prod-discount-type') ? document.getElementById('prod-discount-type').value : 'none',
         discountValue: document.getElementById('prod-discount-value') ? document.getElementById('prod-discount-value').value : 0,
@@ -857,6 +877,7 @@ async function handleAddProduct(e) {
                 const el = document.getElementById(id);
                 if (el && el._tagsInput) el._tagsInput.syncFromOriginal();
             });
+            if (addProdDescEditor) { addProdDescEditor.root.innerHTML = ''; }
             fetchManageProducts(); // Refresh the list instantly
         } else {
             showToast('Failed to save product: ' + (data.message || 'Unknown error', 'error'));
@@ -2276,6 +2297,7 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-colour').value = prod.colour || '';
     if (document.getElementById('edit-prod-colour')._tagsInput) document.getElementById('edit-prod-colour')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-brand').value = prod.brand || '';
+    if (editProdDescEditor) { editProdDescEditor.root.innerHTML = prod.description || ''; }
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
     
@@ -2357,6 +2379,7 @@ async function handleEditProductSubmit(e) {
         size: document.getElementById('edit-prod-size').value,
         colour: document.getElementById('edit-prod-colour').value,
         brand: document.getElementById('edit-prod-brand').value,
+        description: editProdDescEditor ? editProdDescEditor.root.innerHTML : '',
         stock: document.getElementById('edit-prod-stock').value,
         discountType: document.getElementById('edit-prod-discount-type') ? document.getElementById('edit-prod-discount-type').value : 'none',
         discountValue: document.getElementById('edit-prod-discount-value') ? document.getElementById('edit-prod-discount-value').value : 0,

@@ -22,6 +22,9 @@ export default function ProductModal() {
     const [hoverRating, setHoverRating] = useState(0);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
+    // Tab state
+    const [activeTab, setActiveTab] = useState('DESCRIPTION');
+
     useEffect(() => {
         const handleOpenModal = async (e) => {
             const productId = e.detail;
@@ -72,6 +75,7 @@ export default function ProductModal() {
         setSelectedSize('');
         setSelectedColour('');
         setQuantity(1);
+        setActiveTab('DESCRIPTION');
         document.body.style.overflow = 'auto';
     };
 
@@ -154,10 +158,6 @@ export default function ProductModal() {
                                 <div style={{ fontSize: '13px', color: '#555', marginBottom: '20px' }}>
                                     <strong>Category:</strong> <span style={{ textTransform: 'capitalize' }}>{product.category}</span>
                                 </div>
-                                
-                                <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#555', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', padding: '15px 0', marginBottom: '20px' }}>
-                                    {product.description ? product.description.split('\n').map((line, i) => <p key={i} style={{margin: '4px 0'}}>{line}</p>) : <p style={{margin: 0}}>Premium quality product.</p>}
-                                </div>
 
                                 <div className="modal-price-area" style={{ marginBottom: '20px' }}>
                                     {formatDiscountTag(product.discountType, product.discountValue) ? (
@@ -236,68 +236,88 @@ export default function ProductModal() {
                                     </div>
                                 </div>
 
-                                {/* Review Form Section */}
-                                <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px dashed #e2b0c5' }}>
-                                    <h4 style={{ fontSize: '16px', color: '#111', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <i className="fas fa-star" style={{ color: '#ffc107' }}></i> Rate & Review Product
-                                    </h4>
-                                    <p style={{ fontSize: '12px', color: '#666', margin: '0 0 15px 0' }}>Share your star rating and honest opinion</p>
-                                    
-                                    <form onSubmit={handleReviewSubmit}>
-                                        <div style={{ marginBottom: '15px' }}>
-                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '8px' }}>Star Rating:</label>
-                                            <div style={{ display: 'flex', gap: '8px', fontSize: '24px', color: '#ffc107', cursor: 'pointer' }}>
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <i 
-                                                        key={star}
-                                                        className={star <= (hoverRating || reviewRating) ? "fas fa-star" : "far fa-star"}
-                                                        onMouseEnter={() => setHoverRating(star)}
-                                                        onMouseLeave={() => setHoverRating(0)}
-                                                        onClick={() => setReviewRating(star)}
-                                                        style={{ 
-                                                            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                                            transform: star <= hoverRating ? 'scale(1.3)' : 'scale(1)'
-                                                        }}
-                                                    ></i>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div style={{ marginBottom: '15px' }}>
-                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Your Name:</label>
-                                            <input 
-                                                type="text" 
-                                                value={reviewName}
-                                                onChange={(e) => setReviewName(e.target.value)}
-                                                placeholder="Enter your full name" 
-                                                required 
-                                                style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #ffccd8', borderRadius: '8px', fontSize: '13px', outline: 'none' }}
-                                            />
-                                        </div>
-
-                                        <div style={{ marginBottom: '20px' }}>
-                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Review Comment:</label>
-                                            <textarea 
-                                                value={reviewComment}
-                                                onChange={(e) => setReviewComment(e.target.value)}
-                                                placeholder="Write your review comments here..." 
-                                                required 
-                                                rows="3" 
-                                                style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(0,0,0,0.15)', borderRadius: '8px', fontSize: '13px', outline: 'none', resize: 'vertical' }}
-                                            ></textarea>
-                                        </div>
-
-                                        <button 
-                                            type="submit" 
-                                            disabled={isSubmittingReview}
-                                            style={{ 
-                                                background: '#111111', color: '#fff', border: 'none', padding: '10px 24px', fontSize: '13px', fontWeight: '700', borderRadius: '25px', cursor: isSubmittingReview ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', opacity: isSubmittingReview ? 0.7 : 1
-                                            }}
-                                        >
-                                            <i className="fas fa-paper-plane"></i> {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
-                                        </button>
-                                    </form>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* TABBED SECTION */}
+                        <div style={{ marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                            <div style={{ display: 'flex', gap: '30px', borderBottom: '1px solid #ddd', marginBottom: '20px' }}>
+                                {['DESCRIPTION', 'ADDITIONAL INFORMATION', 'REVIEWS (1)'].map((tab) => (
+                                    <button 
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        style={{ 
+                                            background: 'none', border: 'none', 
+                                            padding: '10px 0', 
+                                            fontWeight: activeTab === tab ? 'bold' : 'normal',
+                                            color: activeTab === tab ? '#111' : '#666',
+                                            borderBottom: activeTab === tab ? '2px solid #111' : '2px solid transparent',
+                                            cursor: 'pointer', fontSize: '14px',
+                                            marginBottom: '-1px'
+                                        }}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            <div style={{ minHeight: '150px' }}>
+                                {activeTab === 'DESCRIPTION' && (
+                                    <div 
+                                        style={{ fontSize: '14px', lineHeight: '1.8', color: '#444' }}
+                                        dangerouslySetInnerHTML={{ __html: product.description || '<p>Premium quality product.</p>' }}
+                                    ></div>
+                                )}
+                                
+                                {activeTab === 'ADDITIONAL INFORMATION' && (
+                                    <div style={{ fontSize: '14px', color: '#555' }}>
+                                        <p><strong>Brand:</strong> {product.brand || 'N/A'}</p>
+                                        <p><strong>Weight:</strong> 0.5 kg (Approx)</p>
+                                        <p><strong>Care Instructions:</strong> Machine wash cold, do not bleach.</p>
+                                    </div>
+                                )}
+
+                                {activeTab === 'REVIEWS (1)' && (
+                                    <div style={{ fontSize: '14px', color: '#555' }}>
+                                        <h4 style={{ fontSize: '16px', color: '#111', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <i className="fas fa-star" style={{ color: '#ffc107' }}></i> Rate & Review Product
+                                        </h4>
+                                        <p style={{ fontSize: '12px', color: '#666', margin: '0 0 15px 0' }}>Share your star rating and honest opinion</p>
+                                        
+                                        <form onSubmit={handleReviewSubmit} style={{ maxWidth: '600px' }}>
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '8px' }}>Star Rating:</label>
+                                                <div style={{ display: 'flex', gap: '8px', fontSize: '24px', color: '#ffc107', cursor: 'pointer' }}>
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <i 
+                                                            key={star}
+                                                            className={star <= (hoverRating || reviewRating) ? "fas fa-star" : "far fa-star"}
+                                                            onMouseEnter={() => setHoverRating(star)}
+                                                            onMouseLeave={() => setHoverRating(0)}
+                                                            onClick={() => setReviewRating(star)}
+                                                            style={{ transition: 'transform 0.2s', transform: star <= hoverRating ? 'scale(1.2)' : 'scale(1)' }}
+                                                        ></i>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Your Name:</label>
+                                                <input type="text" value={reviewName} onChange={(e) => setReviewName(e.target.value)} placeholder="Enter your full name" required style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '13px', outline: 'none' }} />
+                                            </div>
+
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Review Comment:</label>
+                                                <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Write your review comments here..." required rows="3" style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '13px', outline: 'none', resize: 'vertical' }}></textarea>
+                                            </div>
+
+                                            <button type="submit" disabled={isSubmittingReview} style={{ background: '#111', color: '#fff', border: 'none', padding: '10px 24px', fontSize: '13px', fontWeight: 'bold', borderRadius: '25px', cursor: isSubmittingReview ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                                <i className="fas fa-paper-plane"></i> {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                                            </button>
+                                        </form>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
