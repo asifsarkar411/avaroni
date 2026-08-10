@@ -31,160 +31,20 @@ function formatImageUrl(url) {
 }
 
 // Global HTML Escaper function to prevent XSS attacks
-function escapeHTML(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Check if user is logged in
-    if (!localStorage.getItem('adminToken')) {
-        window.location.href = 'admin-login.html';
-        return; // Important: Stops the rest of the script from running if not logged in
-    } else {
-        showDashboard().catch(err => console.error('Dashboard init error:', err));
-    }
-
-    // 2. Attach Static Event Listeners
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.addEventListener('click', logout);
-
-    const addCardBtn = document.getElementById('add-card-btn');
-    if (addCardBtn) addCardBtn.addEventListener('click', createNewCard);
-
-    // 2b. Initialize Mobile Sidebar Drawer Navigation
-    initMobileAdminSidebar();
-
-    // 3. Tab Switching Logic
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(button => {
-        button.addEventListener('click', (event) => {
-            const btn = event.target.closest('.tab-btn');
-            if (!btn) return;
-            const targetTab = btn.getAttribute('data-target');
-            if (targetTab) switchTab(targetTab);
-        });
-    });
-
-    // 4. Add Product Form Submit
-    const addProductForm = document.getElementById('add-product-form');
-    if (addProductForm) {
-        addProductForm.addEventListener('submit', handleAddProduct);
-    }
-
-    // 5. Add Category Form Submit
-    const addCategoryForm = document.getElementById('add-category-form');
-    if (addCategoryForm) {
-        addCategoryForm.addEventListener('submit', handleAddCategory);
-    }
-
-    // 6. Dynamic Category -> Subcategory selection binding
-    const prodCategorySelect = document.getElementById('prod-category');
-    if (prodCategorySelect) {
-        prodCategorySelect.addEventListener('change', (e) => {
-            populateSubcategories(e.target.value);
-        });
-    }
-
-    // 7. Add Promo Code Form Submit
-    const addPromoForm = document.getElementById('add-promo-form');
-    if (addPromoForm) {
-        addPromoForm.addEventListener('submit', handleAddPromoCode);
-    }
-
-    // 8. Add Navbar Promo Slider Form Submit
-    const addNavSliderForm = document.getElementById('add-nav-slider-form');
-    if (addNavSliderForm) {
-        addNavSliderForm.addEventListener('submit', handleAddNavSlider);
-    }
-
-    // 9. Edit Product Form Submit
-    const editProductForm = document.getElementById('edit-product-form');
-    if (editProductForm) {
-        editProductForm.addEventListener('submit', handleEditProductSubmit);
-    }
-
-    // 10. Edit Category Form Submit
-    const editCategoryForm = document.getElementById('edit-category-form');
-    if (editCategoryForm) {
-        editCategoryForm.addEventListener('submit', handleEditCategorySubmit);
-    }
-
-    const editCategorySelect = document.getElementById('edit-prod-category');
-    if (editCategorySelect) {
-        editCategorySelect.addEventListener('change', (e) => {
-            populateEditSubcategories(e.target.value);
-        });
-    }
-
-    // 10. Settings & User Forms Submit
-// Custom Toast Notification System
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = "toast ${type}";
-    
-    const icon = type === 'success' ? '<i class="fas fa-check-circle" style="color:#28a745; margin-right:8px;"></i>' : '<i class="fas fa-exclamation-circle" style="color:#dc3545; margin-right:8px;"></i>';
-    toast.innerHTML = icon + message;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideIn 0.5s ease reverse forwards';
-        setTimeout(() => toast.remove(), 500);
-    }, 4000);
-}
-// Helper function to format image URLs safely
-function formatImageUrl(url) {
-    if (!url || typeof url !== 'string' || !url.trim()) {
-        return './img/profile_image.jpg';
-    }
-    let clean = url.trim().replace(/\\/g, '/');
-    if (clean.startsWith('data:image/')) return clean;
-    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
-    if (!clean.startsWith('/') && !clean.startsWith('./')) {
-        clean = '/' + clean;
-    }
-    return clean;
-}
-
-// Global HTML Escaper function to prevent XSS attacks
-function escapeHTML(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
 let addProdDescEditor = null;
 let editProdDescEditor = null;
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById('add-prod-desc-editor')) {
-        addProdDescEditor = new Quill('#add-prod-desc-editor', {
-            theme: 'snow',
-            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
-            placeholder: 'Write product description here...'
-        });
-    }
-    if (document.getElementById('edit-prod-desc-editor')) {
-        editProdDescEditor = new Quill('#edit-prod-desc-editor', {
-            theme: 'snow',
-            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
-            placeholder: 'Write product description here...'
-        });
-    }
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
+document.addEventListener("DOMContentLoaded", () => {
     // 1. Check if user is logged in
     if (!localStorage.getItem('adminToken')) {
         window.location.href = 'admin-login.html';
@@ -276,10 +136,26 @@ document.addEventListener("DOMContentLoaded", () => {
     if (createUserForm) createUserForm.addEventListener('submit', handleCreateUser);
 
     document.querySelectorAll('.tags-input').forEach(el => {
-        el._tagsInput = new TagsInput(el);
+        if (typeof TagsInput !== 'undefined') {
+            el._tagsInput = new TagsInput(el);
+        }
     });
-});
 
+    if (document.getElementById('add-prod-desc-editor')) {
+        addProdDescEditor = new Quill('#add-prod-desc-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
+            placeholder: 'Write product description here...'
+        });
+    }
+    if (document.getElementById('edit-prod-desc-editor')) {
+        editProdDescEditor = new Quill('#edit-prod-desc-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
+            placeholder: 'Write product description here...'
+        });
+    }
+});
 // Helper to convert & compress image file to optimized Base64
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -2983,4 +2859,3 @@ class TagsInput {
         this.renderTags();
     }
 }
-});
