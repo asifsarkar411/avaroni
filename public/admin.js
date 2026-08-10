@@ -164,7 +164,6 @@ function escapeHTML(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
-    }
 }
 
 let addProdDescEditor = null;
@@ -2984,3 +2983,4 @@ class TagsInput {
         this.renderTags();
     }
 }
+});
