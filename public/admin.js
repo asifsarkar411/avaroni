@@ -123,6 +123,131 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 10. Settings & User Forms Submit
+// Custom Toast Notification System
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = "toast ${type}";
+    
+    const icon = type === 'success' ? '<i class="fas fa-check-circle" style="color:#28a745; margin-right:8px;"></i>' : '<i class="fas fa-exclamation-circle" style="color:#dc3545; margin-right:8px;"></i>';
+    toast.innerHTML = icon + message;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.5s ease reverse forwards';
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+// Helper function to format image URLs safely
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
+// Global HTML Escaper function to prevent XSS attacks
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Check if user is logged in
+    if (!localStorage.getItem('adminToken')) {
+        window.location.href = 'admin-login.html';
+        return; // Important: Stops the rest of the script from running if not logged in
+    } else {
+        showDashboard().catch(err => console.error('Dashboard init error:', err));
+    }
+
+    // 2. Attach Static Event Listeners
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    const addCardBtn = document.getElementById('add-card-btn');
+    if (addCardBtn) addCardBtn.addEventListener('click', createNewCard);
+
+    // 2b. Initialize Mobile Sidebar Drawer Navigation
+    initMobileAdminSidebar();
+
+    // 3. Tab Switching Logic
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const btn = event.target.closest('.tab-btn');
+            if (!btn) return;
+            const targetTab = btn.getAttribute('data-target');
+            if (targetTab) switchTab(targetTab);
+        });
+    });
+
+    // 4. Add Product Form Submit
+    const addProductForm = document.getElementById('add-product-form');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', handleAddProduct);
+    }
+
+    // 5. Add Category Form Submit
+    const addCategoryForm = document.getElementById('add-category-form');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', handleAddCategory);
+    }
+
+    // 6. Dynamic Category -> Subcategory selection binding
+    const prodCategorySelect = document.getElementById('prod-category');
+    if (prodCategorySelect) {
+        prodCategorySelect.addEventListener('change', (e) => {
+            populateSubcategories(e.target.value);
+        });
+    }
+
+    // 7. Add Promo Code Form Submit
+    const addPromoForm = document.getElementById('add-promo-form');
+    if (addPromoForm) {
+        addPromoForm.addEventListener('submit', handleAddPromoCode);
+    }
+
+    // 8. Add Navbar Promo Slider Form Submit
+    const addNavSliderForm = document.getElementById('add-nav-slider-form');
+    if (addNavSliderForm) {
+        addNavSliderForm.addEventListener('submit', handleAddNavSlider);
+    }
+
+    // 9. Edit Product Form Submit
+    const editProductForm = document.getElementById('edit-product-form');
+    if (editProductForm) {
+        editProductForm.addEventListener('submit', handleEditProductSubmit);
+    }
+
+    // 10. Edit Category Form Submit
+    const editCategoryForm = document.getElementById('edit-category-form');
+    if (editCategoryForm) {
+        editCategoryForm.addEventListener('submit', handleEditCategorySubmit);
+    }
+
+    const editCategorySelect = document.getElementById('edit-prod-category');
+    if (editCategorySelect) {
+        editCategorySelect.addEventListener('change', (e) => {
+            populateEditSubcategories(e.target.value);
+        });
+    }
+
+    // 10. Settings & User Forms Submit
     const changeEmailForm = document.getElementById('change-email-form');
     if (changeEmailForm) changeEmailForm.addEventListener('submit', handleChangeEmail);
 
@@ -131,6 +256,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const createUserForm = document.getElementById('create-user-form');
     if (createUserForm) createUserForm.addEventListener('submit', handleCreateUser);
+
+    document.querySelectorAll('.tags-input').forEach(el => {
+        el._tagsInput = new TagsInput(el);
+    });
 });
 
 // Helper to convert & compress image file to optimized Base64
@@ -724,6 +853,10 @@ async function handleAddProduct(e) {
         if (data.success) {
             showToast('Product added successfully!');
             document.getElementById('add-product-form').reset();
+            ['prod-size', 'prod-colour'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el._tagsInput) el._tagsInput.syncFromOriginal();
+            });
             fetchManageProducts(); // Refresh the list instantly
         } else {
             showToast('Failed to save product: ' + (data.message || 'Unknown error', 'error'));
@@ -2139,7 +2272,9 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-price').value = prod.price;
     document.getElementById('edit-prod-stock').value = prod.stockQuantity;
     document.getElementById('edit-prod-size').value = prod.size || '';
+    if (document.getElementById('edit-prod-size')._tagsInput) document.getElementById('edit-prod-size')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-colour').value = prod.colour || '';
+    if (document.getElementById('edit-prod-colour')._tagsInput) document.getElementById('edit-prod-colour')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-brand').value = prod.brand || '';
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
@@ -2733,5 +2868,86 @@ async function handleFlashSaleSubmit(e) {
     }
 }
 
+class TagsInput {
+    constructor(element) {
+        this.originalInput = element;
+        this.originalInput.style.display = 'none';
+        
+        this.container = document.createElement('div');
+        this.container.className = 'tags-input-container';
+        
+        this.tags = [];
+        const initialValue = this.originalInput.value.trim();
+        if (initialValue) {
+            this.tags = initialValue.split(',').map(t => t.trim()).filter(t => t);
+        }
 
+        this.tagElements = document.createElement('div');
+        this.tagElements.className = 'tags-wrapper';
+        this.container.appendChild(this.tagElements);
 
+        this.input = document.createElement('input');
+        this.input.type = 'text';
+        this.input.placeholder = this.originalInput.getAttribute('placeholder') || 'Type and press Enter';
+        this.input.className = 'tag-input-field';
+        this.container.appendChild(this.input);
+        
+        this.originalInput.parentNode.insertBefore(this.container, this.originalInput);
+
+        this.renderTags();
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const val = this.input.value.trim().replace(/,/g, '');
+                if (val && !this.tags.includes(val)) {
+                    this.tags.push(val);
+                    this.updateOriginal();
+                    this.renderTags();
+                }
+                this.input.value = '';
+            } else if (e.key === 'Backspace' && this.input.value === '' && this.tags.length > 0) {
+                this.tags.pop();
+                this.updateOriginal();
+                this.renderTags();
+            }
+        });
+        
+        this.container.addEventListener('click', () => {
+            this.input.focus();
+        });
+    }
+
+    renderTags() {
+        this.tagElements.innerHTML = '';
+        this.tags.forEach((tag, index) => {
+            const tagEl = document.createElement('span');
+            tagEl.className = 'tag-item';
+            tagEl.innerHTML = `${escapeHTML(tag)} <i class="fas fa-times" data-index="${index}"></i>`;
+            this.tagElements.appendChild(tagEl);
+        });
+
+        this.tagElements.querySelectorAll('.fa-times').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                this.tags.splice(idx, 1);
+                this.updateOriginal();
+                this.renderTags();
+            });
+        });
+    }
+
+    updateOriginal() {
+        this.originalInput.value = this.tags.join(', ');
+        this.originalInput.dispatchEvent(new Event('change'));
+    }
+    
+    syncFromOriginal() {
+        const val = this.originalInput.value.trim();
+        this.tags = val ? val.split(',').map(t => t.trim()).filter(t => t) : [];
+        this.renderTags();
+    }
+}

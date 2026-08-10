@@ -131,6 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const createUserForm = document.getElementById('create-user-form');
     if (createUserForm) createUserForm.addEventListener('submit', handleCreateUser);
+
+    document.querySelectorAll('.tags-input').forEach(el => {
+        el._tagsInput = new TagsInput(el);
+    });
 });
 
 // Helper to convert & compress image file to optimized Base64
@@ -743,6 +747,10 @@ async function handleAddProduct(e) {
         if (data.success) {
             showToast('Product added successfully!');
             document.getElementById('add-product-form').reset();
+            ['prod-size', 'prod-colour'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el._tagsInput) el._tagsInput.syncFromOriginal();
+            });
             fetchManageProducts(); // Refresh the list instantly
         } else {
             showToast('Failed to save product: ' + (data.message || 'Unknown error', 'error'));
@@ -2167,7 +2175,9 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-price').value = prod.price;
     document.getElementById('edit-prod-stock').value = prod.stockQuantity;
     document.getElementById('edit-prod-size').value = prod.size || '';
+    if (document.getElementById('edit-prod-size')._tagsInput) document.getElementById('edit-prod-size')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-colour').value = prod.colour || '';
+    if (document.getElementById('edit-prod-colour')._tagsInput) document.getElementById('edit-prod-colour')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-brand').value = prod.brand || '';
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
@@ -2758,6 +2768,90 @@ async function handleFlashSaleSubmit(e) {
         showToast('Server connection error.', 'error');
     } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Publish Flash Sale Banner'; }
+    }
+}
+
+class TagsInput {
+    constructor(element) {
+        this.originalInput = element;
+        this.originalInput.style.display = 'none';
+        
+        this.container = document.createElement('div');
+        this.container.className = 'tags-input-container';
+        
+        this.tags = [];
+        const initialValue = this.originalInput.value.trim();
+        if (initialValue) {
+            this.tags = initialValue.split(',').map(t => t.trim()).filter(t => t);
+        }
+
+        this.tagElements = document.createElement('div');
+        this.tagElements.className = 'tags-wrapper';
+        this.container.appendChild(this.tagElements);
+
+        this.input = document.createElement('input');
+        this.input.type = 'text';
+        this.input.placeholder = this.originalInput.getAttribute('placeholder') || 'Type and press Enter';
+        this.input.className = 'tag-input-field';
+        this.container.appendChild(this.input);
+        
+        this.originalInput.parentNode.insertBefore(this.container, this.originalInput);
+
+        this.renderTags();
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const val = this.input.value.trim().replace(/,/g, '');
+                if (val && !this.tags.includes(val)) {
+                    this.tags.push(val);
+                    this.updateOriginal();
+                    this.renderTags();
+                }
+                this.input.value = '';
+            } else if (e.key === 'Backspace' && this.input.value === '' && this.tags.length > 0) {
+                this.tags.pop();
+                this.updateOriginal();
+                this.renderTags();
+            }
+        });
+        
+        this.container.addEventListener('click', () => {
+            this.input.focus();
+        });
+    }
+
+    renderTags() {
+        this.tagElements.innerHTML = '';
+        this.tags.forEach((tag, index) => {
+            const tagEl = document.createElement('span');
+            tagEl.className = 'tag-item';
+            tagEl.innerHTML = `${escapeHTML(tag)} <i class="fas fa-times" data-index="${index}"></i>`;
+            this.tagElements.appendChild(tagEl);
+        });
+
+        this.tagElements.querySelectorAll('.fa-times').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                this.tags.splice(idx, 1);
+                this.updateOriginal();
+                this.renderTags();
+            });
+        });
+    }
+
+    updateOriginal() {
+        this.originalInput.value = this.tags.join(', ');
+        this.originalInput.dispatchEvent(new Event('change'));
+    }
+    
+    syncFromOriginal() {
+        const val = this.originalInput.value.trim();
+        this.tags = val ? val.split(',').map(t => t.trim()).filter(t => t) : [];
+        this.renderTags();
     }
 }
 
