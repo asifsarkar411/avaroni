@@ -282,17 +282,30 @@ h6, .h6 {
 }
 
 .add-to-cart-btn {
-    margin-top: 10px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
-}
-
-.product-card:hover .add-to-cart-btn {
+    margin-top: 12px;
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
+    transition: all 0.3s ease;
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 12px 15px !important;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-to-cart-btn:hover {
+    background: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .section-header-centered {
