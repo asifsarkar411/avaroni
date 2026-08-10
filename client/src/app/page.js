@@ -83,19 +83,24 @@ export default function Home() {
 
         <section className="category-section">
             <div className="category-header">
-                <h2 className="section-title" data-aos="fade-up">Shop by Categories</h2>
+                <div className="category-header-line"></div>
+                <div className="category-header-text">
+                    <h2 data-aos="fade-up">CATEGORIES</h2>
+                    <p data-aos="fade-up" data-aos-delay="100">Browse all the exclusive categories</p>
+                </div>
             </div>
             {loading ? (
                 <div style={{display:'flex', gap:'20px', justifyContent:'center'}}>
-                    <div className="skeleton-loader skeleton-card"></div>
-                    <div className="skeleton-loader skeleton-card"></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '400px' }}></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '400px' }}></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '400px' }}></div>
                 </div>
             ) : (
                 <div className="category-grid" id="category-grid">
                     {categories.map(cat => (
-                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`} style={{ cursor: 'pointer' }}>
-                            <div className="category-icon-wrap">
-                                <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt={cat.name} loading="lazy" className="category-icon-img" />
+                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`}>
+                            <div className="category-image-wrap">
+                                <img src={getImageUrl(cat.imageUrl || cat.image || cat.iconUrl || cat.icon)} alt={cat.name} loading="lazy" />
                             </div>
                             <p className="category-title">{cat.name}</p>
                         </div>
