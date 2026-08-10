@@ -112,12 +112,19 @@ export default function Home() {
         <FlashSaleBanner />
 
         <div className="new-arrivals-section">
-            <h2 className="section-title" data-aos="fade-up"><i className="fas fa-sparkles"></i> New Arrivals <i className="fas fa-sparkles"></i></h2>
-            <p className="section-subtitle" data-aos="fade-up" data-aos-delay="100">Discover our latest products</p>
+            <div className="section-header-centered">
+                <div className="section-header-line-centered"></div>
+                <h2 data-aos="fade-up">NEW ARRIVAL</h2>
+                <br/>
+                <p data-aos="fade-up" data-aos-delay="100">Explore all the new products</p>
+            </div>
             {loading ? (
                 <div style={{display:'flex', gap:'20px', justifyContent:'center'}}>
-                    <div className="skeleton-loader skeleton-card"></div>
-                    <div className="skeleton-loader skeleton-card"></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
+                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
                 </div>
             ) : (
                 <div className="product-grid" id="new-arrivals-grid">
@@ -126,26 +133,36 @@ export default function Home() {
                         const discountTag = formatDiscountTag(prod.discountType, prod.discountValue);
                         return (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
-                                {discountTag && <div style={{position: 'absolute', top: '10px', left: '10px', background: '#e60050', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
+                            <div className="product-image-wrap" onClick={() => openProduct(prod._id)}>
+                                {discountTag && <div style={{position: 'absolute', top: '10px', left: '10px', background: '#3b82f6', color: 'white', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
                                 <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} style={{ color: isInWishlist(prod._id) ? '#e60050' : '#888' }}>
                                     <i className={isInWishlist(prod._id) ? "fas fa-heart" : "far fa-heart"}></i>
                                 </button>
                                 <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
                             <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
+                            <p className="product-category-text">{prod.category?.name || prod.category || 'Category'}</p>
+                            <div className="product-rating">
+                                <i className="fas fa-star"></i>
+                                <i className="fas fa-star"></i>
+                                <i className="fas fa-star"></i>
+                                <i className="fas fa-star"></i>
+                                <i className="far fa-star"></i>
+                                <span>({Math.floor(Math.random() * 50) + 1})</span>
+                            </div>
                             <p className="price">
                                 {discountTag ? (
                                     <>
-                                        <span style={{textDecoration: 'line-through', color: '#999', marginRight: '8px', fontSize: '14px'}}>BDT {prod.price}</span>
-                                        <span style={{color: '#e60050'}}>BDT {finalPrice}</span>
+                                        <span>৳ {finalPrice}</span>
+                                        <span className="old-price">৳ {prod.price}</span>
                                     </>
                                 ) : (
-                                    `BDT ${prod.price}`
+                                    `৳ ${prod.price}`
                                 )}
                             </p>
-                            <button className="btn add-to-cart-btn" onClick={() => addToCart(prod)} style={{ width: '100%' }}>Add to Cart</button>
+                            <button className="btn add-to-cart-btn" onClick={() => addToCart(prod)} style={{ width: '100%', padding: '8px' }}>Add to Cart</button>
                         </div>
+
                     )})}
                 </div>
             )}
