@@ -226,6 +226,7 @@ async function showDashboard() {
     if (res && res.ok) {
         fetchDashboardStats();
         fetchAnalyticsCharts();
+        fetchDashboardVisuals(); // Load new visual charts + tables
     }
 }
 
@@ -503,7 +504,7 @@ function switchTab(tabName) {
     }
 
     // Fetch data dynamically based on the active tab
-    if (tabName === 'dashboard') fetchDashboardStats();
+    if (tabName === 'dashboard') { fetchDashboardStats(); fetchDashboardVisuals(); }
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'manage-products') fetchManageProducts();
     if (tabName === 'add-product') populateAddProductCategories();
@@ -2888,9 +2889,24 @@ async function deleteAdminBlog(id) {
         showToast('❌ Connection error.', 'error');
     }
 }
+
 // ==========================================
 // ADVANCED DASHBOARD VISUALS
 // ==========================================
+async function fetchDashboardVisuals() {
+    try {
+        const response = await fetch('/api/admin/orders', {
+            headers: getAuthHeaders()
+        });
+        if (!response || !response.ok) return;
+        const data = await response.json();
+        const orders = data.orders || [];
+        renderAdvancedVisuals(orders);
+    } catch (err) {
+        console.error('fetchDashboardVisuals error:', err);
+    }
+}
+
 function renderAdvancedVisuals(orders) {
     calculateRevenueByCity(orders);
     calculateOrdersByHour(orders);
@@ -2906,16 +2922,18 @@ function calculateRevenueByCity(orders) {
     let cityRev = {};
     orders.forEach(o => {
         let city = 'Unknown';
-        if(o.shipping && o.shipping.city) {
-            city = o.shipping.city.trim();
-        } else if (o.shipping && o.shipping.address) {
-            city = o.shipping.address.includes('Dhaka') ? 'Dhaka' : 'Other';
+        let addr = (o.address || '').trim().toLowerCase();
+        
+        if (addr.includes('inside dhaka') || addr.includes('dhaka') && !addr.includes('outside')) {
+            city = 'Inside Dhaka';
+        } else if (addr.includes('outside dhaka')) {
+            city = 'Outside Dhaka';
+        } else if (addr) {
+            // Try to extract district/city from address
+            city = o.address.trim().split(',').pop().trim() || 'Other';
         }
         
-        if (city.toLowerCase().includes('inside dhaka') || city.toLowerCase() === 'dhaka') city = 'Inside Dhaka';
-        if (city.toLowerCase().includes('outside dhaka')) city = 'Outside Dhaka';
-        
-        let total = parseFloat(o.total) || 0;
+        let total = parseFloat(o.totalAmount) || 0;
         cityRev[city] = (cityRev[city] || 0) + total;
     });
     
@@ -2960,8 +2978,9 @@ function calculateOrdersByHour(orders) {
     
     let hourCounts = Array(24).fill(0);
     orders.forEach(o => {
-        if(o.createdAt) {
-            let d = new Date(o.createdAt);
+        let dateField = o.orderDate || o.createdAt;
+        if(dateField) {
+            let d = new Date(dateField);
             if(!isNaN(d.getTime())) {
                 hourCounts[d.getHours()]++;
             }
@@ -3008,7 +3027,7 @@ function calculatePaymentMethods(orders) {
     orders.forEach(o => {
         let pm = o.paymentMethod || 'Unknown';
         if(pm === 'Cash on Delivery') pm = 'COD';
-        methods[pm] = (methods[pm] || 0) + (parseFloat(o.total) || 0);
+        methods[pm] = (methods[pm] || 0) + (parseFloat(o.totalAmount) || 0);
     });
     
     const labels = Object.keys(methods);
@@ -3061,7 +3080,7 @@ function renderLatestPendingOrders(orders) {
     const badge = document.getElementById('pending-orders-badge');
     if(!tbody) return;
     
-    const pendingOrders = orders.filter(o => o.status === 'Pending').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const pendingOrders = orders.filter(o => o.status === 'Pending').sort((a,b) => new Date(b.orderDate || b.createdAt) - new Date(a.orderDate || a.createdAt));
     if(badge) badge.innerText = pendingOrders.length;
     
     const latest = pendingOrders.slice(0, 5);
@@ -3073,13 +3092,13 @@ function renderLatestPendingOrders(orders) {
     
     let html = '';
     latest.forEach(o => {
-        const dateStr = new Date(o.createdAt).toLocaleDateString();
-        const phone = (o.shipping && o.shipping.phone) ? o.shipping.phone : 'N/A';
+        const dateStr = new Date(o.orderDate || o.createdAt).toLocaleDateString();
+        const phone = o.phone || 'N/A';
         html += `
         <tr>
             <td><span class="phone">${escapeHTML(phone)}</span></td>
-            <td><span class="invoice" onclick="openOrderModal('${o._id}')">#${o.orderId || o._id.substring(o._id.length-6)}</span></td>
-            <td><span class="total">৳${parseFloat(o.total || 0).toLocaleString()}</span></td>
+            <td><span class="invoice" onclick="switchTab('orders-tab', 'Manage Orders')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="total">৳${parseFloat(o.totalAmount || 0).toLocaleString()}</span></td>
             <td><span class="date">${dateStr}</span></td>
             <td>
                 <button class="action-icon-btn btn-check" title="Approve" onclick="updateOrderStatus('${o._id}', 'Approved')"><i class="fas fa-check"></i></button>
@@ -3095,7 +3114,7 @@ function renderLatestActiveOrders(orders) {
     const badge = document.getElementById('active-orders-badge');
     if(!tbody) return;
     
-    const activeOrders = orders.filter(o => o.status === 'Approved' || o.status === 'Processing').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const activeOrders = orders.filter(o => o.status === 'Approved' || o.status === 'Processing').sort((a,b) => new Date(b.orderDate || b.createdAt) - new Date(a.orderDate || a.createdAt));
     if(badge) badge.innerText = activeOrders.length;
     
     const latest = activeOrders.slice(0, 5);
@@ -3107,16 +3126,16 @@ function renderLatestActiveOrders(orders) {
     
     let html = '';
     latest.forEach(o => {
-        const dateStr = new Date(o.createdAt).toLocaleDateString();
-        const phone = (o.shipping && o.shipping.phone) ? o.shipping.phone : 'N/A';
+        const dateStr = new Date(o.orderDate || o.createdAt).toLocaleDateString();
+        const phone = o.phone || 'N/A';
         html += `
         <tr>
             <td><span class="phone">${escapeHTML(phone)}</span></td>
-            <td><span class="invoice" onclick="openOrderModal('${o._id}')">#${o.orderId || o._id.substring(o._id.length-6)}</span></td>
-            <td><span class="total">৳${parseFloat(o.total || 0).toLocaleString()}</span></td>
+            <td><span class="invoice" onclick="switchTab('orders-tab', 'Manage Orders')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="total">৳${parseFloat(o.totalAmount || 0).toLocaleString()}</span></td>
             <td><span class="date">${dateStr}</span></td>
             <td>
-                <button class="action-icon-btn btn-eye" title="View" onclick="openOrderModal('${o._id}')"><i class="fas fa-eye"></i></button>
+                <button class="action-icon-btn btn-eye" title="View" onclick="switchTab('orders-tab', 'Manage Orders')"><i class="fas fa-eye"></i></button>
                 <button class="action-icon-btn btn-check" title="Mark Delivered" onclick="updateOrderStatus('${o._id}', 'Delivered')"><i class="fas fa-truck"></i></button>
             </td>
         </tr>`;
