@@ -54,8 +54,6 @@ export function CartProvider({ children }) {
         // Show native toast if available
         if (typeof window !== 'undefined' && window.showToast) {
             window.showToast('Product added to cart!');
-        } else {
-            alert('Added to cart!');
         }
     };
 
