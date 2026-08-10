@@ -59,6 +59,7 @@ export default function ProductModal() {
     }, []);
 
     const [selectedSize, setSelectedSize] = useState('');
+    const [selectedColour, setSelectedColour] = useState('');
     const [quantity, setQuantity] = useState(1);
 
     const close = () => {
@@ -69,19 +70,20 @@ export default function ProductModal() {
         setReviewComment('');
         setReviewRating(5);
         setSelectedSize('');
+        setSelectedColour('');
         setQuantity(1);
         document.body.style.overflow = 'auto';
     };
 
     const handleAddToCart = () => {
         if (!product) return;
-        addToCart(product, quantity, selectedSize);
+        addToCart(product, quantity, selectedSize, selectedColour);
         close();
     };
 
     const handleBuyNow = () => {
         if (!product) return;
-        addToCart(product, quantity, selectedSize);
+        addToCart(product, quantity, selectedSize, selectedColour);
         close();
         router.push('/checkout');
     };
@@ -177,13 +179,30 @@ export default function ProductModal() {
                                     <div style={{ marginBottom: '20px' }}>
                                         <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px' }}>SELECT SIZE: <span style={{color: 'red'}}>*</span></div>
                                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                            {product.size.split(',').map(s => s.trim()).map(sz => (
+                                            {product.size.split(',').map(s => s.trim()).map(sz => sz && (
                                                 <button 
                                                     key={sz} 
                                                     className={`size-selector-btn ${selectedSize === sz ? 'active' : ''}`}
                                                     onClick={() => setSelectedSize(sz)}
                                                 >
                                                     {sz}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {product.colour && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px' }}>SELECT COLOUR:</div>
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            {product.colour.split(',').map(c => c.trim()).map(col => col && (
+                                                <button 
+                                                    key={col} 
+                                                    className={`size-selector-btn ${selectedColour === col ? 'active' : ''}`}
+                                                    onClick={() => setSelectedColour(col)}
+                                                >
+                                                    {col}
                                                 </button>
                                             ))}
                                         </div>

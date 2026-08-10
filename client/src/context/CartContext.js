@@ -43,14 +43,17 @@ export function CartProvider({ children }) {
         }
     };
 
-    const addToCart = (product, quantity = 1, size = '') => {
-        const itemIdentifier = size ? `${product._id}-${size}` : product._id;
+    const addToCart = (product, quantity = 1, size = '', colour = '') => {
+        let itemIdentifier = product._id;
+        if (size) itemIdentifier += `-${size}`;
+        if (colour) itemIdentifier += `-${colour}`;
+        
         const existing = cart.find(item => (item.cartItemId || item._id) === itemIdentifier);
         
         if (existing) {
             saveCart(cart.map(item => (item.cartItemId || item._id) === itemIdentifier ? { ...item, quantity: Number(item.quantity || 0) + quantity } : item), cartKey);
         } else {
-            saveCart([...cart, { ...product, cartItemId: itemIdentifier, selectedSize: size, quantity }], cartKey);
+            saveCart([...cart, { ...product, cartItemId: itemIdentifier, selectedSize: size, selectedColour: colour, quantity }], cartKey);
         }
         
         // Show native toast if available

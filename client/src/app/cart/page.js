@@ -24,25 +24,29 @@ export default function CartPage() {
                     <>
                         <div id="cart-items" style={{ marginBottom: '30px' }}>
                             {cart.map(item => (
-                                <div key={item._id} className="cart-item" style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid rgba(0,0,0,0.08)', gap: '15px' }}>
+                                <div key={item.cartItemId || item._id} className="cart-item" style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid rgba(0,0,0,0.08)', gap: '15px' }}>
                                     <img src={getImageUrl(item.imageUrl)} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
                                     
                                     <div style={{ flex: 1 }}>
                                         <h4 style={{ margin: '0 0 5px 0', fontSize: '1.1rem', color: '#111' }}>{item.name}</h4>
-                                        <div style={{ color: '#666', fontSize: '0.9rem' }}>BDT {item.price}</div>
+                                        <div style={{ color: '#666', fontSize: '0.9rem' }}>
+                                            BDT {item.price}
+                                            {item.selectedSize && ` • Size: ${item.selectedSize}`}
+                                            {item.selectedColour && ` • Colour: ${item.selectedColour}`}
+                                        </div>
                                     </div>
 
                                     <div className="cart-quantity-controls" style={{ display: 'flex', alignItems: 'center', background: '#f5f5f5', borderRadius: '8px', overflow: 'hidden' }}>
-                                        <button onClick={() => updateQuantity(item._id, -1)} style={{ border: 'none', background: 'none', padding: '8px 12px', cursor: 'pointer', fontSize: '1.2rem', color: '#333' }}>-</button>
+                                        <button onClick={() => updateQuantity(item.cartItemId || item._id, -1)} style={{ border: 'none', background: 'none', padding: '8px 12px', cursor: 'pointer', fontSize: '1.2rem', color: '#333' }}>-</button>
                                         <span style={{ padding: '0 10px', fontWeight: 'bold' }}>{item.quantity}</span>
-                                        <button onClick={() => updateQuantity(item._id, 1)} style={{ border: 'none', background: 'none', padding: '8px 12px', cursor: 'pointer', fontSize: '1.2rem', color: '#333' }}>+</button>
+                                        <button onClick={() => updateQuantity(item.cartItemId || item._id, 1)} style={{ border: 'none', background: 'none', padding: '8px 12px', cursor: 'pointer', fontSize: '1.2rem', color: '#333' }}>+</button>
                                     </div>
 
                                     <div style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '80px', textAlign: 'right' }}>
                                         BDT {item.price * item.quantity}
                                     </div>
 
-                                    <button onClick={() => removeFromCart(item._id)} style={{ border: 'none', background: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: '1.2rem', padding: '10px' }} title="Remove Item">
+                                    <button onClick={() => removeFromCart(item.cartItemId || item._id)} style={{ border: 'none', background: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: '1.2rem', padding: '10px' }} title="Remove Item">
                                         <i className="fas fa-trash"></i>
                                     </button>
                                 </div>

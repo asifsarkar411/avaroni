@@ -253,11 +253,15 @@ export default function CheckoutPage() {
                         
                         <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px' }}>
                             {cart.map(item => (
-                                <div key={item._id} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                                <div key={item.cartItemId || item._id} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                                     <img src={getImageUrl(item.imageUrl)} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} />
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>{item.name}</div>
-                                        <div style={{ fontSize: '0.8rem', color: '#666' }}>Qty: {item.quantity} x BDT {item.price}</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                                            Qty: {item.quantity} x BDT {item.price}
+                                            {item.selectedSize && ` • Size: ${item.selectedSize}`}
+                                            {item.selectedColour && ` • Colour: ${item.selectedColour}`}
+                                        </div>
                                     </div>
                                     <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>BDT {item.price * item.quantity}</div>
                                 </div>
