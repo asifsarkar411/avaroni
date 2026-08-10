@@ -773,6 +773,11 @@ async function fetchOrders() {
 
         // Render filtered view
         renderFilteredOrders();
+        
+        // Render advanced dashboard visuals
+        if(typeof renderAdvancedVisuals === 'function') {
+            renderAdvancedVisuals(allAdminOrders);
+        }
 
     } catch (error) {
         console.error("Error fetching orders:", error);
@@ -2882,4 +2887,239 @@ async function deleteAdminBlog(id) {
         console.error("Delete blog error:", err);
         showToast('❌ Connection error.', 'error');
     }
+}
+// ==========================================
+// ADVANCED DASHBOARD VISUALS
+// ==========================================
+function renderAdvancedVisuals(orders) {
+    calculateRevenueByCity(orders);
+    calculateOrdersByHour(orders);
+    calculatePaymentMethods(orders);
+    renderLatestPendingOrders(orders);
+    renderLatestActiveOrders(orders);
+}
+
+function calculateRevenueByCity(orders) {
+    const container = document.getElementById('city-revenue-container');
+    if(!container) return;
+    
+    let cityRev = {};
+    orders.forEach(o => {
+        let city = 'Unknown';
+        if(o.shipping && o.shipping.city) {
+            city = o.shipping.city.trim();
+        } else if (o.shipping && o.shipping.address) {
+            city = o.shipping.address.includes('Dhaka') ? 'Dhaka' : 'Other';
+        }
+        
+        if (city.toLowerCase().includes('inside dhaka') || city.toLowerCase() === 'dhaka') city = 'Inside Dhaka';
+        if (city.toLowerCase().includes('outside dhaka')) city = 'Outside Dhaka';
+        
+        let total = parseFloat(o.total) || 0;
+        cityRev[city] = (cityRev[city] || 0) + total;
+    });
+    
+    // Sort cities by revenue
+    const sortedCities = Object.entries(cityRev).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    if(sortedCities.length === 0) {
+        container.innerHTML = '<div style="color:#888; font-size:12px;">No city data found</div>';
+        return;
+    }
+    
+    const maxRev = sortedCities[0][1];
+    
+    let html = '';
+    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899'];
+    
+    sortedCities.forEach((item, index) => {
+        let city = item[0];
+        let rev = item[1];
+        let pct = maxRev > 0 ? (rev / maxRev) * 100 : 0;
+        let color = colors[index % colors.length];
+        
+        html += `
+        <div class="city-progress-wrap">
+            <div class="city-progress-header">
+                <span>${escapeHTML(city)}</span>
+                <span>৳ ${rev.toLocaleString()}</span>
+            </div>
+            <div class="city-progress-bar">
+                <div class="city-progress-fill" style="width: ${pct}%; background: ${color};"></div>
+            </div>
+        </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function calculateOrdersByHour(orders) {
+    const canvas = document.getElementById('ordersHourChart');
+    if(!canvas || typeof Chart === 'undefined') return;
+    
+    let hourCounts = Array(24).fill(0);
+    orders.forEach(o => {
+        if(o.createdAt) {
+            let d = new Date(o.createdAt);
+            if(!isNaN(d.getTime())) {
+                hourCounts[d.getHours()]++;
+            }
+        }
+    });
+    
+    const labels = ['12 AM','1 AM','2 AM','3 AM','4 AM','5 AM','6 AM','7 AM','8 AM','9 AM','10 AM','11 AM',
+                    '12 PM','1 PM','2 PM','3 PM','4 PM','5 PM','6 PM','7 PM','8 PM','9 PM','10 PM','11 PM'];
+    
+    if(chartInstances['ordersHourChart']) {
+        destroyChart('ordersHourChart');
+    }
+    
+    chartInstances['ordersHourChart'] = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Orders',
+                data: hourCounts,
+                backgroundColor: '#10b981',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { borderDash: [2, 2], color: '#f0f0f0' }, beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+    });
+}
+
+function calculatePaymentMethods(orders) {
+    const canvas = document.getElementById('paymentMethodsChart');
+    if(!canvas || typeof Chart === 'undefined') return;
+    
+    let methods = {};
+    orders.forEach(o => {
+        let pm = o.paymentMethod || 'Unknown';
+        if(pm === 'Cash on Delivery') pm = 'COD';
+        methods[pm] = (methods[pm] || 0) + (parseFloat(o.total) || 0);
+    });
+    
+    const labels = Object.keys(methods);
+    const data = Object.values(methods);
+    
+    if(chartInstances['paymentMethodsChart']) {
+        destroyChart('paymentMethodsChart');
+    }
+    
+    const colorMap = {
+        'bKash': '#e2136e',
+        'COD': '#10b981',
+        'Nagad': '#f97316',
+        'Card': '#4f46e5',
+        'Unknown': '#94a3b8'
+    };
+    const bgColors = labels.map(l => colorMap[l] || '#4f46e5');
+    
+    chartInstances['paymentMethodsChart'] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: bgColors,
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                cutout: '70%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ' ৳ ' + context.parsed.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderLatestPendingOrders(orders) {
+    const tbody = document.getElementById('visual-pending-orders-tbody');
+    const badge = document.getElementById('pending-orders-badge');
+    if(!tbody) return;
+    
+    const pendingOrders = orders.filter(o => o.status === 'Pending').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if(badge) badge.innerText = pendingOrders.length;
+    
+    const latest = pendingOrders.slice(0, 5);
+    
+    if(latest.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">No pending orders</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    latest.forEach(o => {
+        const dateStr = new Date(o.createdAt).toLocaleDateString();
+        const phone = (o.shipping && o.shipping.phone) ? o.shipping.phone : 'N/A';
+        html += `
+        <tr>
+            <td><span class="phone">${escapeHTML(phone)}</span></td>
+            <td><span class="invoice" onclick="openOrderModal('${o._id}')">#${o.orderId || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="total">৳${parseFloat(o.total || 0).toLocaleString()}</span></td>
+            <td><span class="date">${dateStr}</span></td>
+            <td>
+                <button class="action-icon-btn btn-check" title="Approve" onclick="updateOrderStatus('${o._id}', 'Approved')"><i class="fas fa-check"></i></button>
+                <button class="action-icon-btn btn-times" title="Cancel" onclick="updateOrderStatus('${o._id}', 'Cancelled')"><i class="fas fa-times"></i></button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function renderLatestActiveOrders(orders) {
+    const tbody = document.getElementById('visual-active-orders-tbody');
+    const badge = document.getElementById('active-orders-badge');
+    if(!tbody) return;
+    
+    const activeOrders = orders.filter(o => o.status === 'Approved' || o.status === 'Processing').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if(badge) badge.innerText = activeOrders.length;
+    
+    const latest = activeOrders.slice(0, 5);
+    
+    if(latest.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">No active orders</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    latest.forEach(o => {
+        const dateStr = new Date(o.createdAt).toLocaleDateString();
+        const phone = (o.shipping && o.shipping.phone) ? o.shipping.phone : 'N/A';
+        html += `
+        <tr>
+            <td><span class="phone">${escapeHTML(phone)}</span></td>
+            <td><span class="invoice" onclick="openOrderModal('${o._id}')">#${o.orderId || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="total">৳${parseFloat(o.total || 0).toLocaleString()}</span></td>
+            <td><span class="date">${dateStr}</span></td>
+            <td>
+                <button class="action-icon-btn btn-eye" title="View" onclick="openOrderModal('${o._id}')"><i class="fas fa-eye"></i></button>
+                <button class="action-icon-btn btn-check" title="Mark Delivered" onclick="updateOrderStatus('${o._id}', 'Delivered')"><i class="fas fa-truck"></i></button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
 }
