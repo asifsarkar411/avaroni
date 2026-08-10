@@ -1058,6 +1058,23 @@
                                     <input type="number" id="prod-discount-value" placeholder="Enter discount amount" value="0" min="0">
                                 </div>
                             </fieldset>
+                            <fieldset style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+                                <legend style="padding: 0 10px; font-weight: bold; color: #555;">Homepage Sections (Optional)</legend>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="checkbox" id="prod-top-selling" style="width: 18px; height: 18px; accent-color: #111;">
+                                        <span>Show in <strong>Top Selling</strong> Section</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="checkbox" id="prod-trending" style="width: 18px; height: 18px; accent-color: #111;">
+                                        <span>Show in <strong>Trending</strong> Section</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="checkbox" id="prod-top-rated" style="width: 18px; height: 18px; accent-color: #111;">
+                                        <span>Show in <strong>Top Rated</strong> Section</span>
+                                    </label>
+                                </div>
+                            </fieldset>
                             <div class="form-group">
                                <label for="prod-image">Upload Product Photo (.jpg, .png, .jpeg):</label>
                                <input type="file" id="prod-image" accept="image/jpeg, image/png, image/jpg" required>
@@ -1596,6 +1613,24 @@
                             <label style="display: block; margin-bottom: 5px; font-weight: 600;">Discount Value:</label>
                             <input type="number" id="edit-prod-discount-value" placeholder="Enter amount" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" min="0">
                         </div>
+                    </div>
+                </fieldset>
+
+                <fieldset style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
+                    <legend style="padding: 0 10px; font-weight: bold; color: #555;">Homepage Sections (Optional)</legend>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="edit-prod-top-selling" style="width: 18px; height: 18px; accent-color: #0d6efd;">
+                            <span>Top Selling</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="edit-prod-trending" style="width: 18px; height: 18px; accent-color: #0d6efd;">
+                            <span>Trending</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="edit-prod-top-rated" style="width: 18px; height: 18px; accent-color: #0d6efd;">
+                            <span>Top Rated</span>
+                        </label>
                     </div>
                 </fieldset>
 

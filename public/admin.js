@@ -856,6 +856,9 @@ async function handleAddProduct(e) {
         stock: document.getElementById('prod-stock').value,
         discountType: document.getElementById('prod-discount-type') ? document.getElementById('prod-discount-type').value : 'none',
         discountValue: document.getElementById('prod-discount-value') ? document.getElementById('prod-discount-value').value : 0,
+        isTopSelling: document.getElementById('prod-top-selling') ? document.getElementById('prod-top-selling').checked : false,
+        isTrending: document.getElementById('prod-trending') ? document.getElementById('prod-trending').checked : false,
+        isTopRated: document.getElementById('prod-top-rated') ? document.getElementById('prod-top-rated').checked : false,
         image: imageBase64
     };
 
@@ -2306,6 +2309,10 @@ async function openEditModal(id) {
         document.getElementById('edit-prod-discount-value').value = prod.discountValue || 0;
     }
 
+    if (document.getElementById('edit-prod-top-selling')) document.getElementById('edit-prod-top-selling').checked = !!prod.isTopSelling;
+    if (document.getElementById('edit-prod-trending')) document.getElementById('edit-prod-trending').checked = !!prod.isTrending;
+    if (document.getElementById('edit-prod-top-rated')) document.getElementById('edit-prod-top-rated').checked = !!prod.isTopRated;
+
     // Populate Category & Subcategory dropdowns
     if (typeof localCategories === 'undefined' || localCategories.length === 0) {
         await loadCategories();
@@ -2383,6 +2390,9 @@ async function handleEditProductSubmit(e) {
         stock: document.getElementById('edit-prod-stock').value,
         discountType: document.getElementById('edit-prod-discount-type') ? document.getElementById('edit-prod-discount-type').value : 'none',
         discountValue: document.getElementById('edit-prod-discount-value') ? document.getElementById('edit-prod-discount-value').value : 0,
+        isTopSelling: document.getElementById('edit-prod-top-selling') ? document.getElementById('edit-prod-top-selling').checked : false,
+        isTrending: document.getElementById('edit-prod-trending') ? document.getElementById('edit-prod-trending').checked : false,
+        isTopRated: document.getElementById('edit-prod-top-rated') ? document.getElementById('edit-prod-top-rated').checked : false,
         image: imageBase64
     };
 

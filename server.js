@@ -1413,11 +1413,11 @@ app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
     }
 });
 
-// Get Products (supports ?category=, ?search=, no params = all products)
+// Get Products (supports ?category=, ?search=, ?section=, no params = all products)
 app.get('/api/products', async (req, res) => {
     try {
         let filter = { isAvailable: { $ne: false } }; 
-        if (req.query.category) {
+        if (req.query.category && req.query.category.toLowerCase() !== 'all') {
             filter.category = { $regex: new RegExp(`^${req.query.category}$`, 'i') };
         }
         
@@ -1425,6 +1425,11 @@ app.get('/api/products', async (req, res) => {
         if (req.query.search) {
             filter.name = { $regex: req.query.search, $options: 'i' };
         }
+
+        // Filter by section flags
+        if (req.query.section === 'topSelling') filter.isTopSelling = true;
+        if (req.query.section === 'trending') filter.isTrending = true;
+        if (req.query.section === 'topRated') filter.isTopRated = true;
 
         const products = await Product.find(filter).sort({ _id: -1 }); // Newest first
         res.json({ success: true, products });
@@ -1949,7 +1954,10 @@ app.post('/api/admin/products', verifyAdminToken, async (req, res) => {
             stockQuantity: Number(bodyData.stock) || 1, 
             discountType: bodyData.discountType || 'none',
             discountValue: Number(bodyData.discountValue) || 0,
-            imageUrl: imageUrl 
+            imageUrl: imageUrl,
+            isTopSelling: bodyData.isTopSelling === true || bodyData.isTopSelling === 'true',
+            isTrending: bodyData.isTrending === true || bodyData.isTrending === 'true',
+            isTopRated: bodyData.isTopRated === true || bodyData.isTopRated === 'true'
         };
         const newProduct = new Product(productData);
         await newProduct.save();
@@ -1980,7 +1988,7 @@ app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
 // Edit / Update Product (Admin)
 app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
     try {
-        const { name, price, category, subcategory, size, colour, brand, description, stock, discountType, discountValue, image } = req.body;
+        const { name, price, category, subcategory, size, colour, brand, description, stock, discountType, discountValue, image, isTopSelling, isTrending, isTopRated } = req.body;
         
         const product = await Product.findById(req.params.id);
         if (!product) {
@@ -1998,6 +2006,9 @@ app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
         if (stock !== undefined) product.stockQuantity = Number(stock);
         if (discountType !== undefined) product.discountType = discountType;
         if (discountValue !== undefined) product.discountValue = Number(discountValue);
+        if (isTopSelling !== undefined) product.isTopSelling = (isTopSelling === true || isTopSelling === 'true');
+        if (isTrending !== undefined) product.isTrending = (isTrending === true || isTrending === 'true');
+        if (isTopRated !== undefined) product.isTopRated = (isTopRated === true || isTopRated === 'true');
 
         // If a new image was uploaded (Base64 string), save as static high-res file
         if (image && image.trim() !== '' && image !== product.imageUrl) {

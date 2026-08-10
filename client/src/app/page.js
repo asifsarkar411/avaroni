@@ -5,6 +5,7 @@ import NavPromoSlider from '@/components/NavPromoSlider';
 import HeroSlider from '@/components/HeroSlider';
 import FlashSaleBanner from '@/components/FlashSaleBanner';
 import ReviewsSlider from '@/components/ReviewsSlider';
+import TabbedProductSection from '@/components/TabbedProductSection';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
@@ -14,7 +15,6 @@ export default function Home() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
   const [subtitleIndex, setSubtitleIndex] = useState(0);
@@ -30,23 +30,13 @@ export default function Home() {
     async function fetchData() {
       try {
         const headers = { 'ngrok-skip-browser-warning': 'true' };
-        const [catRes, prodRes] = await Promise.all([
-          fetch('/api/categories', { headers }),
-          fetch('/api/products', { headers })
-        ]);
-        
-        if (!catRes.ok || !prodRes.ok) {
-           throw new Error(`API returned ${catRes.status} / ${prodRes.status}`);
-        }
-        
+        const catRes = await fetch('/api/categories', { headers });
+        if (!catRes.ok) throw new Error(`API returned ${catRes.status}`);
         const catData = await catRes.json();
-        const prodData = await prodRes.json();
-        
         if (catData.success) setCategories(catData.categories);
-        if (prodData.success) setProducts(prodData.products.slice(0, 10)); // Just 10 new arrivals
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setErrorMsg(err.message || "Failed to load data. If you are using Ngrok, Vercel, or Local IP, check your network or backend connection.");
+        console.error("Error fetching categories:", err);
+        setErrorMsg(err.message || "Failed to load categories.");
       } finally {
         setLoading(false);
       }
@@ -61,10 +51,6 @@ export default function Home() {
       }, 5000);
       return () => clearInterval(interval);
   }, []);
-
-  const openProduct = (id) => {
-    window.dispatchEvent(new CustomEvent('openProductModal', { detail: id }));
-  };
 
   return (
     <div className="home-container">
@@ -109,64 +95,26 @@ export default function Home() {
             )}
         </section>
         
+        <TabbedProductSection 
+            title="FEATURED SECTIONS" 
+            tabs={[
+                { label: "Top Selling", sectionFilter: "topSelling" },
+                { label: "Trending", sectionFilter: "trending" },
+                { label: "Top Rated", sectionFilter: "topRated" }
+            ]} 
+            defaultTab={0} 
+        />
+
         <FlashSaleBanner />
 
-        <div className="new-arrivals-section">
-            <div className="section-header-centered">
-                <div className="section-header-line-centered"></div>
-                <h2 data-aos="fade-up">NEW ARRIVAL</h2>
-                <br/>
-                <p data-aos="fade-up" data-aos-delay="100">Explore all the new products</p>
-            </div>
-            {loading ? (
-                <div style={{display:'flex', gap:'20px', justifyContent:'center'}}>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '350px' }}></div>
-                </div>
-            ) : (
-                <div className="product-grid" id="new-arrivals-grid">
-                    {products.map(prod => {
-                        const finalPrice = calculateDiscountedPrice(prod.price, prod.discountType, prod.discountValue);
-                        const discountTag = formatDiscountTag(prod.discountType, prod.discountValue);
-                        return (
-                        <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image-wrap" onClick={() => openProduct(prod._id)}>
-                                {discountTag && <div style={{position: 'absolute', top: '10px', left: '10px', background: '#3b82f6', color: 'white', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '10px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
-                                <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} style={{ color: isInWishlist(prod._id) ? '#e60050' : '#888' }}>
-                                    <i className={isInWishlist(prod._id) ? "fas fa-heart" : "far fa-heart"}></i>
-                                </button>
-                                <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
-                            </div>
-                            <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
-                            <p className="product-category-text">{prod.category?.name || prod.category || 'Category'}</p>
-                            <div className="product-rating">
-                                <i className="fas fa-star"></i>
-                                <i className="fas fa-star"></i>
-                                <i className="fas fa-star"></i>
-                                <i className="fas fa-star"></i>
-                                <i className="far fa-star"></i>
-                                <span>({Math.floor(Math.random() * 50) + 1})</span>
-                            </div>
-                            <p className="price">
-                                {discountTag ? (
-                                    <>
-                                        <span>৳ {finalPrice}</span>
-                                        <span className="old-price">৳ {prod.price}</span>
-                                    </>
-                                ) : (
-                                    `৳ ${prod.price}`
-                                )}
-                            </p>
-                            <button className="btn add-to-cart-btn" onClick={() => addToCart(prod)} style={{ width: '100%', padding: '8px' }}>Add to Cart</button>
-                        </div>
-
-                    )})}
-                </div>
-            )}
-        </div>
+        <TabbedProductSection 
+            title="OUR PRODUCTS" 
+            tabs={[
+                { label: "All Products", sectionFilter: "" },
+                { label: "New Arrival", sectionFilter: "" }
+            ]} 
+            defaultTab={0} 
+        />
 
         <ReviewsSlider />
     </div>

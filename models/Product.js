@@ -14,7 +14,11 @@ const productSchema = new mongoose.Schema({
     isAvailable: { type: Boolean, default: true },
     stockQuantity: { type: Number, required: true, default: 1 }, // 🌟 NEW: Added Stock tracker
     discountType: { type: String, enum: ['flat', 'percentage', 'none'], default: 'none' },
-    discountValue: { type: Number, default: 0 }
+    discountValue: { type: Number, default: 0 },
+    // 🌟 NEW: Flags for homepage sections
+    isTopSelling: { type: Boolean, default: false },
+    isTrending: { type: Boolean, default: false },
+    isTopRated: { type: Boolean, default: false }
 });
 
 productSchema.index({ category: 1, isAvailable: 1 });
