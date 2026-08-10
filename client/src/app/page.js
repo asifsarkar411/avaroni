@@ -11,6 +11,17 @@ import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 import { calculateDiscountedPrice, formatDiscountTag } from '@/utils/price';
 
+const FEATURED_TABS = [
+    { label: "Top Selling", sectionFilter: "topSelling" },
+    { label: "Trending", sectionFilter: "trending" },
+    { label: "Top Rated", sectionFilter: "topRated" }
+];
+
+const PRODUCT_TABS = [
+    { label: "All Products", sectionFilter: "" },
+    { label: "New Arrival", sectionFilter: "newArrival" }
+];
+
 export default function Home() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -97,11 +108,7 @@ export default function Home() {
         
         <TabbedProductSection 
             title="FEATURED SECTIONS" 
-            tabs={[
-                { label: "Top Selling", sectionFilter: "topSelling" },
-                { label: "Trending", sectionFilter: "trending" },
-                { label: "Top Rated", sectionFilter: "topRated" }
-            ]} 
+            tabs={FEATURED_TABS} 
             defaultTab={0} 
         />
 
@@ -109,10 +116,7 @@ export default function Home() {
 
         <TabbedProductSection 
             title="OUR PRODUCTS" 
-            tabs={[
-                { label: "All Products", sectionFilter: "" },
-                { label: "New Arrival", sectionFilter: "" }
-            ]} 
+            tabs={PRODUCT_TABS} 
             defaultTab={0} 
         />
 
