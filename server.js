@@ -49,7 +49,7 @@ const ContactMessage = require('./models/ContactMessage'); // Contact Messages M
 const Review = require('./models/Review');               // Customer Reviews Model
 const FlashSale = require('./models/FlashSale');           // Flash Sale Sticky Countdown Model
 const Voucher = require('./models/Voucher');             // Public Vouchers Model
-
+const Blog = require('./models/Blog');                   // Blogs Model
 // ==========================================
 // STARTUP ENVIRONMENT VARIABLE GUARD
 // ==========================================
@@ -72,10 +72,10 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://*.google.com"],
-            scriptSrcElem: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://*.google.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://*.google.com", "https://cdn.quilljs.com"],
+            scriptSrcElem: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://*.google.com", "https://cdn.quilljs.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com", "https://cdn.jsdelivr.net", "https://cdn.quilljs.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
             imgSrc: ["'self'", "data:", "blob:", "https:"],
             connectSrc: ["'self'", "https:"],
@@ -1345,6 +1345,71 @@ app.delete('/api/admin/vouchers/:id', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Delete Voucher Error:", error);
         res.status(500).json({ success: false, message: "Failed to delete voucher" });
+    }
+});
+
+// ==========================================
+// BLOGS ROUTES
+// ==========================================
+
+// Get all blogs (Public)
+app.get('/api/blogs', async (req, res) => {
+    try {
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        res.json({ success: true, blogs });
+    } catch (error) {
+        console.error("Get Blogs Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch blogs" });
+    }
+});
+
+// Create a new blog (Admin)
+app.post('/api/admin/blogs', verifyAdminToken, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Image is required' });
+        }
+
+        const { title, description } = req.body;
+        if (!title || !description) {
+            return res.status(400).json({ success: false, message: 'Title and description are required' });
+        }
+
+        const newBlog = new Blog({
+            title,
+            description,
+            imageUrl: `/uploads/${req.file.filename}`
+        });
+
+        await newBlog.save();
+        res.status(201).json({ success: true, blog: newBlog });
+    } catch (error) {
+        console.error("Create Blog Error:", error);
+        res.status(500).json({ success: false, message: 'Failed to create blog' });
+    }
+});
+
+// Delete a blog (Admin)
+app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const blog = await Blog.findById(req.params.id);
+        if (!blog) {
+            return res.status(404).json({ success: false, message: "Blog not found" });
+        }
+
+        // Delete associated image file
+        if (blog.imageUrl) {
+            const imagePath = path.join(__dirname, 'public', blog.imageUrl);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+        }
+
+        await Blog.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Blog deleted successfully" });
+    } catch (error) {
+        console.error("Delete Blog Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete blog" });
     }
 });
 
@@ -2703,6 +2768,49 @@ app.delete('/api/navbar-sliders/:id', verifyAdminToken, async (req, res) => {
         res.json({ success: true, message: 'Slider deleted' });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+// ==========================================
+// 📝 BLOG ROUTES
+// ==========================================
+app.get('/api/blogs', async (req, res) => {
+    try {
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        res.json({ success: true, blogs });
+    } catch (err) {
+        console.error("Get Blogs Error:", err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/admin/blogs', verifyAdminToken, upload.single('image'), async (req, res) => {
+    try {
+        const { title, description } = req.body;
+        if (!title || !description) return res.status(400).json({ success: false, message: 'Title and description are required' });
+        
+        let imageUrl = '';
+        if (req.file) {
+            imageUrl = `/uploads/${req.file.filename}`;
+        } else if (req.body.image) { // In case base64 was sent
+            imageUrl = req.body.image;
+        } else {
+            return res.status(400).json({ success: false, message: 'Image is required' });
+        }
+        
+        const newBlog = new Blog({ title, description, imageUrl });
+        await newBlog.save();
+        res.json({ success: true, blog: newBlog });
+    } catch (err) {
+        console.error("Create Blog Error:", err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Blog.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Blog deleted' });
+    } catch (err) {
+        console.error("Delete Blog Error:", err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
