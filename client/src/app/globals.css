@@ -1400,15 +1400,15 @@ body.no-scroll {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    max-width: 900px;
+    background: #fff;
+    border-radius: 4px;
+    max-width: 1000px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
     animation: slideUp 0.35s ease;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
 @keyframes slideUp {
     from { transform: translateY(40px); opacity: 0; }
@@ -1437,10 +1437,19 @@ body.no-scroll {
     color: #fff;
     border-color: #111111;
 }
-.product-modal-body {
+.product-modal-body.modal-two-column {
     display: flex;
-    gap: 30px;
-    padding: 30px;
+    gap: 40px;
+    padding: 40px;
+}
+.modal-left-column {
+    flex: 1;
+    max-width: 450px;
+}
+.modal-right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 .product-modal-image {
     flex: 1;
@@ -1456,7 +1465,7 @@ body.no-scroll {
     object-fit: cover;
     max-height: 450px;
     display: block;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
     transform-origin: center center;
     will-change: transform, transform-origin;
@@ -1496,6 +1505,62 @@ body.no-scroll {
     font-size: 14px;
     margin-bottom: 20px;
 }
+.size-selector-btn {
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+.size-selector-btn:hover, .size-selector-btn.active {
+    border-color: #111;
+    background: #111;
+    color: #fff;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    width: fit-content;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.quantity-selector button {
+    background: #fff;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #333;
+}
+.quantity-selector button:hover {
+    background: #f5f5f5;
+}
+.quantity-selector input {
+    width: 40px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+}
+
+.btn.add-to-cart-outline:hover {
+    background: #111 !important;
+    color: #fff !important;
+}
+.btn.buy-now-fill:hover {
+    background: #333 !important;
+}
+
 .product-modal-cart-btn {
     display: inline-flex;
     align-items: center;
@@ -1583,22 +1648,25 @@ body.no-scroll {
    Responsive: Product Modal
 ========================================= */
 @media (max-width: 700px) {
-    .product-modal-body {
+    .product-modal-body.modal-two-column {
         flex-direction: column;
         padding: 20px;
         gap: 20px;
     }
-    .product-modal-image {
+    .modal-left-column {
         max-width: 100%;
+    }
+    .action-btn-group {
+        flex-direction: column;
+    }
+    .product-modal-price {
+        font-size: 24px;
     }
     .product-modal-image img {
         max-height: 300px;
     }
     .product-modal-info h2 {
         font-size: 20px;
-    }
-    .product-modal-price {
-        font-size: 22px;
     }
     .related-products-grid {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));

@@ -43,12 +43,14 @@ export function CartProvider({ children }) {
         }
     };
 
-    const addToCart = (product) => {
-        const existing = cart.find(item => item._id === product._id);
+    const addToCart = (product, quantity = 1, size = '') => {
+        const itemIdentifier = size ? `${product._id}-${size}` : product._id;
+        const existing = cart.find(item => (item.cartItemId || item._id) === itemIdentifier);
+        
         if (existing) {
-            saveCart(cart.map(item => item._id === product._id ? { ...item, quantity: Number(item.quantity || 0) + 1 } : item), cartKey);
+            saveCart(cart.map(item => (item.cartItemId || item._id) === itemIdentifier ? { ...item, quantity: Number(item.quantity || 0) + quantity } : item), cartKey);
         } else {
-            saveCart([...cart, { ...product, quantity: 1 }], cartKey);
+            saveCart([...cart, { ...product, cartItemId: itemIdentifier, selectedSize: size, quantity }], cartKey);
         }
         
         // Show native toast if available
@@ -57,20 +59,20 @@ export function CartProvider({ children }) {
         }
     };
 
-    const updateQuantity = (productId, change) => {
-        const existing = cart.find(item => item._id === productId);
+    const updateQuantity = (identifier, change) => {
+        const existing = cart.find(item => (item.cartItemId || item._id) === identifier);
         if (existing) {
             const newQuantity = Number(existing.quantity || 0) + change;
             if (newQuantity <= 0) {
-                removeFromCart(productId);
+                removeFromCart(identifier);
             } else {
-                saveCart(cart.map(item => item._id === productId ? { ...item, quantity: newQuantity } : item), cartKey);
+                saveCart(cart.map(item => (item.cartItemId || item._id) === identifier ? { ...item, quantity: newQuantity } : item), cartKey);
             }
         }
     };
 
-    const removeFromCart = (productId) => {
-        saveCart(cart.filter(item => item._id !== productId), cartKey);
+    const removeFromCart = (identifier) => {
+        saveCart(cart.filter(item => (item.cartItemId || item._id) !== identifier), cartKey);
     };
 
     const clearCart = () => {

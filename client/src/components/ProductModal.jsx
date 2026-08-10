@@ -4,8 +4,10 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 import { calculateDiscountedPrice, formatDiscountTag } from '@/utils/price';
+import { useRouter } from 'next/navigation';
 
 export default function ProductModal() {
+    const router = useRouter();
     const { addToCart } = useCart();
     const { toggleWishlist, isInWishlist } = useWishlist();
     const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +58,9 @@ export default function ProductModal() {
         return () => window.removeEventListener('openProductModal', handleOpenModal);
     }, []);
 
+    const [selectedSize, setSelectedSize] = useState('');
+    const [quantity, setQuantity] = useState(1);
+
     const close = () => {
         setIsOpen(false);
         setProduct(null);
@@ -63,7 +68,22 @@ export default function ProductModal() {
         setReviewName('');
         setReviewComment('');
         setReviewRating(5);
+        setSelectedSize('');
+        setQuantity(1);
         document.body.style.overflow = 'auto';
+    };
+
+    const handleAddToCart = () => {
+        if (!product) return;
+        addToCart(product, quantity, selectedSize);
+        close();
+    };
+
+    const handleBuyNow = () => {
+        if (!product) return;
+        addToCart(product, quantity, selectedSize);
+        close();
+        router.push('/checkout');
     };
 
     const handleReviewSubmit = async (e) => {
@@ -118,56 +138,83 @@ export default function ProductModal() {
                     <div style={{padding: '40px', textAlign: 'center'}}>Loading...</div>
                 ) : product ? (
                     <>
-                        <div className="product-modal-body">
-                            <div className="product-modal-image" style={{position: 'relative'}}>
-                                {formatDiscountTag(product.discountType, product.discountValue) && <div style={{position: 'absolute', top: '15px', left: '15px', background: '#e60050', color: 'white', padding: '6px 12px', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold', zIndex: 2}}>{formatDiscountTag(product.discountType, product.discountValue)}</div>}
-                                <img src={getImageUrl(product.imageUrl)} alt={product.name} />
+                        <div className="product-modal-body modal-two-column">
+                            <div className="modal-left-column" style={{position: 'relative'}}>
+                                {formatDiscountTag(product.discountType, product.discountValue) && <div style={{position: 'absolute', top: '15px', left: '15px', background: '#3b82f6', color: 'white', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '13px', fontWeight: 'bold', zIndex: 2}}>{formatDiscountTag(product.discountType, product.discountValue)}</div>}
+                                <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', height: 'auto', display: 'block', aspectRatio: '4/5', objectFit: 'cover' }} />
                             </div>
-                            <div className="product-modal-info">
-                                <span className="product-modal-category">{product.category}</span>
-                                <h2>{product.name}</h2>
-                                <p className="product-modal-price">
+                            <div className="modal-right-column">
+                                <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 10px 0', color: '#111' }}>{product.name}</h2>
+                                <div className="modal-meta-row" style={{ display: 'flex', gap: '15px', fontSize: '13px', color: '#555', marginBottom: '10px' }}>
+                                    <div><strong>Availability:</strong> <span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '4px', fontWeight: '600' }}>In Stock</span></div>
+                                    <div><strong>SKU:</strong> {product._id.substring(0, 6).toUpperCase()}</div>
+                                </div>
+                                <div style={{ fontSize: '13px', color: '#555', marginBottom: '20px' }}>
+                                    <strong>Category:</strong> <span style={{ textTransform: 'capitalize' }}>{product.category}</span>
+                                </div>
+                                
+                                <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#555', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', padding: '15px 0', marginBottom: '20px' }}>
+                                    {product.description ? product.description.split('\n').map((line, i) => <p key={i} style={{margin: '4px 0'}}>{line}</p>) : <p style={{margin: 0}}>Premium quality product.</p>}
+                                </div>
+
+                                <div className="modal-price-area" style={{ marginBottom: '20px' }}>
                                     {formatDiscountTag(product.discountType, product.discountValue) ? (
                                         <>
-                                            <span style={{textDecoration: 'line-through', color: '#999', marginRight: '10px', fontSize: '1.2rem'}}>BDT {product.price}</span>
-                                            <span style={{color: '#e60050'}}>BDT {calculateDiscountedPrice(product.price, product.discountType, product.discountValue)}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#111' }}>৳ {calculateDiscountedPrice(product.price, product.discountType, product.discountValue)}</span>
+                                                <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '16px' }}>৳ {product.price}</span>
+                                            </div>
+                                            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', marginTop: '5px' }}>
+                                                YOU SAVE ৳ {product.price - calculateDiscountedPrice(product.price, product.discountType, product.discountValue)} ({formatDiscountTag(product.discountType, product.discountValue).replace('-', '')} OFF)
+                                            </div>
                                         </>
                                     ) : (
-                                        `BDT ${product.price}`
+                                        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#111' }}>৳ {product.price}</div>
                                     )}
-                                </p>
-                                <p className="product-modal-stock" style={{color: product.stockQuantity > 0 ? 'green' : 'red'}}>
-                                    {product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
-                                </p>
-                                <div style={{ margin: '15px 0', fontSize: '14px', lineHeight: '1.6', color: '#555', borderTop: '1px dotted #ddd', borderBottom: '1px dotted #ddd', padding: '10px 0' }}>
-                                    {product.description || 'No description available.'}
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
-                                    <button 
-                                        className="btn add-to-cart-btn product-modal-cart-btn" 
-                                        disabled={product.stockQuantity <= 0}
-                                        onClick={() => {
-                                            addToCart(product);
-                                            close();
-                                        }}
-                                        style={{ flex: 1, marginRight: '10px' }}
-                                    >
-                                        <i className="fas fa-cart-plus"></i> {product.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
+
+                                {product.size && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px' }}>SELECT SIZE: <span style={{color: 'red'}}>*</span></div>
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            {product.size.split(',').map(s => s.trim()).map(sz => (
+                                                <button 
+                                                    key={sz} 
+                                                    className={`size-selector-btn ${selectedSize === sz ? 'active' : ''}`}
+                                                    onClick={() => setSelectedSize(sz)}
+                                                >
+                                                    {sz}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div style={{ marginBottom: '25px' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px' }}>QUANTITY:</div>
+                                    <div className="quantity-selector">
+                                        <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+                                        <input type="text" value={quantity} readOnly />
+                                        <button onClick={() => setQuantity(quantity + 1)}>+</button>
+                                    </div>
+                                </div>
+
+                                <div className="action-btn-group" style={{ display: 'flex', gap: '15px', marginBottom: '25px' }}>
+                                    <button className="btn add-to-cart-outline" onClick={handleAddToCart} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #111', color: '#111', fontWeight: 'bold', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <i className="fas fa-shopping-cart"></i> Add to Cart
                                     </button>
-                                    <button
-                                        onClick={() => toggleWishlist(product)}
-                                        style={{ 
-                                            padding: '10px 15px', 
-                                            borderRadius: '8px', 
-                                            border: '1px solid #ddd', 
-                                            background: isInWishlist(product._id) ? 'rgba(230,0,80,0.05)' : '#fff', 
-                                            cursor: 'pointer',
-                                            fontSize: '1.2rem',
-                                            color: isInWishlist(product._id) ? '#e60050' : '#888'
-                                        }}
-                                    >
-                                        <i className={isInWishlist(product._id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                    <button className="btn buy-now-fill" onClick={handleBuyNow} style={{ flex: 1, padding: '12px', background: '#111', border: '1px solid #111', color: '#fff', fontWeight: 'bold', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <i className="fas fa-lock"></i> Buy Now
                                     </button>
+                                </div>
+
+                                <div style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                                    <div style={{ fontSize: '12px', color: '#888', fontWeight: 'bold', marginBottom: '10px' }}>NEED HELP? CONTACT US:</div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <a href="tel:+8801234567890" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fas fa-phone"></i> Call</a>
+                                        <a href="https://wa.me/8801234567890" target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fab fa-whatsapp"></i> WhatsApp</a>
+                                        <a href="#" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fab fa-facebook-messenger"></i> Messenger</a>
+                                    </div>
                                 </div>
 
                                 {/* Review Form Section */}
