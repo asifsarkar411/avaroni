@@ -522,6 +522,22 @@ function switchTab(tabName) {
     if (tabName === 'admin-settings') initSettingsTab();
 }
 
+// Navigate to Orders tab with a specific filter pre-selected
+function goToOrdersTab(filterStatus) {
+    activeOrderFilterStatus = filterStatus || 'ALL';
+    currentOrdersPage = 1;
+    switchTab('orders');
+    // After tab switch, highlight the correct filter pill
+    setTimeout(() => {
+        const filterBtns = document.querySelectorAll('.order-filter-btn');
+        filterBtns.forEach(b => {
+            b.classList.remove('active');
+            if ((b.dataset.status || 'ALL') === filterStatus) b.classList.add('active');
+        });
+        renderFilteredOrders();
+    }, 100);
+}
+
 // ==========================================
 // DYNAMIC EVENT DELEGATORS
 // ==========================================
@@ -3097,7 +3113,7 @@ function renderLatestPendingOrders(orders) {
         html += `
         <tr>
             <td><span class="phone">${escapeHTML(phone)}</span></td>
-            <td><span class="invoice" onclick="switchTab('orders-tab', 'Manage Orders')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="invoice" onclick="goToOrdersTab('Pending')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
             <td><span class="total">৳${parseFloat(o.totalAmount || 0).toLocaleString()}</span></td>
             <td><span class="date">${dateStr}</span></td>
             <td>
@@ -3131,11 +3147,11 @@ function renderLatestActiveOrders(orders) {
         html += `
         <tr>
             <td><span class="phone">${escapeHTML(phone)}</span></td>
-            <td><span class="invoice" onclick="switchTab('orders-tab', 'Manage Orders')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="invoice" onclick="goToOrdersTab('ALL')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
             <td><span class="total">৳${parseFloat(o.totalAmount || 0).toLocaleString()}</span></td>
             <td><span class="date">${dateStr}</span></td>
             <td>
-                <button class="action-icon-btn btn-eye" title="View" onclick="switchTab('orders-tab', 'Manage Orders')"><i class="fas fa-eye"></i></button>
+                <button class="action-icon-btn btn-eye" title="View" onclick="goToOrdersTab('ALL')"><i class="fas fa-eye"></i></button>
                 <button class="action-icon-btn btn-check" title="Mark Delivered" onclick="updateOrderStatus('${o._id}', 'Delivered')"><i class="fas fa-truck"></i></button>
             </td>
         </tr>`;
