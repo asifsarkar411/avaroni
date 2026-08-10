@@ -21,6 +21,7 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
         .blog-hero {
             background: linear-gradient(135deg, #111 0%, #333 100%);
@@ -251,53 +252,10 @@
     </div>
 
     <div class="blog-container">
-        <div class="blog-grid">
-            <!-- Article 1 -->
-            <div class="blog-card">
-                <div class="blog-card-img" style="background-image: url('./img/profile_image.jpg');">
-                    <span class="blog-tag">Fashion Guide</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> July 24, 2026</span>
-                        <span><i class="far fa-clock"></i> 4 min read</span>
-                    </div>
-                    <h3 class="blog-title">Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh</h3>
-                    <p class="blog-excerpt">Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bengali festive fashion by storm this season...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('salwar-kameez')">Read Full Article <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-
-            <!-- Article 2 -->
-            <div class="blog-card">
-                <div class="blog-card-img" style="background-image: url('./img/profile_image.jpg');">
-                    <span class="blog-tag">Jewelry Care</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> July 20, 2026</span>
-                        <span><i class="far fa-clock"></i> 3 min read</span>
-                    </div>
-                    <h3 class="blog-title">How to Maintain & Preserve Your Hand-Crafted Ornaments & Jewelry</h3>
-                    <p class="blog-excerpt">Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple home care techniques...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('jewelry-care')">Read Full Article <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-
-            <!-- Article 3 -->
-            <div class="blog-card">
-                <div class="blog-card-img" style="background-image: url('./img/profile_image.jpg');">
-                    <span class="blog-tag">Kids Collection</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> July 15, 2026</span>
-                        <span><i class="far fa-clock"></i> 5 min read</span>
-                    </div>
-                    <h3 class="blog-title">Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear</h3>
-                    <p class="blog-excerpt">When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('kids-fashion')">Read Full Article <i class="fas fa-arrow-right"></i></span>
-                </div>
+        <div class="blog-grid" id="blog-grid">
+            <div style="text-align: center; padding: 40px; grid-column: 1 / -1; color: #666;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #e60050; margin-bottom: 10px;"></i>
+                <p>Loading the latest blogs...</p>
             </div>
         </div>
     </div>
@@ -312,62 +270,94 @@
 
     <script src="script.js"></script>
     <script>
-        const articles = {
-            'salwar-kameez': {
-                title: 'Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh',
-                date: 'July 24, 2026',
-                category: 'Fashion Guide',
-                content: `
-                    <p>Festive fashion in Bangladesh is undergoing a gorgeous transformation! Combining traditional craftsmanship with modern silhouettes, today's women are embracing vibrant colors, intricate embroidery, and lightweight fabrics.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">1. Organza Dupatta Sets</h4>
-                    <p>Organza brings a delicate, royal sheen to any ensemble. Paired with straight-cut Kameez and churidar, organza dupattas featuring floral embroidery or zari borders are a top favorite.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">2. Anarkali Floor-Length Gowns</h4>
-                    <p>For grand evening receptions and Eid celebrations, floor-length Anarkalis offer timeless grandeur and graceful flair.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">3. Pastel Silk Combinations</h4>
-                    <p>Soft mint green, powder blue, and blush pink silks are replacing heavy dark tones for day events, giving a fresh and sophisticated look.</p>
-                    <p style="margin-top:20px; font-weight:600; color:#333;">Discover our full Women's Dress collection at आभाৰણી to shop these trending styles today!</p>
-                `
-            },
-            'jewelry-care': {
-                title: 'How to Maintain & Preserve Your Hand-Crafted Ornaments & Jewelry',
-                date: 'July 20, 2026',
-                category: 'Jewelry Care',
-                content: `
-                    <p>Hand-crafted ornaments and fashion jewelry require delicate care to preserve their original shine and prevent oxidation or discoloration.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">1. Keep Away From Perfume & Moisture</h4>
-                    <p>Always apply your perfume, lotion, and hairspray BEFORE putting on your jewelry. Chemicals in sprays can erode protective coatings.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">2. Separate Storage Pouches</h4>
-                    <p>Store each piece in individual velvet pouches or zip-lock bags to avoid scratches caused by friction between metal components.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">3. Gently Wipe After Wearing</h4>
-                    <p>Before storing, wipe your ornaments with a soft microfiber cloth to remove natural skin oils and sweat accumulated during wear.</p>
-                `
-            },
-            'kids-fashion': {
-                title: 'Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear',
-                date: 'July 15, 2026',
-                category: 'Kids Collection',
-                content: `
-                    <p>Dressing children for traditional Bangladeshi events can be a delight when comfort is prioritized alongside style.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">1. Pure Cotton Inner Linings</h4>
-                    <p>Ensure any embellished kid's frock or panjabi features a soft 100% cotton inner lining to prevent itching or irritation during warm weather.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">2. Elasticated Waistbands</h4>
-                    <p>Choose trousers and skirts with adjustable elastic waistbands that allow free movement for playing and enjoying celebrations.</p>
-                    <h4 style="margin: 15px 0 8px; color: #e60050;">3. Lightweight Zari Details</h4>
-                    <p>Opt for woven motifs rather than heavy metallic beads for younger kids to keep outfits lightweight and comfortable all day long.</p>
-                `
-            }
-        };
+        let articles = [];
 
-        function openBlogModal(key) {
-            const article = articles[key];
+        async function fetchBlogs() {
+            try {
+                const response = await fetch('/api/blogs');
+                if (!response.ok) throw new Error('Failed to fetch blogs');
+                
+                const data = await response.json();
+                articles = data.blogs || [];
+                renderBlogs();
+            } catch (error) {
+                console.error("Error fetching blogs:", error);
+                document.getElementById('blog-grid').innerHTML = `
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1; color: #b91c1c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <p>Failed to load blogs. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderBlogs() {
+            const blogGrid = document.getElementById('blog-grid');
+            
+            if (articles.length === 0) {
+                blogGrid.innerHTML = `
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1; color: #666;">
+                        <i class="fas fa-folder-open" style="font-size: 24px; margin-bottom: 10px; color: #ccc;"></i>
+                        <p>No blogs published yet. Check back soon!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            blogGrid.innerHTML = articles.map((article, index) => {
+                // Strip HTML tags to create a short excerpt
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = article.description || '';
+                const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                const excerpt = textContent.length > 120 ? textContent.substring(0, 120) + '...' : textContent;
+                
+                const dateString = new Date(article.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Calculate estimated read time (avg 200 words per minute)
+                const wordCount = textContent.split(/\s+/).length;
+                const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
+                return `
+                <div class="blog-card" data-aos="fade-up" data-aos-delay="${(index % 3) * 100}">
+                    <div class="blog-card-img" style="background-image: url('${article.imageUrl || './img/profile_image.jpg'}');">
+                        <span class="blog-tag">Blog</span>
+                    </div>
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span><i class="far fa-calendar-alt"></i> ${dateString}</span>
+                            <span><i class="far fa-clock"></i> ${readTime} min read</span>
+                        </div>
+                        <h3 class="blog-title">${article.title || 'Untitled'}</h3>
+                        <p class="blog-excerpt">${excerpt}</p>
+                        <span class="blog-read-more" onclick="openBlogModal('${article._id}')">Read Full Article <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function openBlogModal(id) {
+            const article = articles.find(b => b._id === id);
             if (!article) return;
+            
+            const dateString = new Date(article.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
             const body = document.getElementById('blog-modal-body');
             body.innerHTML = `
-                <span style="background:#e60050; color:#fff; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">${article.category}</span>
-                <p style="color:#888; font-size:13px; margin: 10px 0;"><i class="far fa-calendar-alt"></i> ${article.date}</p>
+                <span style="background:#e60050; color:#fff; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">Blog</span>
+                <p style="color:#888; font-size:13px; margin: 10px 0;"><i class="far fa-calendar-alt"></i> ${dateString}</p>
                 <h2 style="color:#222; margin-bottom:15px; font-size:22px;">${article.title}</h2>
+                ${article.imageUrl ? `<img src="${article.imageUrl}" alt="${article.title}" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin-bottom:20px;">` : ''}
                 <hr style="border:0; border-top:1px solid #eee; margin-bottom:20px;">
-                <div style="font-size:15px; line-height:1.7; color:#444;">${article.content}</div>
+                <div class="ql-editor" style="padding: 0; font-size:15px; line-height:1.7; color:#444;">${article.description}</div>
             `;
             document.getElementById('blog-modal').style.display = 'flex';
         }
@@ -375,6 +365,9 @@
         function closeBlogModal() {
             document.getElementById('blog-modal').style.display = 'none';
         }
+
+        // Fetch blogs on page load
+        document.addEventListener('DOMContentLoaded', fetchBlogs);
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
