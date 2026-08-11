@@ -3548,13 +3548,7 @@ html {
     gap: 30px;
     border-bottom: 1px solid #ddd;
     margin-bottom: 20px;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-}
-.product-modal-tabs-container::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
 }
 .product-modal-tab-btn {
     background: none;
@@ -3581,5 +3575,7 @@ html {
     .product-modal-tab-btn {
         font-size: 12px;
         padding: 8px 0;
+        flex: 1 1 auto;
+        text-align: center;
     }
 }
