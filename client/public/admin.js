@@ -31,9 +31,6 @@ function formatImageUrl(url) {
 }
 
 // Global HTML Escaper function to prevent XSS attacks
-let addProdDescEditor = null;
-let editProdDescEditor = null;
-
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -44,7 +41,25 @@ function escapeHTML(str) {
         .replace(/'/g, '&#039;');
 }
 
+let addProdDescEditor = null;
+let editProdDescEditor = null;
+
 document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById('add-prod-desc-editor')) {
+        addProdDescEditor = new Quill('#add-prod-desc-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
+            placeholder: 'Write product description here...'
+        });
+    }
+    if (document.getElementById('edit-prod-desc-editor')) {
+        editProdDescEditor = new Quill('#edit-prod-desc-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
+            placeholder: 'Write product description here...'
+        });
+    }
+
     // 1. Check if user is logged in
     if (!localStorage.getItem('adminToken')) {
         window.location.href = 'admin-login.html';
@@ -136,26 +151,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (createUserForm) createUserForm.addEventListener('submit', handleCreateUser);
 
     document.querySelectorAll('.tags-input').forEach(el => {
-        if (typeof TagsInput !== 'undefined') {
-            el._tagsInput = new TagsInput(el);
-        }
+        el._tagsInput = new TagsInput(el);
     });
-
-    if (document.getElementById('add-prod-desc-editor')) {
-        addProdDescEditor = new Quill('#add-prod-desc-editor', {
-            theme: 'snow',
-            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
-            placeholder: 'Write product description here...'
-        });
-    }
-    if (document.getElementById('edit-prod-desc-editor')) {
-        editProdDescEditor = new Quill('#edit-prod-desc-editor', {
-            theme: 'snow',
-            modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], ['link', 'image'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']] },
-            placeholder: 'Write product description here...'
-        });
-    }
 });
+
 // Helper to convert & compress image file to optimized Base64
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -249,6 +248,7 @@ async function showDashboard() {
     if (res && res.ok) {
         fetchDashboardStats();
         fetchAnalyticsCharts();
+        fetchDashboardVisuals(); // Load new visual charts + tables
     }
 }
 
@@ -520,12 +520,13 @@ function switchTab(tabName) {
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
+        if (tabName === 'manage-blogs') cleanTitle = "Manage Blogs";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
         titleElement.innerText = cleanTitle;
     }
 
     // Fetch data dynamically based on the active tab
-    if (tabName === 'dashboard') fetchDashboardStats();
+    if (tabName === 'dashboard') { fetchDashboardStats(); fetchDashboardVisuals(); }
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'manage-products') fetchManageProducts();
     if (tabName === 'add-product') populateAddProductCategories();
@@ -539,7 +540,24 @@ function switchTab(tabName) {
     if (tabName === 'manage-customers') fetchCustomerUsers();
     if (tabName === 'manage-reviews') fetchAdminReviews();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
+    if (tabName === 'manage-blogs') fetchAdminBlogs();
     if (tabName === 'admin-settings') initSettingsTab();
+}
+
+// Navigate to Orders tab with a specific filter pre-selected
+function goToOrdersTab(filterStatus) {
+    activeOrderFilterStatus = filterStatus || 'ALL';
+    currentOrdersPage = 1;
+    switchTab('orders');
+    // After tab switch, highlight the correct filter pill
+    setTimeout(() => {
+        const filterBtns = document.querySelectorAll('.order-filter-btn');
+        filterBtns.forEach(b => {
+            b.classList.remove('active');
+            if ((b.dataset.status || 'ALL') === filterStatus) b.classList.add('active');
+        });
+        renderFilteredOrders();
+    }, 100);
 }
 
 // ==========================================
@@ -731,9 +749,6 @@ async function handleAddProduct(e) {
         stock: document.getElementById('prod-stock').value,
         discountType: document.getElementById('prod-discount-type') ? document.getElementById('prod-discount-type').value : 'none',
         discountValue: document.getElementById('prod-discount-value') ? document.getElementById('prod-discount-value').value : 0,
-        isTopSelling: document.getElementById('prod-top-selling') ? document.getElementById('prod-top-selling').checked : false,
-        isTrending: document.getElementById('prod-trending') ? document.getElementById('prod-trending').checked : false,
-        isTopRated: document.getElementById('prod-top-rated') ? document.getElementById('prod-top-rated').checked : false,
         image: imageBase64
     };
 
@@ -803,6 +818,11 @@ async function fetchOrders() {
 
         // Render filtered view
         renderFilteredOrders();
+        
+        // Render advanced dashboard visuals
+        if(typeof renderAdvancedVisuals === 'function') {
+            renderAdvancedVisuals(allAdminOrders);
+        }
 
     } catch (error) {
         console.error("Error fetching orders:", error);
@@ -950,6 +970,7 @@ function renderFilteredOrders() {
                 <td style="white-space:nowrap;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${statusSelectHtml}
+                        <a href="invoice.html?orderNumber=${escapeHTML(order.orderNumber)}" target="_blank" class="btn-icon btn-icon-secondary" title="View Invoice" style="color: #475569; text-decoration: none; display: flex; align-items: center; justify-content: center;"><i class="fas fa-external-link-alt"></i></a>
                         <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-icon btn-icon-secondary" title="Download Invoice"><i class="fas fa-file-invoice"></i></button>
                         <button onclick="deleteOrder('${order._id}')" class="btn-icon btn-icon-danger" title="Delete Order"><i class="fas fa-trash"></i></button>
                     </div>
@@ -982,7 +1003,10 @@ function renderFilteredOrders() {
                         <strong>Items:</strong> ${itemsList}
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
-                        <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Invoice"><i class="fas fa-file-invoice"></i> Tax Invoice</button>
+                        <div style="display: flex; gap: 5px;">
+                            <a href="invoice.html?orderNumber=${escapeHTML(order.orderNumber)}" target="_blank" class="btn-invoice-sm" style="background:#f1f5f9; color:#475569; text-decoration:none;" title="View Invoice"><i class="fas fa-external-link-alt"></i> View</a>
+                            <button onclick="downloadInvoice('${escapeHTML(order.orderNumber)}')" class="btn-invoice-sm" title="Download Invoice"><i class="fas fa-file-invoice"></i> DL</button>
+                        </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
                             ${statusSelectHtml}
                             <button onclick="deleteOrder('${order._id}')" class="btn-icon btn-icon-danger" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;" title="Delete Order"><i class="fas fa-trash" style="font-size: 12px;"></i></button>
@@ -2184,10 +2208,6 @@ async function openEditModal(id) {
         document.getElementById('edit-prod-discount-value').value = prod.discountValue || 0;
     }
 
-    if (document.getElementById('edit-prod-top-selling')) document.getElementById('edit-prod-top-selling').checked = !!prod.isTopSelling;
-    if (document.getElementById('edit-prod-trending')) document.getElementById('edit-prod-trending').checked = !!prod.isTrending;
-    if (document.getElementById('edit-prod-top-rated')) document.getElementById('edit-prod-top-rated').checked = !!prod.isTopRated;
-
     // Populate Category & Subcategory dropdowns
     if (typeof localCategories === 'undefined' || localCategories.length === 0) {
         await loadCategories();
@@ -2265,9 +2285,6 @@ async function handleEditProductSubmit(e) {
         stock: document.getElementById('edit-prod-stock').value,
         discountType: document.getElementById('edit-prod-discount-type') ? document.getElementById('edit-prod-discount-type').value : 'none',
         discountValue: document.getElementById('edit-prod-discount-value') ? document.getElementById('edit-prod-discount-value').value : 0,
-        isTopSelling: document.getElementById('edit-prod-top-selling') ? document.getElementById('edit-prod-top-selling').checked : false,
-        isTrending: document.getElementById('edit-prod-trending') ? document.getElementById('edit-prod-trending').checked : false,
-        isTopRated: document.getElementById('edit-prod-top-rated') ? document.getElementById('edit-prod-top-rated').checked : false,
         image: imageBase64
     };
 
@@ -2860,25 +2877,400 @@ class TagsInput {
     }
 }
 
+// ==========================================
+// BLOG MANAGEMENT LOGIC
+// ==========================================
 
-// Initialize Quill Editor for Blogs
-let quillEditor;
+let quillEditor = null;
+
+// Initialize Quill Editor if not already initialized
 function initBlogEditor() {
     if (!quillEditor && document.getElementById('blog-editor-container')) {
         quillEditor = new Quill('#blog-editor-container', {
             theme: 'snow',
-            placeholder: 'Write your blog content here...',
             modules: {
                 toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
                     ['bold', 'italic', 'underline', 'strike'],
-                    ['blockquote', 'code-block'],
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['link', 'image'],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['link', 'image', 'video'],
                     ['clean']
                 ]
             }
         });
     }
+}
+
+// Fetch and display admin blogs
+async function fetchAdminBlogs() {
+    initBlogEditor();
+    
+    const tbody = document.getElementById('blogs-table-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+    
+    try {
+        const res = await fetch('/api/blogs');
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+            renderAdminBlogs(data.blogs);
+        } else {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Failed to load blogs.</td></tr>';
+        }
+    } catch (err) {
+        console.error("fetchAdminBlogs error:", err);
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Connection error.</td></tr>';
+    }
+}
+
+function renderAdminBlogs(blogs) {
+    const tbody = document.getElementById('blogs-table-body');
+    if (!tbody) return;
+    
+    if (!blogs || blogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No blogs found. Create one above!</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = blogs.map(blog => `
+        <tr>
+            <td>
+                <img src="${formatImageUrl(blog.imageUrl)}" alt="${escapeHTML(blog.title)}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+            </td>
+            <td><strong>${escapeHTML(blog.title)}</strong></td>
+            <td>${new Date(blog.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-icon-danger" onclick="deleteAdminBlog('${blog._id}')" title="Delete Blog">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Handle Add Blog Form Submission
+document.addEventListener('DOMContentLoaded', () => {
+    const addBlogForm = document.getElementById('add-blog-form');
+    if (addBlogForm) {
+        addBlogForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('adminToken');
+            
+            const title = document.getElementById('blog-title').value.trim();
+            const imageFile = document.getElementById('blog-image').files[0];
+            const descriptionHTML = quillEditor ? quillEditor.root.innerHTML : '';
+            
+            if (!title) return showToast('Please enter a blog title', 'error');
+            if (!descriptionHTML || descriptionHTML === '<p><br></p>') return showToast('Please enter a blog description', 'error');
+            if (!imageFile) return showToast('Please attach a blog image', 'error');
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...'; }
+            
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', descriptionHTML);
+            formData.append('image', imageFile);
+            
+            try {
+                const res = await fetch('/api/admin/blogs', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('✅ Blog created successfully!');
+                    addBlogForm.reset();
+                    if (quillEditor) quillEditor.root.innerHTML = '';
+                    fetchAdminBlogs(); // Refresh list
+                } else {
+                    showToast('❌ ' + (data.message || 'Failed to create blog'), 'error');
+                }
+            } catch (err) {
+                console.error("Create blog error:", err);
+                showToast('❌ Connection error. Please try again.', 'error');
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Upload Blog'; }
+            }
+        });
+    }
+});
+
+// Delete a blog
+async function deleteAdminBlog(id) {
+    if (!confirm("Are you sure you want to delete this blog? This action cannot be undone.")) return;
+    
+    const token = localStorage.getItem('adminToken');
+    try {
+        const res = await fetch(`/api/admin/blogs/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        const data = await res.json();
+        if (res.ok && data.success) {
+            showToast('✅ Blog deleted successfully!');
+            fetchAdminBlogs();
+        } else {
+            showToast('❌ ' + (data.message || 'Failed to delete blog'), 'error');
+        }
+    } catch (err) {
+        console.error("Delete blog error:", err);
+        showToast('❌ Connection error.', 'error');
+    }
+}
+
+// ==========================================
+// ADVANCED DASHBOARD VISUALS
+// ==========================================
+async function fetchDashboardVisuals() {
+    try {
+        const response = await fetch('/api/admin/orders', {
+            headers: getAuthHeaders()
+        });
+        if (!response || !response.ok) return;
+        const data = await response.json();
+        const orders = data.orders || [];
+        renderAdvancedVisuals(orders);
+    } catch (err) {
+        console.error('fetchDashboardVisuals error:', err);
+    }
+}
+
+function renderAdvancedVisuals(orders) {
+    calculateRevenueByCity(orders);
+    calculateOrdersByHour(orders);
+    calculatePaymentMethods(orders);
+    renderLatestPendingOrders(orders);
+    renderLatestActiveOrders(orders);
+}
+
+function calculateRevenueByCity(orders) {
+    const container = document.getElementById('city-revenue-container');
+    if(!container) return;
+    
+    let cityRev = {};
+    orders.forEach(o => {
+        let city = 'Unknown';
+        let addr = (o.address || '').trim().toLowerCase();
+        
+        if (addr.includes('inside dhaka') || addr.includes('dhaka') && !addr.includes('outside')) {
+            city = 'Inside Dhaka';
+        } else if (addr.includes('outside dhaka')) {
+            city = 'Outside Dhaka';
+        } else if (addr) {
+            // Try to extract district/city from address
+            city = o.address.trim().split(',').pop().trim() || 'Other';
+        }
+        
+        let total = parseFloat(o.totalAmount) || 0;
+        cityRev[city] = (cityRev[city] || 0) + total;
+    });
+    
+    // Sort cities by revenue
+    const sortedCities = Object.entries(cityRev).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    
+    if(sortedCities.length === 0) {
+        container.innerHTML = '<div style="color:#888; font-size:12px;">No city data found</div>';
+        return;
+    }
+    
+    const maxRev = sortedCities[0][1];
+    
+    let html = '';
+    const colors = ['#4f46e5', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899'];
+    
+    sortedCities.forEach((item, index) => {
+        let city = item[0];
+        let rev = item[1];
+        let pct = maxRev > 0 ? (rev / maxRev) * 100 : 0;
+        let color = colors[index % colors.length];
+        
+        html += `
+        <div class="city-progress-wrap">
+            <div class="city-progress-header">
+                <span>${escapeHTML(city)}</span>
+                <span>৳ ${rev.toLocaleString()}</span>
+            </div>
+            <div class="city-progress-bar">
+                <div class="city-progress-fill" style="width: ${pct}%; background: ${color};"></div>
+            </div>
+        </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function calculateOrdersByHour(orders) {
+    const canvas = document.getElementById('ordersHourChart');
+    if(!canvas || typeof Chart === 'undefined') return;
+    
+    let hourCounts = Array(24).fill(0);
+    orders.forEach(o => {
+        let dateField = o.orderDate || o.createdAt;
+        if(dateField) {
+            let d = new Date(dateField);
+            if(!isNaN(d.getTime())) {
+                hourCounts[d.getHours()]++;
+            }
+        }
+    });
+    
+    const labels = ['12 AM','1 AM','2 AM','3 AM','4 AM','5 AM','6 AM','7 AM','8 AM','9 AM','10 AM','11 AM',
+                    '12 PM','1 PM','2 PM','3 PM','4 PM','5 PM','6 PM','7 PM','8 PM','9 PM','10 PM','11 PM'];
+    
+    if(chartInstances['ordersHourChart']) {
+        destroyChart('ordersHourChart');
+    }
+    
+    chartInstances['ordersHourChart'] = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Orders',
+                data: hourCounts,
+                backgroundColor: '#10b981',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { borderDash: [2, 2], color: '#f0f0f0' }, beginAtZero: true, ticks: { precision: 0 } }
+            }
+        }
+    });
+}
+
+function calculatePaymentMethods(orders) {
+    const canvas = document.getElementById('paymentMethodsChart');
+    if(!canvas || typeof Chart === 'undefined') return;
+    
+    let methods = {};
+    orders.forEach(o => {
+        let pm = o.paymentMethod || 'Unknown';
+        if(pm === 'Cash on Delivery') pm = 'COD';
+        methods[pm] = (methods[pm] || 0) + (parseFloat(o.totalAmount) || 0);
+    });
+    
+    const labels = Object.keys(methods);
+    const data = Object.values(methods);
+    
+    if(chartInstances['paymentMethodsChart']) {
+        destroyChart('paymentMethodsChart');
+    }
+    
+    const colorMap = {
+        'bKash': '#e2136e',
+        'COD': '#10b981',
+        'Nagad': '#f97316',
+        'Card': '#4f46e5',
+        'Unknown': '#94a3b8'
+    };
+    const bgColors = labels.map(l => colorMap[l] || '#4f46e5');
+    
+    chartInstances['paymentMethodsChart'] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: bgColors,
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                cutout: '70%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ' ৳ ' + context.parsed.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderLatestPendingOrders(orders) {
+    const tbody = document.getElementById('visual-pending-orders-tbody');
+    const badge = document.getElementById('pending-orders-badge');
+    if(!tbody) return;
+    
+    const pendingOrders = orders.filter(o => o.status === 'Pending').sort((a,b) => new Date(b.orderDate || b.createdAt) - new Date(a.orderDate || a.createdAt));
+    if(badge) badge.innerText = pendingOrders.length;
+    
+    const latest = pendingOrders.slice(0, 5);
+    
+    if(latest.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">No pending orders</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    latest.forEach(o => {
+        const dateStr = new Date(o.orderDate || o.createdAt).toLocaleDateString();
+        const phone = o.phone || 'N/A';
+        html += `
+        <tr>
+            <td><span class="phone">${escapeHTML(phone)}</span></td>
+            <td><span class="invoice" onclick="goToOrdersTab('Pending')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="total">৳${parseFloat(o.totalAmount || 0).toLocaleString()}</span></td>
+            <td><span class="date">${dateStr}</span></td>
+            <td>
+                <button class="action-icon-btn btn-check" title="Approve" onclick="updateOrderStatus('${o._id}', 'Approved')"><i class="fas fa-check"></i></button>
+                <button class="action-icon-btn btn-times" title="Cancel" onclick="updateOrderStatus('${o._id}', 'Cancelled')"><i class="fas fa-times"></i></button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function renderLatestActiveOrders(orders) {
+    const tbody = document.getElementById('visual-active-orders-tbody');
+    const badge = document.getElementById('active-orders-badge');
+    if(!tbody) return;
+    
+    const activeOrders = orders.filter(o => o.status === 'Approved' || o.status === 'Processing').sort((a,b) => new Date(b.orderDate || b.createdAt) - new Date(a.orderDate || a.createdAt));
+    if(badge) badge.innerText = activeOrders.length;
+    
+    const latest = activeOrders.slice(0, 5);
+    
+    if(latest.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">No active orders</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    latest.forEach(o => {
+        const dateStr = new Date(o.orderDate || o.createdAt).toLocaleDateString();
+        const phone = o.phone || 'N/A';
+        html += `
+        <tr>
+            <td><span class="phone">${escapeHTML(phone)}</span></td>
+            <td><span class="invoice" onclick="goToOrdersTab('ALL')">#${o.orderNumber || o._id.substring(o._id.length-6)}</span></td>
+            <td><span class="total">৳${parseFloat(o.totalAmount || 0).toLocaleString()}</span></td>
+            <td><span class="date">${dateStr}</span></td>
+            <td>
+                <button class="action-icon-btn btn-eye" title="View" onclick="goToOrdersTab('ALL')"><i class="fas fa-eye"></i></button>
+                <button class="action-icon-btn btn-check" title="Mark Delivered" onclick="updateOrderStatus('${o._id}', 'Delivered')"><i class="fas fa-truck"></i></button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
 }
