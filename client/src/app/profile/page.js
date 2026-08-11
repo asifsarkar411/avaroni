@@ -29,6 +29,7 @@ export default function ProfilePage() {
     const [editName, setEditName] = useState('');
     const [editPhone, setEditPhone] = useState('');
     const [editAvatar, setEditAvatar] = useState('');
+    const [editAddress, setEditAddress] = useState('');
     const [saveLoading, setSaveLoading] = useState(false);
 
     const handleEditToggle = () => {
@@ -36,6 +37,7 @@ export default function ProfilePage() {
             setEditName(user.username || '');
             setEditPhone(user.phone || '');
             setEditAvatar(user.avatar || '');
+            setEditAddress(user.address || '');
         }
         setIsEditing(!isEditing);
     };
@@ -46,7 +48,7 @@ export default function ProfilePage() {
             const res = await fetch('/api/user/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ name: editName, phone: editPhone, avatar: editAvatar })
+                body: JSON.stringify({ name: editName, phone: editPhone, avatar: editAvatar, address: editAddress })
             });
             const data = await res.json();
             if (data.success) {
@@ -267,6 +269,19 @@ export default function ProfilePage() {
                                         <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} style={inputStyle} placeholder="e.g. +8801XXXXXXXXX" />
                                     ) : (
                                         <div style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>{user.phone || '-'}</div>
+                                    )}
+                                </div>
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                    <label style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '5px' }}>Shipping Address</label>
+                                    {isEditing ? (
+                                        <textarea 
+                                            value={editAddress} 
+                                            onChange={(e) => setEditAddress(e.target.value)} 
+                                            style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} 
+                                            placeholder="Enter your full shipping address..." 
+                                        />
+                                    ) : (
+                                        <div style={{ fontSize: '16px', fontWeight: '500', color: '#333', whiteSpace: 'pre-wrap' }}>{user.address || '-'}</div>
                                     )}
                                 </div>
                             </div>

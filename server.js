@@ -797,11 +797,12 @@ app.put('/api/user/profile', async (req, res) => {
             const user = await User.findById(decoded.id);
             if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-            const { phone, avatar, name } = req.body;
+            const { phone, avatar, name, address } = req.body;
             
             if (phone !== undefined) user.phone = phone;
             if (avatar !== undefined) user.avatar = avatar;
             if (name !== undefined) user.username = name;
+            if (address !== undefined) user.address = address;
 
             await user.save();
 

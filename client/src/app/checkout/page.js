@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { getImageUrl } from '@/utils/image';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart } = useCart();
+    const { user } = useAuth();
     const [shippingDetails, setShippingDetails] = useState({
         name: '',
         email: '',
@@ -22,6 +24,18 @@ export default function CheckoutPage() {
     const [placedOrderDetails, setPlacedOrderDetails] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeVouchers, setActiveVouchers] = useState([]);
+
+    useEffect(() => {
+        if (user) {
+            setShippingDetails(prev => ({
+                ...prev,
+                name: prev.name || user.username || '',
+                email: prev.email || user.email || '',
+                phone: prev.phone || user.phone || '',
+                address: prev.address || user.address || ''
+            }));
+        }
+    }, [user]);
 
     const shippingFee = shippingDetails.deliveryLocation === 'inside' ? 80 : 150;
     const finalTotal = Math.max(0, cartTotal + shippingFee - discount);

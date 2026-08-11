@@ -2609,7 +2609,7 @@ async function fetchCustomerUsers() {
         tbody.innerHTML = '';
 
         if (!data.success || !data.customers || data.customers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No customer accounts found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No customer accounts found.</td></tr>';
             return;
         }
 
@@ -2619,6 +2619,7 @@ async function fetchCustomerUsers() {
                     <td><strong>${escapeHTML(customer.username)}</strong></td>
                     <td>${escapeHTML(customer.email || 'N/A')}</td>
                     <td>${escapeHTML(customer.phone || 'N/A')}</td>
+                    <td><span style="font-size: 13px;">${escapeHTML(customer.address || 'N/A')}</span></td>
                     <td><span style="background:#e3f2fd; color:#0d6efd; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">Customer</span></td>
                     <td>${escapeHTML(customer.loginCount || 0)} times</td>
                 </tr>
