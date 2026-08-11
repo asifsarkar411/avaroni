@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop by Category -  আভরণী (Avaroni) | Women & Kids Fashion</title>
-    <meta name="description" content="Explore fashion categories at  আভরণী (Avaroni). Sarees, designer dresses, kids wear, and ornaments.">
+    <title>Shop by Category -  AVARONI (Avaroni) | Women & Kids Fashion</title>
+    <meta name="description" content="Explore fashion categories at  AVARONI (Avaroni). Sarees, designer dresses, kids wear, and ornaments.">
     
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="আভরণী (Avaroni)">
-    <meta property="og:title" content="Shop by Category -  আভরণী (Avaroni)">
+    <meta property="og:site_name" content="AVARONI (Avaroni)">
+    <meta property="og:title" content="Shop by Category -  AVARONI (Avaroni)">
     <meta property="og:description" content="Browse our complete catalog of sarees, dresses, kids outfits, and fashion accessories!">
     <meta property="og:image" content="./img/profile_image.jpg">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Shop by Category -  আভরণী (Avaroni)">
+    <meta name="twitter:title" content="Shop by Category -  AVARONI (Avaroni)">
     <meta name="twitter:description" content="Browse our complete catalog of sarees, dresses, kids outfits, and fashion accessories!">
     <meta name="twitter:image" content="./img/profile_image.jpg">
 
@@ -27,7 +27,7 @@
     <nav class="navbar">
         <a href="index.html" class="logo">
             <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
-            <B>আভরণী</B>
+            <B>AVARONI</B>
         </a>
         <!-- Search & Filter Bar -->
         <div class="search-bar-container">
@@ -66,27 +66,21 @@
         <div class="sidebar-header">
             <a href="index.html" class="sidebar-brand">
                 <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
-                <span>আভরণী</span>
+                <span style="font-size:20px; font-weight:700; color:#333333; letter-spacing:0.5px;">AVARONI</span>
             </a>
-            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn" style="color:#555555; text-decoration:none; font-size:32px; border-bottom:none;">&times;</a>
         </div>
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;">
+        <div id="sidebar-categories-container"></div>
+        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;">
+        <div style="padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</div>
         <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
         <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
         <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
         <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
-        <a href="return-product.html"><i class="fas fa-undo"></i> Return Product</a>
-        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
         <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
         <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
     </div>
 
-    <h2 class="page-title" id="category-page-title">Loading...</h2>
-
-    <!-- Subcategory Filter Tabs -->
-    <div id="subcategory-filter" class="subcategory-filter" style="display:none; text-align:center; margin: 0 20px 20px; flex-wrap:wrap; gap:8px; justify-content:center;">
-    </div>
-    
     <div class="product-grid" id="product-list">
         <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
         <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
@@ -148,7 +142,7 @@
             ? `${prettyCategoryName} — ${subcategoryFilter}` 
             : `${prettyCategoryName} Collection`;
     }
-    document.title = `${prettyCategoryName} | আভরণী`;
+    document.title = `${prettyCategoryName} | AVARONI`;
 
     // Fetch official category display name and build subcategory tabs
     fetch('/api/categories')
@@ -162,7 +156,7 @@
                             ? `${cat.displayName} — ${subcategoryFilter}` 
                             : `${cat.displayName} Collection`;
                     }
-                    document.title = `${cat.displayName} | আভরণী`;
+                    document.title = `${cat.displayName} | AVARONI`;
 
                     // Build subcategory filter tabs
                     if (cat.subcategories && cat.subcategories.length > 0) {
