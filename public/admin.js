@@ -144,6 +144,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const changeEmailForm = document.getElementById('change-email-form');
     if (changeEmailForm) changeEmailForm.addEventListener('submit', handleChangeEmail);
 
+    const brandLogoForm = document.getElementById('brand-logo-form');
+    if (brandLogoForm) brandLogoForm.addEventListener('submit', handleChangeBrandLogo);
+
+
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
 
@@ -249,6 +253,20 @@ async function showDashboard() {
         fetchDashboardStats();
         fetchAnalyticsCharts();
         fetchDashboardVisuals(); // Load new visual charts + tables
+        fetchSettings();
+    }
+}
+
+async function fetchSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (data.success && data.settings.brandLogo) {
+            const logoPreview = document.getElementById('current-brand-logo-preview');
+            if (logoPreview) logoPreview.src = data.settings.brandLogo;
+        }
+    } catch (err) {
+        console.error("Error fetching settings:", err);
     }
 }
 
@@ -2473,6 +2491,38 @@ async function handleChangeEmail(e) {
     } catch (err) {
         console.error("Change Email Error:", err);
         showToast("Failed to connect to server.", 'error');
+    }
+}
+
+async function handleChangeBrandLogo(e) {
+    e.preventDefault();
+    const logoInput = document.getElementById('brand-logo-input');
+    if (!logoInput.files || !logoInput.files[0]) {
+        showToast("Please select an image file first.", "error");
+        return;
+    }
+
+    const file = logoInput.files[0];
+    try {
+        const base64Image = await fileToBase64(file);
+        const response = await fetchWithAuth('/api/admin/settings/logo', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logoUrl: base64Image })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Brand logo updated successfully! Changes apply globally.");
+            document.getElementById('current-brand-logo-preview').src = base64Image;
+            document.getElementById('brand-logo-form').reset();
+        } else {
+            showToast(data.message || "Failed to update logo.", "error");
+        }
+    } catch (err) {
+        console.error("Change Brand Logo Error:", err);
+        showToast("Error processing the image.", "error");
     }
 }
 

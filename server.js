@@ -38,6 +38,7 @@ function escapeHTML(str) {
 
 // --- MODELS ---
 const User = require('./models/User');           // Secure Login User Model
+const Settings = require('./models/Settings');   // Settings Model
 const Order = require('./models/Order');         // E-commerce Order Model
 const Product = require('./models/Product');     // E-commerce Product Model
 const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
@@ -1818,6 +1819,38 @@ app.delete('/api/admin/reviews/:id', verifyAdminToken, async (req, res) => {
 app.get('/api/user-data', verifyAdminToken, async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     res.json({ success: true, user });
+});
+
+// Update global brand logo
+app.put('/api/admin/settings/logo', verifyAdminToken, async (req, res) => {
+    try {
+        const { logoUrl } = req.body;
+        if (!logoUrl) return res.status(400).json({ success: false, message: "Logo URL is required." });
+        
+        await Settings.findOneAndUpdate(
+            { key: 'brandLogo' },
+            { value: logoUrl },
+            { upsert: true, new: true }
+        );
+        
+        res.json({ success: true, message: "Brand logo updated successfully." });
+    } catch (err) {
+        console.error("Update Brand Logo Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Get global settings (public)
+app.get('/api/settings', async (req, res) => {
+    try {
+        const settings = await Settings.find({});
+        const settingsMap = {};
+        settings.forEach(s => settingsMap[s.key] = s.value);
+        res.json({ success: true, settings: settingsMap });
+    } catch (err) {
+        console.error("Get Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
 });
 
 // ==========================================

@@ -5,27 +5,37 @@ import { getImageUrl } from '@/utils/image';
 
 export default function Sidebar({ isOpen, onClose }) {
     const [categories, setCategories] = useState([]);
+    const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
 
     useEffect(() => {
-        async function fetchCategories() {
+        async function fetchSettingsAndCategories() {
             try {
-                const res = await fetch('/api/categories');
-                const data = await res.json();
-                if (data.success) {
-                    setCategories(data.categories);
+                const [catRes, setRes] = await Promise.all([
+                    fetch('/api/categories'),
+                    fetch('/api/settings')
+                ]);
+                
+                const catData = await catRes.json();
+                if (catData.success) {
+                    setCategories(catData.categories);
+                }
+
+                const setData = await setRes.json();
+                if (setData.success && setData.settings.brandLogo) {
+                    setBrandLogo(setData.settings.brandLogo);
                 }
             } catch (err) {
                 console.error("Sidebar category fetch error", err);
             }
         }
-        fetchCategories();
+        fetchSettingsAndCategories();
     }, []);
 
     return (
         <div id="sidebar" className={'sidebar ' + (isOpen ? 'active' : '')}>
             <div className="sidebar-header">
                 <Link href="/" className="sidebar-brand" onClick={onClose}>
-                    <img src="/img/profile_image.jpg" alt="Logo" className="sidebar-logo" />
+                    <img src={brandLogo} alt="Logo" className="sidebar-logo" />
                     <span>AVARONI</span>
                 </Link>
                 <a href="#" onClick={(e) => { e.preventDefault(); onClose(); }} className="close-btn">&times;</a>

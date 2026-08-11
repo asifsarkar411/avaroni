@@ -13,21 +13,32 @@ export default function Navbar({ onMenuClick }) {
     const [isSearching, setIsSearching] = useState(false);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
     const searchRef = useRef(null);
 
     useEffect(() => {
-        async function fetchCategories() {
+        async function fetchSettingsAndCategories() {
             try {
-                const res = await fetch('/api/categories');
-                const data = await res.json();
-                if (data.success) {
-                    setCategories(data.categories);
+                const [catRes, setRes] = await Promise.all([
+                    fetch('/api/categories'),
+                    fetch('/api/settings')
+                ]);
+                
+                const catData = await catRes.json();
+                if (catData.success) {
+                    setCategories(catData.categories);
                 }
+
+                const setData = await setRes.json();
+                if (setData.success && setData.settings.brandLogo) {
+                    setBrandLogo(setData.settings.brandLogo);
+                }
+
             } catch (err) {
                 console.error("Navbar category fetch error", err);
             }
         }
-        fetchCategories();
+        fetchSettingsAndCategories();
     }, []);
 
     useEffect(() => {
@@ -75,7 +86,7 @@ export default function Navbar({ onMenuClick }) {
     return (
         <nav className="navbar">
             <Link href="/" className="logo">
-                <img src="/img/profile_image.jpg" alt="Logo" className="nav-logo" />
+                <img src={brandLogo} alt="Logo" className="nav-logo" />
                 <b>AVARONI</b>
             </Link>
             

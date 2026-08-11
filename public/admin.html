@@ -1586,6 +1586,34 @@
 
                 <!-- SETTINGS & ADMIN USERS TAB PANEL -->
                 <div id="admin-settings-tab" class="tab-content">
+                    
+                    <!-- Global Store Settings -->
+                    <div class="panel-box" data-aos="fade-up" style="margin-bottom: 25px;">
+                        <div class="panel-header">
+                            <h2><i class="fas fa-store" style="color: var(--primary);"></i> Global Store Settings</h2>
+                        </div>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                            <!-- Form: Change Brand Logo -->
+                            <div style="background: #fafafa; padding: 20px; border-radius: 10px; border: 1px solid #eaeaea;">
+                                <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c2c3e;"><i class="fas fa-image" style="color: var(--primary); margin-right: 8px;"></i> Change Brand Logo</h3>
+                                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                    <div style="flex-shrink: 0;">
+                                        <img id="current-brand-logo-preview" src="./img/profile_image.jpg" alt="Current Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;">
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <form id="brand-logo-form">
+                                            <div class="form-group" style="margin-bottom: 12px;">
+                                                <label for="brand-logo-input">Upload New Logo (Image):</label>
+                                                <input type="file" id="brand-logo-input" accept="image/*" required>
+                                            </div>
+                                            <button type="submit" class="btn" style="background: #111111;"><i class="fas fa-save"></i> Save Logo</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="panel-box" data-aos="fade-up" style="margin-bottom: 25px;">
                         <div class="panel-header">
                             <h2><i class="fas fa-user-cog" style="color: var(--primary);"></i> Admin Profile & Account Settings</h2>

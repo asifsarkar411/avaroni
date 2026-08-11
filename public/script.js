@@ -2187,3 +2187,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+// Fetch and apply Dynamic Brand Logo for Static HTML pages
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (data.success && data.settings.brandLogo) {
+            document.querySelectorAll('.nav-logo, .sidebar-logo, .footer-logo').forEach(img => {
+                img.src = data.settings.brandLogo;
+            });
+        }
+    } catch (err) {
+        console.error('Error fetching brand logo:', err);
+    }
+});
