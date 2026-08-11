@@ -480,11 +480,18 @@
                 const quantity = Number(item.quantity);
                 const itemTotal = price * quantity;
                 subtotal += itemTotal;
-                
+                let itemDetails = item.name;
+                let extras = [];
+                if (item.size) extras.push(`Size: ${item.size}`);
+                if (item.color || item.colour) extras.push(`Color: ${item.color || item.colour}`);
+                if (extras.length > 0) {
+                    itemDetails += ` <br><span style="font-size: 11px; color: #64748b;">${extras.join(' | ')}</span>`;
+                }
+
                 itemsHtml += \`
                     <tr>
                         <td>\${String(index + 1).padStart(2, '0')}</td>
-                        <td class="item-name">\${item.name}</td>
+                        <td class="item-name">\${itemDetails}</td>
                         <td>\${quantity}</td>
                         <td>৳\${price.toLocaleString()}</td>
                         <td>৳\${itemTotal.toLocaleString()}</td>

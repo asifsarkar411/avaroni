@@ -18,10 +18,19 @@ async function generatePDFInvoice(order) {
         const quantity = Number(item.quantity);
         const itemTotal = price * quantity;
         subtotal += itemTotal;
+        
+        let itemDetails = item.name;
+        let extras = [];
+        if (item.size) extras.push(`Size: ${item.size}`);
+        if (item.color || item.colour) extras.push(`Color: ${item.color || item.colour}`);
+        if (extras.length > 0) {
+            itemDetails += ` <br><span style="font-size: 11px; color: #64748b;">${extras.join(' | ')}</span>`;
+        }
+
         itemsHtml += `
             <tr>
                 <td style="padding: 16px 15px; font-size: 14px; color: #334155; border-bottom: 1px solid #e2e8f0;">${String(index + 1).padStart(2, '0')}</td>
-                <td style="padding: 16px 15px; font-size: 15px; color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${item.name}</td>
+                <td style="padding: 16px 15px; font-size: 15px; color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${itemDetails}</td>
                 <td style="padding: 16px 15px; text-align: center; font-size: 14px; color: #334155; border-bottom: 1px solid #e2e8f0;">${quantity}</td>
                 <td style="padding: 16px 15px; text-align: right; font-size: 14px; color: #334155; border-bottom: 1px solid #e2e8f0;">৳${price.toLocaleString()}</td>
                 <td style="padding: 16px 15px; text-align: right; font-size: 14px; color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0;">৳${itemTotal.toLocaleString()}</td>
