@@ -240,47 +240,91 @@ export default function ProductModal() {
                         </div>
 
                         {/* TABBED SECTION */}
-                        <div style={{ marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                        <div style={{ marginTop: '30px' }}>
                             <div className="product-modal-tabs-container">
-                                {['DESCRIPTION', 'ADDITIONAL INFORMATION', 'REVIEWS (1)'].map((tab) => (
+                                {[
+                                    { key: 'DESCRIPTION', icon: 'fas fa-file-alt', label: 'Description' },
+                                    { key: 'ADDITIONAL INFORMATION', icon: 'fas fa-info-circle', label: 'Additional Info' },
+                                    { key: 'REVIEWS (1)', icon: 'fas fa-comments', label: 'Reviews' }
+                                ].map((tab) => (
                                     <button 
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`product-modal-tab-btn ${activeTab === tab ? 'active' : ''}`}
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key)}
+                                        className={`product-modal-tab-btn ${activeTab === tab.key ? 'active' : ''}`}
                                     >
-                                        {tab}
+                                        <i className={tab.icon} style={{ marginRight: '6px', fontSize: '12px' }}></i>
+                                        {tab.label}
                                     </button>
                                 ))}
                             </div>
                             
-                            <div style={{ minHeight: '150px', width: '100%', overflowX: 'hidden', overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+                            <div className="product-modal-tab-content">
                                 {activeTab === 'DESCRIPTION' && (
-                                    <div 
-                                        style={{ fontSize: '14px', lineHeight: '1.8', color: '#444' }}
-                                        dangerouslySetInnerHTML={{ __html: product.description || '<p>Premium quality product.</p>' }}
-                                    ></div>
+                                    <div className="tab-panel-description">
+                                        {product.description && product.description.replace(/<[^>]*>/g, '').trim() ? (
+                                            <div 
+                                                dangerouslySetInnerHTML={{ __html: product.description }}
+                                            ></div>
+                                        ) : (
+                                            <div className="tab-empty-state">
+                                                <i className="fas fa-file-alt"></i>
+                                                <p>Premium quality product crafted with care and attention to detail.</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                                 
                                 {activeTab === 'ADDITIONAL INFORMATION' && (
-                                    <div style={{ fontSize: '14px', color: '#555' }}>
-                                        <p><strong>Brand:</strong> {product.brand || 'N/A'}</p>
-                                        <p><strong>Weight:</strong> 0.5 kg (Approx)</p>
-                                        <p><strong>Care Instructions:</strong> Machine wash cold, do not bleach.</p>
+                                    <div className="tab-panel-info">
+                                        <table className="info-table">
+                                            <tbody>
+                                                <tr>
+                                                    <td className="info-label"><i className="fas fa-tag"></i> Brand</td>
+                                                    <td className="info-value">{product.brand || 'N/A'}</td>
+                                                </tr>
+                                                {product.category && (
+                                                    <tr>
+                                                        <td className="info-label"><i className="fas fa-folder"></i> Category</td>
+                                                        <td className="info-value">{product.category}</td>
+                                                    </tr>
+                                                )}
+                                                {product.sizes && product.sizes.length > 0 && (
+                                                    <tr>
+                                                        <td className="info-label"><i className="fas fa-ruler"></i> Available Sizes</td>
+                                                        <td className="info-value">{product.sizes.join(', ')}</td>
+                                                    </tr>
+                                                )}
+                                                {product.colors && product.colors.length > 0 && (
+                                                    <tr>
+                                                        <td className="info-label"><i className="fas fa-palette"></i> Colors</td>
+                                                        <td className="info-value">{product.colors.join(', ')}</td>
+                                                    </tr>
+                                                )}
+                                                <tr>
+                                                    <td className="info-label"><i className="fas fa-weight-hanging"></i> Weight</td>
+                                                    <td className="info-value">0.5 kg (Approx)</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="info-label"><i className="fas fa-tshirt"></i> Care</td>
+                                                    <td className="info-value">Machine wash cold, do not bleach</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
 
                                 {activeTab === 'REVIEWS (1)' && (
-                                    <div style={{ fontSize: '14px', color: '#555' }}>
-                                        <div style={{ background: '#fafafa', padding: '25px', borderRadius: '12px', border: '1px solid #eee', marginTop: '10px' }}>
-                                            <h4 style={{ fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <i className="fas fa-star" style={{ color: '#ffc107' }}></i> Rate & Review Product
-                                            </h4>
-                                            <p style={{ fontSize: '13px', color: '#666', margin: '0 0 20px 0' }}>Share your star rating and honest opinion</p>
+                                    <div className="tab-panel-reviews">
+                                        <div className="review-form-card">
+                                            <div className="review-form-header">
+                                                <h4><i className="fas fa-star" style={{ color: '#ffc107' }}></i> Rate & Review Product</h4>
+                                                <p>Share your star rating and honest opinion</p>
+                                            </div>
                                             
-                                            <form onSubmit={handleReviewSubmit} style={{ width: '100%' }}>
-                                                <div style={{ marginBottom: '20px' }}>
-                                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '8px' }}>Star Rating <span style={{color: 'red'}}>*</span></label>
-                                                    <div style={{ display: 'flex', gap: '8px', fontSize: '28px', color: '#ffc107', cursor: 'pointer' }}>
+                                            <form onSubmit={handleReviewSubmit} className="review-form">
+                                                <div className="review-form-group">
+                                                    <label>Star Rating <span className="required">*</span></label>
+                                                    <div className="star-rating-row">
                                                         {[1, 2, 3, 4, 5].map((star) => (
                                                             <i 
                                                                 key={star}
@@ -294,17 +338,17 @@ export default function ProductModal() {
                                                     </div>
                                                 </div>
 
-                                                <div style={{ marginBottom: '20px', width: '100%' }}>
-                                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '8px' }}>Your Name <span style={{color: 'red'}}>*</span></label>
-                                                    <input type="text" value={reviewName} onChange={(e) => setReviewName(e.target.value)} placeholder="Enter your full name" required style={{ width: '100%', padding: '12px 15px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' }} />
+                                                <div className="review-form-group">
+                                                    <label>Your Name <span className="required">*</span></label>
+                                                    <input type="text" value={reviewName} onChange={(e) => setReviewName(e.target.value)} placeholder="Enter your full name" required />
                                                 </div>
 
-                                                <div style={{ marginBottom: '25px', width: '100%' }}>
-                                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '8px' }}>Review Comment <span style={{color: 'red'}}>*</span></label>
-                                                    <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Write your review comments here..." required rows="4" style={{ width: '100%', padding: '12px 15px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '14px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', backgroundColor: '#fff' }}></textarea>
+                                                <div className="review-form-group">
+                                                    <label>Review Comment <span className="required">*</span></label>
+                                                    <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Write your review comments here..." required rows="4"></textarea>
                                                 </div>
 
-                                                <button type="submit" disabled={isSubmittingReview} style={{ background: '#111', color: '#fff', border: 'none', padding: '12px 30px', fontSize: '14px', fontWeight: '600', borderRadius: '30px', cursor: isSubmittingReview ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
+                                                <button type="submit" disabled={isSubmittingReview} className="review-submit-btn">
                                                     <i className="fas fa-paper-plane"></i> {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
                                                 </button>
                                             </form>
