@@ -556,6 +556,7 @@ sidebar.appendChild(headerDiv);
 
         const link = document.createElement('a');
         link.href = pageFile;
+        link.style.textTransform = 'uppercase';
         link.innerHTML = `<i class="${iconClass}"></i> ${cat.displayName}`;
         sidebar.appendChild(link);
     });
