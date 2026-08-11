@@ -147,7 +147,7 @@ export default function ProductModal() {
                         <div className="product-modal-body modal-two-column">
                             <div className="modal-left-column" style={{position: 'relative'}}>
                                 {formatDiscountTag(product.discountType, product.discountValue) && <div style={{position: 'absolute', top: '15px', left: '15px', background: '#3b82f6', color: 'white', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '13px', fontWeight: 'bold', zIndex: 2}}>{formatDiscountTag(product.discountType, product.discountValue)}</div>}
-                                <img src={getImageUrl(product.imageUrl)} alt={product.name} style={{ width: '100%', height: 'auto', display: 'block', aspectRatio: '4/5', objectFit: 'cover' }} />
+                                <img src={getImageUrl(product.imageUrl)} alt={product.name} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block', aspectRatio: '4/5', objectFit: 'cover' }} />
                             </div>
                             <div className="modal-right-column">
                                 <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 10px 0', color: '#111' }}>{product.name}</h2>
@@ -322,7 +322,7 @@ export default function ProductModal() {
                                         return (
                                         <div key={rel._id} className="related-product-card" onClick={() => window.dispatchEvent(new CustomEvent('openProductModal', { detail: rel._id }))} style={{cursor: 'pointer', border: '1px solid #eee', borderRadius: '8px', padding: '10px', textAlign: 'center', position: 'relative'}}>
                                             {discountTag && <div style={{position: 'absolute', top: '5px', left: '5px', background: '#e60050', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
-                                            <img src={getImageUrl(rel.imageUrl)} alt={rel.name} style={{width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px'}} />
+                                            <img src={getImageUrl(rel.imageUrl)} alt={rel.name} loading="lazy" style={{width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px'}} />
                                             <h4 style={{fontSize: '14px', margin: '10px 0 5px'}}>{rel.name}</h4>
                                             <p style={{color: '#111111', fontWeight: 'bold', margin: 0}}>
                                                 {discountTag ? (

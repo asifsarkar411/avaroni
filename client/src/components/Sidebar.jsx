@@ -48,7 +48,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 
                 return (
                     <a key={cat._id} href={url} onClick={onClose} style={{ textTransform: 'uppercase' }}>
-                        <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
+                        <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
                         {cat.name}
                     </a>
                 );

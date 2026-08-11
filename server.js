@@ -98,7 +98,29 @@ app.get('/favicon.ico', (req, res) => {
 }); 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors()); // Allow frontend to communicate with backend
+
+// Security: Restrict CORS to specific domains (and allow localhost for dev)
+const allowedOrigins = ['https://avaroni.vercel.app', 'http://localhost:3000', 'http://localhost:5000', 'http://localhost:5500', 'http://127.0.0.1:3000', 'http://127.0.0.1:5000', 'http://127.0.0.1:5500'];
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
+// Security: Apply Rate Limiting to all /api routes to prevent brute-force and DDoS
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // limit each IP to 500 requests per windowMs
+    message: { success: false, message: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
 
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: function (res, filePath) {

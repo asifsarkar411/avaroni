@@ -22,5 +22,8 @@ const productSchema = new mongoose.Schema({
 });
 
 productSchema.index({ category: 1, isAvailable: 1 });
+productSchema.index({ isTopSelling: 1 });
+productSchema.index({ isTrending: 1 });
+productSchema.index({ isTopRated: 1 });
 
 module.exports = mongoose.model('Product', productSchema);
