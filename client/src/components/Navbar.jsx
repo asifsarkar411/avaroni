@@ -78,11 +78,24 @@ export default function Navbar({ onMenuClick }) {
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
                             className="search-category-select"
+                            disabled={categories.length === 0}
+                            style={{ 
+                                opacity: categories.length === 0 ? 0.7 : 1, 
+                                cursor: categories.length === 0 ? 'not-allowed' : 'pointer',
+                                background: categories.length === 0 ? '#f9f9f9' : 'transparent'
+                            }}
+                            title={categories.length === 0 ? 'Loading categories...' : 'Select a category'}
                         >
-                            <option value="">All Categories</option>
-                            {categories.map(cat => (
-                                <option key={cat._id} value={cat.name}>{cat.name}</option>
-                            ))}
+                            {categories.length === 0 ? (
+                                <option value="">Loading...</option>
+                            ) : (
+                                <>
+                                    <option value="">All Categories</option>
+                                    {categories.map(cat => (
+                                        <option key={cat._id} value={cat.name}>{cat.name}</option>
+                                    ))}
+                                </>
+                            )}
                         </select>
                         <i className="fas fa-search search-bar-icon" style={{ marginLeft: '10px' }}></i>
                         <input 
