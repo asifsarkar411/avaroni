@@ -3790,3 +3790,14 @@ html {
 .nav-dropdown-item:hover .nav-subcategories { display: block; animation: fadeIn 0.2s ease-in-out; }
 .nav-subcategories > a { color: #555; padding: 8px 20px; text-decoration: none; display: block; font-size: 13px; transition: background 0.2s, color 0.2s; text-transform: capitalize; }
 .nav-subcategories > a:hover { background-color: #f9f9f9; color: #ff4d4f; }
+
+/* Force remove any red shadow from navbar buttons */
+.search-clear-btn, 
+.search-clear-btn:hover, 
+.search-clear-btn:focus,
+.search-clear-btn:active {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    outline: none !important;
+}

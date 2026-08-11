@@ -3085,3 +3085,14 @@ body.no-scroll #flash-sale-banner,
         justify-content: center !important;
     }
 }
+
+/* Force remove any red shadow from navbar buttons */
+.search-clear-btn, 
+.search-clear-btn:hover, 
+.search-clear-btn:focus,
+.search-clear-btn:active {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    outline: none !important;
+}
