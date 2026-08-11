@@ -144,10 +144,29 @@ export default function Navbar({ onMenuClick }) {
 
             <div className="nav-links">
                 <div className="desktop-only-links">
+                    <div className="nav-dropdown-wrapper">
+                        <span className="dynamic-nav-link" style={{cursor: 'pointer'}}>Categories <i className="fas fa-chevron-down" style={{fontSize: '0.8em', marginLeft: '3px'}}></i></span>
+                        <div className="nav-dropdown-content">
+                            {categories.length === 0 ? (
+                                <div style={{padding: '10px 20px', color: '#999', fontSize: '13px'}}>Loading...</div>
+                            ) : (
+                                categories.map(cat => (
+                                    <div key={cat._id} className="nav-dropdown-item">
+                                        <Link href={`/category/${cat.slug || cat.name.toLowerCase()}`}>{cat.name}</Link>
+                                        {cat.subcategories && cat.subcategories.length > 0 && (
+                                            <div className="nav-subcategories">
+                                                {cat.subcategories.map((sub, idx) => (
+                                                    <Link key={idx} href={`/category/${cat.slug || cat.name.toLowerCase()}?sub=${encodeURIComponent(sub)}`}>{sub}</Link>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
                     <Link href="/about" className="dynamic-nav-link">About</Link>
                     <Link href="/contact" className="dynamic-nav-link">Contact</Link>
-                    <Link href="/return-policy" className="dynamic-nav-link">Return Policy</Link>
-                    <Link href="/return-product" className="dynamic-nav-link">Return Product</Link>
                 </div>
                 <Link href="/cart" className="cart-icon" title="Cart">
                     <i className="fas fa-shopping-cart"></i>

@@ -47,10 +47,21 @@ export default function Sidebar({ isOpen, onClose }) {
                 }
                 
                 return (
-                    <a key={cat._id} href={url} onClick={onClose} style={{ textTransform: 'uppercase' }}>
-                        <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
-                        {cat.name}
-                    </a>
+                    <div key={cat._id} className="sidebar-category-wrapper">
+                        <a href={url} onClick={onClose} style={{ textTransform: 'uppercase', display: 'flex', alignItems: 'center' }}>
+                            <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
+                            {cat.name}
+                        </a>
+                        {cat.subcategories && cat.subcategories.length > 0 && (
+                            <div className="sidebar-subcategories" style={{ paddingLeft: '45px', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                                {cat.subcategories.map((sub, idx) => (
+                                    <a key={idx} href={`${url}?sub=${encodeURIComponent(sub)}`} onClick={onClose} style={{ textTransform: 'capitalize', padding: '0', fontSize: '14px', color: '#888' }}>
+                                        - {sub}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 );
             })}
             
@@ -61,8 +72,6 @@ export default function Sidebar({ isOpen, onClose }) {
             <a href="/faq"><i className="fas fa-question-circle"></i> FAQ</a>
             <a href="/blog"><i className="fas fa-newspaper"></i> Blog</a>
             <a href="/sitemap"><i className="fas fa-sitemap"></i> Sitemap</a>
-            <a href="/return-product"><i className="fas fa-undo"></i> Return Product</a>
-            <a href="/return-policy"><i className="fas fa-file-contract"></i> Return Policy</a>
             <a href="/about"><i className="fas fa-info-circle"></i> About Us</a>
             <Link href="/contact"><i className="fas fa-envelope"></i> Contact</Link>
         </div>

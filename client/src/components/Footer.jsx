@@ -25,7 +25,6 @@ export default function Footer() {
                 <h3>Customer Service</h3>
                 <ul>
                     <li><a href="/track-order">Track Order</a></li>
-                    <li><a href="/return-policy">Return Policy</a></li>
                     <li><Link href="/contact">Contact Us</Link></li>
                 </ul>
             </div>
