@@ -65,7 +65,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 );
             })}
             
-            <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.2)', margin: '15px 0' }} />
+            <hr style={{ border: '0', borderTop: '1px solid rgba(0,0,0,0.1)', margin: '15px 0' }} />
             
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Links</div>
             <a href="/track-order"><i className="fas fa-truck"></i> Track Order</a>
