@@ -50,22 +50,25 @@ export default function FlashSaleBanner() {
     if (!flashSale) return null;
 
     return (
-        <section data-aos="fade-up" style={{
-            margin: '40px auto',
-            maxWidth: '1200px',
+        <div style={{
+            margin: '40px calc(50% - 50vw)',
             background: 'linear-gradient(135deg, #fdfbf7, #f4eee6)',
-            border: '1px solid #eaeaea',
-            color: '#333',
-            borderRadius: '16px',
-            padding: 'clamp(15px, 4vw, 30px)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-            position: 'relative',
-            overflow: 'hidden'
+            borderTop: '1px solid #eaeaea',
+            borderBottom: '1px solid #eaeaea',
+            padding: '20px 15px'
         }}>
+            <section data-aos="fade-up" style={{
+                margin: '0 auto',
+                maxWidth: '1200px',
+                color: '#333',
+                padding: 'clamp(15px, 4vw, 20px)',
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
             <div style={{ position: 'relative', zIndex: 1, flex: '1', minWidth: '300px' }}>
                 <div style={{
                     display: 'inline-block',
@@ -125,6 +128,7 @@ export default function FlashSaleBanner() {
                     </div>
                 ))}
             </div>
-        </section>
+            </section>
+        </div>
     );
 }
