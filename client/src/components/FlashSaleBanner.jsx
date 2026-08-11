@@ -53,15 +53,16 @@ export default function FlashSaleBanner() {
         <section data-aos="fade-up" style={{
             margin: '40px auto',
             maxWidth: '1200px',
-            background: 'linear-gradient(135deg, #111, #333)',
-            color: 'white',
+            background: 'linear-gradient(135deg, #fdfbf7, #f4eee6)',
+            border: '1px solid #eaeaea',
+            color: '#333',
             borderRadius: '16px',
             padding: 'clamp(15px, 4vw, 30px)',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
             position: 'relative',
             overflow: 'hidden'
         }}>
@@ -74,23 +75,25 @@ export default function FlashSaleBanner() {
                     borderRadius: '20px',
                     fontWeight: 'bold',
                     fontSize: '14px',
-                    marginBottom: '15px'
+                    marginBottom: '15px',
+                    boxShadow: '0 4px 10px rgba(231, 76, 60, 0.3)'
                 }}>
                     <i className="fas fa-bolt"></i> FLASH SALE
                 </div>
-                <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.2rem, 5vw, 2rem)' }}>{flashSale.title || 'Special Offer'}</h2>
-                <p style={{ margin: '0 0 20px 0', color: '#ccc', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)' }}>{flashSale.description || 'Grab it before it\'s gone!'}</p>
+                <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.2rem, 5vw, 2rem)', color: '#111' }}>{flashSale.title || 'Special Offer'}</h2>
+                <p style={{ margin: '0 0 20px 0', color: '#555', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)' }}>{flashSale.description || 'Grab it before it\'s gone!'}</p>
                 <a href={flashSale.linkUrl || '#'} style={{
                     display: 'inline-block',
-                    background: 'white',
-                    color: '#111',
+                    background: '#111',
+                    color: 'white',
                     padding: '12px 25px',
                     borderRadius: '8px',
                     textDecoration: 'none',
                     fontWeight: 'bold',
-                    transition: 'transform 0.2s ease',
-                }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} 
-                   onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                }} onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)'; }} 
+                   onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)'; }}>
                     Shop Now <i className="fas fa-arrow-right" style={{marginLeft: '8px'}}></i>
                 </a>
             </div>
@@ -106,16 +109,17 @@ export default function FlashSaleBanner() {
             }}>
                 {Object.entries(timeLeft).map(([unit, value]) => (
                     <div key={unit} style={{
-                        background: 'rgba(255,255,255,0.1)',
+                        background: 'rgba(255, 255, 255, 0.7)',
                         backdropFilter: 'blur(10px)',
                         padding: 'clamp(8px, 2vw, 15px)',
                         borderRadius: '12px',
                         minWidth: 'clamp(50px, 15vw, 80px)',
                         textAlign: 'center',
-                        border: '1px solid rgba(255,255,255,0.2)'
+                        border: '1px solid rgba(0, 0, 0, 0.05)',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
                     }}>
-                        <div style={{ fontSize: 'clamp(1.2rem, 5vw, 2rem)', fontWeight: 'bold' }}>{value.toString().padStart(2, '0')}</div>
-                        <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#aaa', marginTop: '5px' }}>
+                        <div style={{ fontSize: 'clamp(1.2rem, 5vw, 2rem)', fontWeight: 'bold', color: '#e74c3c' }}>{value.toString().padStart(2, '0')}</div>
+                        <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#666', marginTop: '5px' }}>
                             {unit === 'd' ? 'Days' : unit === 'h' ? 'Hours' : unit === 'm' ? 'Mins' : 'Secs'}
                         </div>
                     </div>
