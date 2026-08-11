@@ -41,6 +41,7 @@ export default function Navbar({ onMenuClick }) {
     }, []);
 
     useEffect(() => {
+        let active = true;
         const delayDebounceFn = setTimeout(async () => {
             if (searchQuery.trim().length >= 2 || (selectedCategory && searchQuery.trim().length >= 1)) {
                 setIsSearching(true);
@@ -48,21 +49,28 @@ export default function Navbar({ onMenuClick }) {
                     const categoryParam = selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : '';
                     const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}${categoryParam}`);
                     const data = await res.json();
-                    if (data.success) {
-                        setSearchResults(data.products.slice(0, 5));
+                    if (active) {
+                        if (data.success) {
+                            setSearchResults(data.products.slice(0, 5));
+                        }
                     }
                 } catch (e) {
-                    console.error("Search failed", e);
+                    if (active) console.error("Search failed", e);
                 } finally {
-                    setIsSearching(false);
+                    if (active) setIsSearching(false);
                 }
             } else {
-                setSearchResults([]);
+                if (active) {
+                    setSearchResults([]);
+                }
             }
         }, 300);
 
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+        return () => {
+            active = false;
+            clearTimeout(delayDebounceFn);
+        };
+    }, [searchQuery, selectedCategory]);
 
     return (
         <nav className="navbar">
