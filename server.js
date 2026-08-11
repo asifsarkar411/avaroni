@@ -39,6 +39,7 @@ function escapeHTML(str) {
 // --- MODELS ---
 const User = require('./models/User');           // Secure Login User Model
 const Settings = require('./models/Settings');   // Settings Model
+const ActivityLog = require('./models/ActivityLog'); // Analytics Tracking Model
 const Order = require('./models/Order');         // E-commerce Order Model
 const Product = require('./models/Product');     // E-commerce Product Model
 const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
@@ -2929,6 +2930,71 @@ app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
     } catch (err) {
         console.error("Delete Blog Error:", err);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// ==========================================
+// 📈 ANALYTICS & TRACKING ROUTES
+// ==========================================
+
+// Endpoint to receive tracking events from frontend
+app.post('/api/analytics/track', async (req, res) => {
+    try {
+        const data = Array.isArray(req.body) ? req.body : [req.body];
+        
+        // Basic validation
+        const validData = data.filter(d => d.sessionId && d.type && d.page);
+        
+        if (validData.length > 0) {
+            await ActivityLog.insertMany(validData);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Tracking Error:", err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Endpoint to fetch analytics for Admin Dashboard
+app.get('/api/admin/analytics/activity', verifyAdminToken, async (req, res) => {
+    try {
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 7);
+
+        // Top Exit Pages
+        const exitPages = await ActivityLog.aggregate([
+            { $match: { type: 'exit_page', timestamp: { $gte: last7Days } } },
+            { $group: { _id: "$page", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top Dead Clicks
+        const deadClicks = await ActivityLog.aggregate([
+            { $match: { type: 'dead_click', timestamp: { $gte: last7Days } } },
+            { $group: { 
+                _id: { page: "$page", element: "$element", className: "$className", text: "$text" }, 
+                count: { $sum: 1 } 
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top Normal Clicks
+        const topClicks = await ActivityLog.aggregate([
+            { $match: { type: 'click', timestamp: { $gte: last7Days } } },
+            { $group: { 
+                _id: { page: "$page", element: "$element", text: "$text" }, 
+                count: { $sum: 1 } 
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        res.json({ success: true, exitPages, deadClicks, topClicks });
+    } catch (err) {
+        console.error("Analytics Fetch Error:", err);
+        res.status(500).json({ success: false, message: "Error fetching analytics data." });
     }
 });
 

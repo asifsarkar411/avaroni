@@ -2202,3 +2202,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error fetching brand logo:', err);
     }
 });
+
+// Dynamically load analytics tracking for static pages
+(function() {
+    var script = document.createElement('script');
+    script.src = '/analytics.js';
+    script.defer = true;
+    document.head.appendChild(script);
+})();

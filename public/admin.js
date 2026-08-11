@@ -536,7 +536,9 @@ function switchTab(tabName) {
         if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
+        if (tabName === 'manage-customers') cleanTitle = "Customer Accounts Management";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
+        if (tabName === 'user-tracking') cleanTitle = "User Activity Tracking & Analytics";
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
         if (tabName === 'manage-blogs') cleanTitle = "Manage Blogs";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
@@ -557,6 +559,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-customers') fetchCustomerUsers();
     if (tabName === 'manage-reviews') fetchAdminReviews();
+    if (tabName === 'user-tracking') fetchUserTrackingAnalytics();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'manage-blogs') fetchAdminBlogs();
     if (tabName === 'admin-settings') initSettingsTab();
@@ -3324,4 +3327,109 @@ function renderLatestActiveOrders(orders) {
         </tr>`;
     });
     tbody.innerHTML = html;
+}
+
+// ==========================================
+// USER ACTIVITY & TRACKING ANALYTICS
+// ==========================================
+let exitPagesChartInstance = null;
+
+async function fetchUserTrackingAnalytics() {
+    try {
+        const res = await fetchWithAuth('/api/admin/analytics/activity');
+        if (!res) return;
+        const data = await res.json();
+        
+        if (data.success) {
+            renderExitPagesChart(data.exitPages);
+            renderTopClicksTable(data.topClicks);
+            renderDeadClicksTable(data.deadClicks);
+        }
+    } catch (err) {
+        console.error("Error fetching analytics:", err);
+    }
+}
+
+function renderExitPagesChart(exitPages) {
+    const ctx = document.getElementById('exitPagesChart');
+    if (!ctx) return;
+
+    if (exitPagesChartInstance) {
+        exitPagesChartInstance.destroy();
+    }
+
+    if (!exitPages || exitPages.length === 0) {
+        ctx.style.display = 'none';
+        ctx.parentElement.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">No exit page data available for the last 7 days.</p>';
+        return;
+    }
+
+    const labels = exitPages.map(p => p._id || '/');
+    const values = exitPages.map(p => p.count);
+
+    exitPagesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Exit Count',
+                data: values,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function renderTopClicksTable(clicks) {
+    const tbody = document.getElementById('top-clicks-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!clicks || clicks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No click data available.</td></tr>';
+        return;
+    }
+
+    clicks.forEach(click => {
+        tbody.innerHTML += \
+            <tr>
+                <td>\</td>
+                <td><span style="background:#e0f7fa; color:#00838f; padding:3px 8px; border-radius:4px; font-size:11px;">\</span></td>
+                <td>\</td>
+                <td><strong>\</strong></td>
+            </tr>
+        \;
+    });
+}
+
+function renderDeadClicksTable(deadClicks) {
+    const tbody = document.getElementById('dead-clicks-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!deadClicks || deadClicks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No dead clicks recorded. Great job!</td></tr>';
+        return;
+    }
+
+    deadClicks.forEach(click => {
+        tbody.innerHTML += \
+            <tr>
+                <td>\</td>
+                <td><span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:4px; font-size:11px;">\</span></td>
+                <td>\</td>
+                <td>\</td>
+                <td><strong>\</strong></td>
+            </tr>
+        \;
+    });
 }
