@@ -1972,6 +1972,7 @@ app.post('/api/admin/products', verifyAdminToken, async (req, res) => {
             size: bodyData.size || "",
             colour: bodyData.colour || "",
             brand: bodyData.brand || "",
+            additionalInfo: bodyData.additionalInfo || "",
             description: bodyData.description || "",
             stockQuantity: Number(bodyData.stock) || 1, 
             discountType: bodyData.discountType || 'none',
@@ -2010,7 +2011,7 @@ app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
 // Edit / Update Product (Admin)
 app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
     try {
-        const { name, price, category, subcategory, size, colour, brand, description, stock, discountType, discountValue, image, isTopSelling, isTrending, isTopRated } = req.body;
+        const { name, price, category, subcategory, size, colour, brand, additionalInfo, description, stock, discountType, discountValue, image, isTopSelling, isTrending, isTopRated } = req.body;
         
         const product = await Product.findById(req.params.id);
         if (!product) {
@@ -2024,6 +2025,7 @@ app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
         if (size !== undefined) product.size = size.trim();
         if (colour !== undefined) product.colour = colour.trim();
         if (brand !== undefined) product.brand = brand.trim();
+        if (additionalInfo !== undefined) product.additionalInfo = additionalInfo.trim();
         if (description !== undefined) product.description = description.trim();
         if (stock !== undefined) product.stockQuantity = Number(stock);
         if (discountType !== undefined) product.discountType = discountType;

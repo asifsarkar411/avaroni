@@ -308,6 +308,12 @@ export default function ProductModal() {
                                                     <td className="info-label"><i className="fas fa-tshirt"></i> Care</td>
                                                     <td className="info-value">Machine wash cold, do not bleach</td>
                                                 </tr>
+                                                {product.additionalInfo && (
+                                                    <tr>
+                                                        <td className="info-label"><i className="fas fa-info-circle"></i> Additional Info</td>
+                                                        <td className="info-value" style={{ whiteSpace: 'pre-wrap' }}>{product.additionalInfo}</td>
+                                                    </tr>
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
