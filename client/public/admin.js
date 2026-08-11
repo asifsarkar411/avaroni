@@ -2859,3 +2859,26 @@ class TagsInput {
         this.renderTags();
     }
 }
+
+
+// Initialize Quill Editor for Blogs
+let quillEditor;
+function initBlogEditor() {
+    if (!quillEditor && document.getElementById('blog-editor-container')) {
+        quillEditor = new Quill('#blog-editor-container', {
+            theme: 'snow',
+            placeholder: 'Write your blog content here...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    ['blockquote', 'code-block'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+    }
+}
