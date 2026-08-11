@@ -253,7 +253,7 @@ export default function ProductModal() {
                                 ))}
                             </div>
                             
-                            <div style={{ minHeight: '150px' }}>
+                            <div style={{ minHeight: '150px', width: '100%', overflowX: 'hidden', overflowWrap: 'break-word', wordWrap: 'break-word' }}>
                                 {activeTab === 'DESCRIPTION' && (
                                     <div 
                                         style={{ fontSize: '14px', lineHeight: '1.8', color: '#444' }}
@@ -276,7 +276,7 @@ export default function ProductModal() {
                                         </h4>
                                         <p style={{ fontSize: '12px', color: '#666', margin: '0 0 15px 0' }}>Share your star rating and honest opinion</p>
                                         
-                                        <form onSubmit={handleReviewSubmit} style={{ maxWidth: '600px' }}>
+                                        <form onSubmit={handleReviewSubmit} style={{ maxWidth: '600px', width: '100%' }}>
                                             <div style={{ marginBottom: '15px' }}>
                                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '8px' }}>Star Rating:</label>
                                                 <div style={{ display: 'flex', gap: '8px', fontSize: '24px', color: '#ffc107', cursor: 'pointer' }}>
@@ -293,14 +293,14 @@ export default function ProductModal() {
                                                 </div>
                                             </div>
 
-                                            <div style={{ marginBottom: '15px' }}>
+                                            <div style={{ marginBottom: '15px', width: '100%' }}>
                                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Your Name:</label>
-                                                <input type="text" value={reviewName} onChange={(e) => setReviewName(e.target.value)} placeholder="Enter your full name" required style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '13px', outline: 'none' }} />
+                                                <input type="text" value={reviewName} onChange={(e) => setReviewName(e.target.value)} placeholder="Enter your full name" required style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                                             </div>
 
-                                            <div style={{ marginBottom: '20px' }}>
+                                            <div style={{ marginBottom: '20px', width: '100%' }}>
                                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>Review Comment:</label>
-                                                <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Write your review comments here..." required rows="3" style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '13px', outline: 'none', resize: 'vertical' }}></textarea>
+                                                <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Write your review comments here..." required rows="3" style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}></textarea>
                                             </div>
 
                                             <button type="submit" disabled={isSubmittingReview} style={{ background: '#111', color: '#fff', border: 'none', padding: '10px 24px', fontSize: '13px', fontWeight: 'bold', borderRadius: '25px', cursor: isSubmittingReview ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>

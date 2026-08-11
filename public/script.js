@@ -1718,7 +1718,7 @@ function ensureModalReviewSection(modalElement, product) {
                 <h4 style="font-size: 16px; color: #111; margin: 0 0 4px 0; display:flex; align-items:center; gap:8px;"><i class="fas fa-star" style="color:#ffc107;"></i> Rate & Review Product</h4>
                 <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">Share your star rating and honest opinion</p>
             </div>
-            <form id="modal-review-form" onsubmit="handleModalReviewSubmit(event)">
+            <form id="modal-review-form" onsubmit="handleModalReviewSubmit(event)" style="width: 100%; box-sizing: border-box; overflow-x: hidden;">
                 <input type="hidden" id="review-modal-prod-id" value="${product._id || product.id || ''}">
                 <input type="hidden" id="review-modal-prod-name" value="${(product.name || '').replace(/"/g, '&quot;')}">
                 <input type="hidden" id="modal-review-rating-val" value="5">

@@ -1460,6 +1460,8 @@ body.no-scroll {
     max-width: 450px;
 }
 .modal-right-column {
+    min-width: 0;
+    overflow-x: hidden;
     flex: 1;
     display: flex;
     flex-direction: column;
