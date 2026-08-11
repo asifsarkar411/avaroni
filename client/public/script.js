@@ -1811,40 +1811,41 @@ function ensureModalReviewSection(modalElement, product) {
         reviewSec = document.createElement('div');
         reviewSec.className = 'product-modal-review-section';
         reviewSec.innerHTML = `
-            <div class="review-modal-header" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2b0c5;">
-                <h4 style="font-size: 16px; color: #111; margin: 0 0 4px 0; display:flex; align-items:center; gap:8px;"><i class="fas fa-star" style="color:#ffc107;"></i> Rate & Review Product</h4>
-                <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">Share your star rating and honest opinion</p>
-            </div>
-            <form id="modal-review-form" onsubmit="handleModalReviewSubmit(event)" style="width: 100%; box-sizing: border-box; overflow-x: hidden;">
-                <input type="hidden" id="review-modal-prod-id" value="${product._id || product.id || ''}">
-                <input type="hidden" id="review-modal-prod-name" value="${(product.name || '').replace(/"/g, '&quot;')}">
-                <input type="hidden" id="modal-review-rating-val" value="5">
-
-                <div class="review-form-field" style="margin-bottom: 10px;">
-                    <label style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Star Rating:</label>
-                    <div class="star-rating-selector" id="modal-star-selector" style="display:flex; gap:6px; font-size:22px; color:#ffc107; cursor:pointer;">
-                        <i class="fas fa-star" data-rating="1"></i>
-                        <i class="fas fa-star" data-rating="2"></i>
-                        <i class="fas fa-star" data-rating="3"></i>
-                        <i class="fas fa-star" data-rating="4"></i>
-                        <i class="fas fa-star" data-rating="5"></i>
+            <div style="background: #fafafa; padding: 25px; border-radius: 12px; border: 1px solid #eee; margin-top: 15px;">
+                <h4 style="font-size: 18px; font-weight: 700; color: #111; margin: 0 0 6px 0; display:flex; align-items:center; gap:8px;"><i class="fas fa-star" style="color:#ffc107;"></i> Rate & Review Product</h4>
+                <p style="font-size: 13px; color: #666; margin: 0 0 20px 0;">Share your star rating and honest opinion</p>
+            
+                <form id="modal-review-form" onsubmit="handleModalReviewSubmit(event)" style="width: 100%; box-sizing: border-box; overflow-x: hidden;">
+                    <input type="hidden" id="review-modal-prod-id" value="${product._id || product.id || ''}">
+                    <input type="hidden" id="review-modal-prod-name" value="${(product.name || '').replace(/"/g, '&quot;')}">
+                    <input type="hidden" id="modal-review-rating-val" value="5">
+    
+                    <div class="review-form-field" style="margin-bottom: 20px;">
+                        <label style="display:block; font-size:13px; font-weight:600; color:#444; margin-bottom:8px;">Star Rating <span style="color:red;">*</span></label>
+                        <div class="star-rating-selector" id="modal-star-selector" style="display:flex; gap:8px; font-size:28px; color:#ffc107; cursor:pointer;">
+                            <i class="fas fa-star" data-rating="1"></i>
+                            <i class="fas fa-star" data-rating="2"></i>
+                            <i class="fas fa-star" data-rating="3"></i>
+                            <i class="fas fa-star" data-rating="4"></i>
+                            <i class="fas fa-star" data-rating="5"></i>
+                        </div>
                     </div>
-                </div>
-
-                <div class="review-form-field" style="margin-bottom: 10px;">
-                    <label for="modal-review-name" style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Your Name:</label>
-                    <input type="text" id="modal-review-name" placeholder="Enter your full name" required class="review-input" style="width:100%; padding:9px 12px; border:1.5px solid #ffccd8; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;">
-                </div>
-
-                <div class="review-form-field" style="margin-bottom: 12px;">
-                    <label for="modal-review-comment" style="display:block; font-size:12px; font-weight:700; color:#333; margin-bottom:4px;">Review Comment:</label>
-                    <textarea id="modal-review-comment" placeholder="Write your review comments here..." required class="review-textarea" rows="3" style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.15); border-radius:8px; font-size:13px; outline:none; box-sizing:border-box; font-family:inherit;"></textarea>
-                </div>
-
-                <button type="submit" class="btn submit-review-btn" style="background: #111111; color:#fff; border:none; padding:9px 20px; font-size:13px; font-weight:700; border-radius:25px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                    <i class="fas fa-paper-plane"></i> Submit Review
-                </button>
-            </form>
+    
+                    <div class="review-form-field" style="margin-bottom: 20px;">
+                        <label for="modal-review-name" style="display:block; font-size:13px; font-weight:600; color:#444; margin-bottom:8px;">Your Name <span style="color:red;">*</span></label>
+                        <input type="text" id="modal-review-name" placeholder="Enter your full name" required class="review-input" style="width:100%; padding:12px 15px; border:1px solid #ddd; border-radius:8px; font-size:14px; outline:none; box-sizing:border-box; background:#fff;">
+                    </div>
+    
+                    <div class="review-form-field" style="margin-bottom: 25px;">
+                        <label for="modal-review-comment" style="display:block; font-size:13px; font-weight:600; color:#444; margin-bottom:8px;">Review Comment <span style="color:red;">*</span></label>
+                        <textarea id="modal-review-comment" placeholder="Write your review comments here..." required class="review-textarea" rows="4" style="width:100%; padding:12px 15px; border:1px solid #ddd; border-radius:8px; font-size:14px; outline:none; box-sizing:border-box; background:#fff; font-family:inherit; resize:vertical;"></textarea>
+                    </div>
+    
+                    <button type="submit" class="btn submit-review-btn" style="background: #111; color:#fff; border:none; padding:12px 30px; font-size:14px; font-weight:600; border-radius:30px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; width: 100%;">
+                        <i class="fas fa-paper-plane"></i> Submit Review
+                    </button>
+                </form>
+            </div>
         `;
         const modalInfo = modalElement.querySelector('.product-modal-info');
         if (modalInfo) {
