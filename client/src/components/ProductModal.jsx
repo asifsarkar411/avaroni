@@ -241,21 +241,12 @@ export default function ProductModal() {
 
                         {/* TABBED SECTION */}
                         <div style={{ marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                            <div style={{ display: 'flex', gap: '30px', borderBottom: '1px solid #ddd', marginBottom: '20px' }}>
+                            <div className="product-modal-tabs-container">
                                 {['DESCRIPTION', 'ADDITIONAL INFORMATION', 'REVIEWS (1)'].map((tab) => (
                                     <button 
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
-                                        style={{ 
-                                            background: 'none', border: 'none', 
-                                            padding: '10px 0', 
-                                            fontWeight: activeTab === tab ? 'bold' : 'normal',
-                                            color: activeTab === tab ? '#111' : '#666',
-                                            borderBottom: activeTab === tab ? '2px solid #111' : '2px solid transparent',
-                                            cursor: 'pointer', fontSize: '14px',
-                                            position: 'relative',
-                                            top: '1px'
-                                        }}
+                                        className={`product-modal-tab-btn ${activeTab === tab ? 'active' : ''}`}
                                     >
                                         {tab}
                                     </button>

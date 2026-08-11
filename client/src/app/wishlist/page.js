@@ -28,7 +28,7 @@ export default function WishlistPage() {
                 <div className="product-grid" style={{ marginTop: '30px' }}>
                     {wishlist.map(prod => (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image-wrap" onClick={() => setSelectedProductId(prod._id)} style={{ cursor: 'pointer' }}>
+                            <div className="product-image-wrap" onClick={() => window.dispatchEvent(new CustomEvent('openProductModal', { detail: prod._id }))} style={{ cursor: 'pointer' }}>
                                 <button 
                                     className="wishlist-card-btn" 
                                     title="Remove from Wishlist" 
@@ -42,19 +42,12 @@ export default function WishlistPage() {
                                 </button>
                                 <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
                             </div>
-                            <h3 onClick={() => setSelectedProductId(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
+                            <h3 onClick={() => window.dispatchEvent(new CustomEvent('openProductModal', { detail: prod._id }))} style={{ cursor: 'pointer' }}>{prod.name}</h3>
                             <p className="price">BDT {prod.price}</p>
                             <button className="btn add-to-cart-btn" onClick={() => { addToCart(prod); toggleWishlist(prod); }} style={{ width: '100%' }}>Move to Cart</button>
                         </div>
                     ))}
                 </div>
-            )}
-
-            {selectedProductId && (
-                <ProductModal 
-                    productId={selectedProductId} 
-                    onClose={() => setSelectedProductId(null)} 
-                />
             )}
         </div>
     );
