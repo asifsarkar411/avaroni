@@ -70,6 +70,9 @@ export default function CartPage() {
                             <Link href="/checkout" className="btn" style={{ display: 'block', width: '100%', textAlign: 'center', marginTop: '20px', padding: '15px', fontSize: '1.1rem' }}>
                                 Proceed to Checkout
                             </Link>
+                            <Link href="/" className="btn" style={{ display: 'block', width: '100%', textAlign: 'center', marginTop: '10px', padding: '15px', fontSize: '1.1rem', background: '#f8f9fa', color: '#111', border: '1px solid #ddd' }}>
+                                Continue Shopping
+                            </Link>
                         </div>
                     </>
                 )}
