@@ -24,6 +24,82 @@ export default function ProfilePage() {
     const [ordersLoading, setOrdersLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('profile'); // profile, orders, wishlist
 
+    // Edit Profile State
+    const [isEditing, setIsEditing] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editAvatar, setEditAvatar] = useState('');
+    const [saveLoading, setSaveLoading] = useState(false);
+
+    const handleEditToggle = () => {
+        if (!isEditing && user) {
+            setEditName(user.username || '');
+            setEditPhone(user.phone || '');
+            setEditAvatar(user.avatar || '');
+        }
+        setIsEditing(!isEditing);
+    };
+
+    const handleSaveProfile = async () => {
+        setSaveLoading(true);
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ name: editName, phone: editPhone, avatar: editAvatar })
+            });
+            const data = await res.json();
+            if (data.success) {
+                login(data.user, token);
+                setIsEditing(false);
+            } else {
+                alert(data.message || 'Failed to update profile');
+            }
+        } catch (err) {
+            alert('Error updating profile');
+        } finally {
+            setSaveLoading(false);
+        }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 400; // Profile photos don't need to be huge
+                
+                if (width > height) {
+                    if (width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                setEditAvatar(dataUrl);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     useEffect(() => {
         if (user && token && activeTab === 'orders') {
             fetchOrders();
@@ -121,8 +197,21 @@ export default function ProfilePage() {
                 {/* Sidebar Navigation */}
                 <div style={{ flex: '1', minWidth: '250px', background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', height: 'fit-content' }}>
                     <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff4d4f, #ff7875)', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '32px', margin: '0 auto 15px', fontWeight: 'bold' }}>
-                            {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                        <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 15px' }}>
+                            {user.avatar || (isEditing && editAvatar) ? (
+                                <img src={isEditing ? editAvatar : user.avatar} alt="Profile" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ff4d4f' }} />
+                            ) : (
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff4d4f, #ff7875)', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '32px', fontWeight: 'bold' }}>
+                                    {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                            )}
+                            
+                            {isEditing && (
+                                <label style={{ position: 'absolute', bottom: '0', right: '0', background: '#fff', border: '1px solid #ddd', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: '#555', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }} title="Upload Photo">
+                                    <i className="fas fa-camera" style={{ fontSize: '12px' }}></i>
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                                </label>
+                            )}
                         </div>
                         <h3 style={{ margin: '0 0 5px 0', color: '#111' }}>{user.username || 'Customer'}</h3>
                         <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>{user.email || user.phone}</p>
@@ -142,19 +231,43 @@ export default function ProfilePage() {
                     
                     {activeTab === 'profile' && (
                         <div>
-                            <h2 style={{ marginBottom: '20px', borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', color: '#111' }}>Account Details</h2>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #f5f5f5', paddingBottom: '10px' }}>
+                                <h2 style={{ margin: 0, color: '#111' }}>Account Details</h2>
+                                {!isEditing ? (
+                                    <button onClick={handleEditToggle} className="btn" style={{ padding: '6px 12px', fontSize: '13px' }}>
+                                        <i className="fas fa-edit"></i> Edit Profile
+                                    </button>
+                                ) : (
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button onClick={handleEditToggle} style={{ padding: '6px 12px', fontSize: '13px', border: '1px solid #ddd', background: '#fff', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                                        <button onClick={handleSaveProfile} disabled={saveLoading} className="btn" style={{ padding: '6px 12px', fontSize: '13px' }}>
+                                            {saveLoading ? 'Saving...' : 'Save Changes'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                                 <div>
                                     <label style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '5px' }}>Full Name</label>
-                                    <div style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>{user.username || '-'}</div>
+                                    {isEditing ? (
+                                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} placeholder="Enter your name" />
+                                    ) : (
+                                        <div style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>{user.username || '-'}</div>
+                                    )}
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '5px' }}>Email Address</label>
                                     <div style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>{user.email || '-'}</div>
+                                    {isEditing && <small style={{ color: '#aaa', display: 'block', marginTop: '4px' }}>Email cannot be changed.</small>}
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '5px' }}>Phone Number</label>
-                                    <div style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>{user.phone || '-'}</div>
+                                    {isEditing ? (
+                                        <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} style={inputStyle} placeholder="e.g. +8801XXXXXXXXX" />
+                                    ) : (
+                                        <div style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>{user.phone || '-'}</div>
+                                    )}
                                 </div>
                             </div>
                         </div>

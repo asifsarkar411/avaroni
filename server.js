@@ -783,6 +783,45 @@ app.get('/api/user/auth/me', async (req, res) => {
     }
 });
 
+// Update Current User Profile
+app.put('/api/user/profile', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ success: false, message: "No token provided" });
+
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, getJwtSecret(), async (err, decoded) => {
+            if (err) return res.status(403).json({ success: false, message: "Invalid or expired session" });
+
+            const user = await User.findById(decoded.id);
+            if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+            const { phone, avatar, name } = req.body;
+            
+            if (phone !== undefined) user.phone = phone;
+            if (avatar !== undefined) user.avatar = avatar;
+            if (name !== undefined) user.username = name;
+
+            await user.save();
+
+            res.json({
+                success: true,
+                message: "Profile updated successfully",
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    avatar: user.avatar || ''
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Update Profile Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update profile" });
+    }
+});
+
 // Customer Forgot Password - Request Password Reset Email Link
 app.post('/api/user/auth/forgot-password', authLimiter, async (req, res) => {
     try {
