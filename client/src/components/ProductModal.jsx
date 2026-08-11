@@ -300,14 +300,18 @@ export default function ProductModal() {
                                                         <td className="info-value">{product.colors.join(', ')}</td>
                                                     </tr>
                                                 )}
-                                                <tr>
-                                                    <td className="info-label"><i className="fas fa-weight-hanging"></i> Weight</td>
-                                                    <td className="info-value">0.5 kg (Approx)</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="info-label"><i className="fas fa-tshirt"></i> Care</td>
-                                                    <td className="info-value">Machine wash cold, do not bleach</td>
-                                                </tr>
+                                                {product.weight && (
+                                                    <tr>
+                                                        <td className="info-label"><i className="fas fa-weight-hanging"></i> Weight</td>
+                                                        <td className="info-value">{product.weight}</td>
+                                                    </tr>
+                                                )}
+                                                {product.care && (
+                                                    <tr>
+                                                        <td className="info-label"><i className="fas fa-tshirt"></i> Care</td>
+                                                        <td className="info-value">{product.care}</td>
+                                                    </tr>
+                                                )}
                                                 {product.additionalInfo && (
                                                     <tr>
                                                         <td className="info-label"><i className="fas fa-info-circle"></i> Additional Info</td>

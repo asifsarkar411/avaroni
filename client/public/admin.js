@@ -745,6 +745,8 @@ async function handleAddProduct(e) {
         size: document.getElementById('prod-size') ? document.getElementById('prod-size').value : '',
         colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
         brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
+        weight: document.getElementById('prod-weight') ? document.getElementById('prod-weight').value : '',
+        care: document.getElementById('prod-care') ? document.getElementById('prod-care').value : '',
         additionalInfo: document.getElementById('prod-additional-info') ? document.getElementById('prod-additional-info').value : '',
         description: addProdDescEditor ? addProdDescEditor.root.innerHTML : '',
         stock: document.getElementById('prod-stock').value,
@@ -2200,6 +2202,8 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-colour').value = prod.colour || '';
     if (document.getElementById('edit-prod-colour')._tagsInput) document.getElementById('edit-prod-colour')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-brand').value = prod.brand || '';
+    if (document.getElementById('edit-prod-weight')) document.getElementById('edit-prod-weight').value = prod.weight || '';
+    if (document.getElementById('edit-prod-care')) document.getElementById('edit-prod-care').value = prod.care || '';
     if (document.getElementById('edit-prod-additional-info')) document.getElementById('edit-prod-additional-info').value = prod.additionalInfo || '';
     if (editProdDescEditor) { editProdDescEditor.root.innerHTML = prod.description || ''; }
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
@@ -2283,6 +2287,8 @@ async function handleEditProductSubmit(e) {
         size: document.getElementById('edit-prod-size').value,
         colour: document.getElementById('edit-prod-colour').value,
         brand: document.getElementById('edit-prod-brand').value,
+        weight: document.getElementById('edit-prod-weight') ? document.getElementById('edit-prod-weight').value : '',
+        care: document.getElementById('edit-prod-care') ? document.getElementById('edit-prod-care').value : '',
         additionalInfo: document.getElementById('edit-prod-additional-info') ? document.getElementById('edit-prod-additional-info').value : '',
         description: editProdDescEditor ? editProdDescEditor.root.innerHTML : '',
         stock: document.getElementById('edit-prod-stock').value,

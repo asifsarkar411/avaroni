@@ -10,6 +10,8 @@ const productSchema = new mongoose.Schema({
     size: { type: String, default: "" },
     colour: { type: String, default: "" },
     brand: { type: String, default: "" },
+    weight: { type: String, default: "" },
+    care: { type: String, default: "" },
     additionalInfo: { type: String, default: "" },
     // 🌟 NEW: Track availability (defaults to true)
     isAvailable: { type: Boolean, default: true },
