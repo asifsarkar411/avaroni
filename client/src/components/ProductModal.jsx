@@ -253,7 +253,8 @@ export default function ProductModal() {
                                             color: activeTab === tab ? '#111' : '#666',
                                             borderBottom: activeTab === tab ? '2px solid #111' : '2px solid transparent',
                                             cursor: 'pointer', fontSize: '14px',
-                                            marginBottom: '-1px'
+                                            position: 'relative',
+                                            top: '1px'
                                         }}
                                     >
                                         {tab}
