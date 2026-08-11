@@ -882,7 +882,7 @@ function initFooterAndWidgets() {
         floatingContainer.id = 'floating-contact-widgets';
         floatingContainer.className = 'floating-contact-container';
         floatingContainer.innerHTML = `
-            <a href="https://wa.me/8801743648510" target="_blank" class="floating-btn floating-whatsapp" title="WhatsApp Us">
+            <a href="https://wa.me/8801628628300" target="_blank" class="floating-btn floating-whatsapp" title="WhatsApp Us">
                 <i class="fab fa-whatsapp"></i>
             </a>
             <a href="https://m.me/61572879166588" target="_blank" class="floating-btn floating-messenger" title="Chat on Messenger">
@@ -932,7 +932,7 @@ function initFooterAndWidgets() {
     <p><i class="fab fa-whatsapp" style="color: #ffb6d8; margin-right: 8px;"></i> 01628628300</p>
     <div class="social-icons">
     <!-- WhatsApp (Official Green) -->
-    <a href="https://wa.me/8801743648510" style="text-decoration: none;" target="_blank">
+    <a href="https://wa.me/8801628628300" style="text-decoration: none;" target="_blank">
         <i class="fab fa-whatsapp" style="color: #25D366;"></i>
     </a>
     
@@ -942,12 +942,12 @@ function initFooterAndWidgets() {
     </a>
     
     <!-- Phone (Standard Green) -->
-    <a href="tel:+8801743648510" style="text-decoration: none;">
+    <a href="tel:+8801628628300" style="text-decoration: none;">
         <i class="fas fa-phone-alt" style="color: #28a745;"></i>
     </a>
     
     <!-- Facebook (Official Blue) -->
-    <a href="https://www.facebook.com/profile.php?id=61572879166588" style="text-decoration: none;" target="_blank">
+    <a href="https://www.facebook.com/profile.php?id=61572879166588#" style="text-decoration: none;" target="_blank">
         <i class="fab fa-facebook-f" style="color: #1877F2;"></i>
     </a>
 </div>
@@ -2185,4 +2185,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     observer.observe(document.body, { childList: true, subtree: true });
 });
+
 

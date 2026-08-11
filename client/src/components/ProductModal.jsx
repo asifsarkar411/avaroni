@@ -230,9 +230,9 @@ export default function ProductModal() {
                                 <div style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
                                     <div style={{ fontSize: '12px', color: '#888', fontWeight: 'bold', marginBottom: '10px' }}>NEED HELP? CONTACT US:</div>
                                     <div style={{ display: 'flex', gap: '10px' }}>
-                                        <a href="tel:+8801234567890" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fas fa-phone"></i> Call</a>
-                                        <a href="https://wa.me/8801234567890" target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fab fa-whatsapp"></i> WhatsApp</a>
-                                        <a href="#" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fab fa-facebook-messenger"></i> Messenger</a>
+                                        <a href="tel:+8801628628300" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fas fa-phone"></i> Call</a>
+                                        <a href="https://wa.me/8801628628300" target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fab fa-whatsapp"></i> WhatsApp</a>
+                                        <a href="https://www.facebook.com/profile.php?id=61572879166588#" target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', border: '1px solid #eee', textAlign: 'center', color: '#333', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold' }}><i className="fab fa-facebook-messenger"></i> Messenger</a>
                                     </div>
                                 </div>
 

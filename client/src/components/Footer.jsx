@@ -9,8 +9,7 @@ export default function Footer() {
                 <h3>AVARONI</h3>
                 <p>Elegance Redefined for Every Moment.</p>
                 <div className="social-icons">
-                    <a href="#" className="social-facebook"><i className="fab fa-facebook-f"></i></a>
-                    <a href="#" className="social-twitter"><i className="fab fa-twitter"></i></a>
+                    <a href="https://www.facebook.com/profile.php?id=61572879166588#" target="_blank" rel="noopener noreferrer" className="social-facebook"><i className="fab fa-facebook-f"></i></a>
                     <a href="#" className="social-instagram"><i className="fab fa-instagram"></i></a>
                 </div>
             </div>
@@ -43,13 +42,13 @@ export default function Footer() {
 
     {/* Floating Action Buttons */}
     <div className="floating-actions">
-        <a href="tel:+8801234567890" className="floating-btn phone" title="Call Us">
+        <a href="tel:+8801628628300" className="floating-btn phone" title="Call Us">
             <i className="fas fa-phone-alt"></i>
         </a>
-        <a href="https://wa.me/8801234567890" target="_blank" rel="noopener noreferrer" className="floating-btn whatsapp" title="WhatsApp Us">
+        <a href="https://wa.me/8801628628300" target="_blank" rel="noopener noreferrer" className="floating-btn whatsapp" title="WhatsApp Us">
             <i className="fab fa-whatsapp"></i>
         </a>
-        <a href="https://m.me/avaroni" target="_blank" rel="noopener noreferrer" className="floating-btn messenger" title="Message Us">
+        <a href="https://www.facebook.com/profile.php?id=61572879166588#" target="_blank" rel="noopener noreferrer" className="floating-btn messenger" title="Message Us">
             <i className="fab fa-facebook-messenger"></i>
         </a>
     </div>
