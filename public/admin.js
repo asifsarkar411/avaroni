@@ -3400,14 +3400,14 @@ function renderTopClicksTable(clicks) {
     }
 
     clicks.forEach(click => {
-        tbody.innerHTML += \
+        tbody.innerHTML += `
             <tr>
-                <td>\</td>
-                <td><span style="background:#e0f7fa; color:#00838f; padding:3px 8px; border-radius:4px; font-size:11px;">\</span></td>
-                <td>\</td>
-                <td><strong>\</strong></td>
+                <td>${escapeHTML(click._id.page || '/')}</td>
+                <td><span style="background:#e0f7fa; color:#00838f; padding:3px 8px; border-radius:4px; font-size:11px;">${escapeHTML(click._id.element || 'N/A')}</span></td>
+                <td>${escapeHTML(click._id.text || '-')}</td>
+                <td><strong>${click.count}</strong></td>
             </tr>
-        \;
+        `;
     });
 }
 
@@ -3422,14 +3422,14 @@ function renderDeadClicksTable(deadClicks) {
     }
 
     deadClicks.forEach(click => {
-        tbody.innerHTML += \
+        tbody.innerHTML += `
             <tr>
-                <td>\</td>
-                <td><span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:4px; font-size:11px;">\</span></td>
-                <td>\</td>
-                <td>\</td>
-                <td><strong>\</strong></td>
+                <td>${escapeHTML(click._id.page || '/')}</td>
+                <td><span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:4px; font-size:11px;">${escapeHTML(click._id.element || 'N/A')}</span></td>
+                <td>${escapeHTML(click._id.className || '-')}</td>
+                <td>${escapeHTML(click._id.text || '-')}</td>
+                <td><strong>${click.count}</strong></td>
             </tr>
-        \;
+        `;
     });
 }
