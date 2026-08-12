@@ -556,7 +556,6 @@ sidebar.appendChild(headerDiv);
 
         const link = document.createElement('a');
         link.href = pageFile;
-        link.style.textTransform = 'uppercase';
         link.innerHTML = `<i class="${iconClass}"></i> ${cat.displayName}`;
         sidebar.appendChild(link);
     });
@@ -1515,7 +1514,7 @@ function closeProductModal() {
 }
 
 // ==========================================
-// NAVBAR PROMOTIONAL PHOTO SLIDER (DYNAMIC)
+// NAVBAR PROMOTIONAL PHOTO SLIDER
 // ==========================================
 async function loadNavbarSliders() {
     const container = document.getElementById('nav-promo-slider');
@@ -1531,128 +1530,32 @@ async function loadNavbarSliders() {
         }
 
         container.innerHTML = '';
-        
-        // Create track
-        const track = document.createElement('div');
-        track.className = 'nav-promo-track';
-        container.appendChild(track);
-
-        // Build slides
         data.sliders.forEach((slider, idx) => {
-            const slide = document.createElement('div');
-            slide.className = 'nav-promo-slide';
-            
             const img = document.createElement('img');
             img.src = formatImageUrl(slider.imageUrl);
             img.onerror = function() { this.onerror=null; this.src='./img/profile_image.jpg'; };
             img.alt = `Offer ${idx + 1}`;
+            if (idx === 0) img.classList.add('active');
             
             if (slider.link) {
                 const linkWrap = document.createElement('a');
                 linkWrap.href = slider.link;
+                linkWrap.style.display = 'contents';
                 linkWrap.appendChild(img);
-                slide.appendChild(linkWrap);
+                container.appendChild(linkWrap);
             } else {
-                slide.appendChild(img);
+                container.appendChild(img);
             }
-            track.appendChild(slide);
         });
 
-        // Add interactive controls if more than 1 slide
         if (data.sliders.length > 1) {
             let activeIdx = 0;
-            let autoPlayInterval;
-            
-            // Create navigation arrows
-            const prevArrow = document.createElement('div');
-            prevArrow.className = 'nav-promo-arrow prev';
-            prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
-            
-            const nextArrow = document.createElement('div');
-            nextArrow.className = 'nav-promo-arrow next';
-            nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            
-            container.appendChild(prevArrow);
-            container.appendChild(nextArrow);
-
-            // Create pagination dots
-            const dotsContainer = document.createElement('div');
-            dotsContainer.className = 'nav-promo-dots';
-            const dots = [];
-            
-            data.sliders.forEach((_, idx) => {
-                const dot = document.createElement('div');
-                dot.className = `nav-promo-dot ${idx === 0 ? 'active' : ''}`;
-                dot.addEventListener('click', () => goToSlide(idx));
-                dotsContainer.appendChild(dot);
-                dots.push(dot);
-            });
-            container.appendChild(dotsContainer);
-
-            // Navigation functions
-            const updateSlider = () => {
-                track.style.transform = `translateX(-${activeIdx * 100}%)`;
-                dots.forEach(d => d.classList.remove('active'));
-                if(dots[activeIdx]) dots[activeIdx].classList.add('active');
-            };
-
-            const goToSlide = (idx) => {
-                activeIdx = idx;
-                updateSlider();
-                resetAutoPlay();
-            };
-
-            const nextSlide = () => {
-                activeIdx = (activeIdx + 1) % data.sliders.length;
-                updateSlider();
-            };
-
-            const prevSlide = () => {
-                activeIdx = (activeIdx - 1 + data.sliders.length) % data.sliders.length;
-                updateSlider();
-            };
-
-            prevArrow.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
-            nextArrow.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
-
-            // Touch Swipe Support
-            let touchStartX = 0;
-            let touchEndX = 0;
-            
-            track.addEventListener('touchstart', e => {
-                touchStartX = e.changedTouches[0].screenX;
-                pauseAutoPlay();
-            }, { passive: true });
-            
-            track.addEventListener('touchend', e => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-                startAutoPlay();
-            }, { passive: true });
-            
-            const handleSwipe = () => {
-                const threshold = 50;
-                if (touchEndX < touchStartX - threshold) nextSlide(); // Swipe left
-                if (touchEndX > touchStartX + threshold) prevSlide(); // Swipe right
-            };
-
-            // Smart Autoplay Logic
-            const startAutoPlay = () => {
-                if (!autoPlayInterval) autoPlayInterval = setInterval(nextSlide, 4000);
-            };
-            const pauseAutoPlay = () => {
-                clearInterval(autoPlayInterval);
-                autoPlayInterval = null;
-            };
-            const resetAutoPlay = () => {
-                pauseAutoPlay();
-                startAutoPlay();
-            };
-
-            container.addEventListener('mouseenter', pauseAutoPlay);
-            container.addEventListener('mouseleave', startAutoPlay);
-            
-            startAutoPlay();
+            const images = container.querySelectorAll('img');
+            setInterval(() => {
+                images[activeIdx].classList.remove('active');
+                activeIdx = (activeIdx + 1) % images.length;
+                images[activeIdx].classList.add('active');
+            }, 4000);
         }
     } catch (err) {
         console.error("Error loading navbar sliders:", err);
@@ -2284,3 +2187,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+// Fetch and apply Dynamic Brand Logo for Static HTML pages
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (data.success && data.settings.brandLogo) {
+            document.querySelectorAll('.nav-logo, .sidebar-logo, .footer-logo').forEach(img => {
+                img.src = data.settings.brandLogo;
+            });
+        }
+    } catch (err) {
+        console.error('Error fetching brand logo:', err);
+    }
+});
+
+// Dynamically load analytics tracking for static pages
+(function() {
+    var script = document.createElement('script');
+    script.src = '/analytics.js';
+    script.defer = true;
+    document.head.appendChild(script);
+})();

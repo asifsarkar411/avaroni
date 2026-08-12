@@ -144,6 +144,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const changeEmailForm = document.getElementById('change-email-form');
     if (changeEmailForm) changeEmailForm.addEventListener('submit', handleChangeEmail);
 
+    const brandLogoForm = document.getElementById('brand-logo-form');
+    if (brandLogoForm) brandLogoForm.addEventListener('submit', handleChangeBrandLogo);
+
+
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
 
@@ -249,6 +253,20 @@ async function showDashboard() {
         fetchDashboardStats();
         fetchAnalyticsCharts();
         fetchDashboardVisuals(); // Load new visual charts + tables
+        fetchSettings();
+    }
+}
+
+async function fetchSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (data.success && data.settings.brandLogo) {
+            const logoPreview = document.getElementById('current-brand-logo-preview');
+            if (logoPreview) logoPreview.src = data.settings.brandLogo;
+        }
+    } catch (err) {
+        console.error("Error fetching settings:", err);
     }
 }
 
@@ -518,7 +536,9 @@ function switchTab(tabName) {
         if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
+        if (tabName === 'manage-customers') cleanTitle = "Customer Accounts Management";
         if (tabName === 'manage-reviews') cleanTitle = "Customer Reviews & Ratings";
+        if (tabName === 'user-tracking') cleanTitle = "User Activity Tracking & Analytics";
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
         if (tabName === 'manage-blogs') cleanTitle = "Manage Blogs";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
@@ -539,6 +559,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-customers') fetchCustomerUsers();
     if (tabName === 'manage-reviews') fetchAdminReviews();
+    if (tabName === 'user-tracking') fetchUserTrackingAnalytics();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'manage-blogs') fetchAdminBlogs();
     if (tabName === 'admin-settings') initSettingsTab();
@@ -745,9 +766,6 @@ async function handleAddProduct(e) {
         size: document.getElementById('prod-size') ? document.getElementById('prod-size').value : '',
         colour: document.getElementById('prod-colour') ? document.getElementById('prod-colour').value : '',
         brand: document.getElementById('prod-brand') ? document.getElementById('prod-brand').value : '',
-        weight: document.getElementById('prod-weight') ? document.getElementById('prod-weight').value : '',
-        care: document.getElementById('prod-care') ? document.getElementById('prod-care').value : '',
-        additionalInfo: document.getElementById('prod-additional-info') ? document.getElementById('prod-additional-info').value : '',
         description: addProdDescEditor ? addProdDescEditor.root.innerHTML : '',
         stock: document.getElementById('prod-stock').value,
         discountType: document.getElementById('prod-discount-type') ? document.getElementById('prod-discount-type').value : 'none',
@@ -2202,9 +2220,6 @@ async function openEditModal(id) {
     document.getElementById('edit-prod-colour').value = prod.colour || '';
     if (document.getElementById('edit-prod-colour')._tagsInput) document.getElementById('edit-prod-colour')._tagsInput.syncFromOriginal();
     document.getElementById('edit-prod-brand').value = prod.brand || '';
-    if (document.getElementById('edit-prod-weight')) document.getElementById('edit-prod-weight').value = prod.weight || '';
-    if (document.getElementById('edit-prod-care')) document.getElementById('edit-prod-care').value = prod.care || '';
-    if (document.getElementById('edit-prod-additional-info')) document.getElementById('edit-prod-additional-info').value = prod.additionalInfo || '';
     if (editProdDescEditor) { editProdDescEditor.root.innerHTML = prod.description || ''; }
     document.getElementById('edit-prod-preview').src = formatImageUrl(prod.imageUrl);
     document.getElementById('edit-prod-image').value = '';
@@ -2287,9 +2302,6 @@ async function handleEditProductSubmit(e) {
         size: document.getElementById('edit-prod-size').value,
         colour: document.getElementById('edit-prod-colour').value,
         brand: document.getElementById('edit-prod-brand').value,
-        weight: document.getElementById('edit-prod-weight') ? document.getElementById('edit-prod-weight').value : '',
-        care: document.getElementById('edit-prod-care') ? document.getElementById('edit-prod-care').value : '',
-        additionalInfo: document.getElementById('edit-prod-additional-info') ? document.getElementById('edit-prod-additional-info').value : '',
         description: editProdDescEditor ? editProdDescEditor.root.innerHTML : '',
         stock: document.getElementById('edit-prod-stock').value,
         discountType: document.getElementById('edit-prod-discount-type') ? document.getElementById('edit-prod-discount-type').value : 'none',
@@ -2485,6 +2497,38 @@ async function handleChangeEmail(e) {
     }
 }
 
+async function handleChangeBrandLogo(e) {
+    e.preventDefault();
+    const logoInput = document.getElementById('brand-logo-input');
+    if (!logoInput.files || !logoInput.files[0]) {
+        showToast("Please select an image file first.", "error");
+        return;
+    }
+
+    const file = logoInput.files[0];
+    try {
+        const base64Image = await fileToBase64(file);
+        const response = await fetchWithAuth('/api/admin/settings/logo', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logoUrl: base64Image })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Brand logo updated successfully! Changes apply globally.");
+            document.getElementById('current-brand-logo-preview').src = base64Image;
+            document.getElementById('brand-logo-form').reset();
+        } else {
+            showToast(data.message || "Failed to update logo.", "error");
+        }
+    } catch (err) {
+        console.error("Change Brand Logo Error:", err);
+        showToast("Error processing the image.", "error");
+    }
+}
+
 async function handleChangePassword(e) {
     e.preventDefault();
     const currentPassword = document.getElementById('setting-current-pass').value;
@@ -2568,7 +2612,7 @@ async function fetchCustomerUsers() {
         tbody.innerHTML = '';
 
         if (!data.success || !data.customers || data.customers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No customer accounts found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No customer accounts found.</td></tr>';
             return;
         }
 
@@ -2578,6 +2622,7 @@ async function fetchCustomerUsers() {
                     <td><strong>${escapeHTML(customer.username)}</strong></td>
                     <td>${escapeHTML(customer.email || 'N/A')}</td>
                     <td>${escapeHTML(customer.phone || 'N/A')}</td>
+                    <td><span style="font-size: 13px;">${escapeHTML(customer.address || 'N/A')}</span></td>
                     <td><span style="background:#e3f2fd; color:#0d6efd; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:700;">Customer</span></td>
                     <td>${escapeHTML(customer.loginCount || 0)} times</td>
                 </tr>
@@ -3282,4 +3327,109 @@ function renderLatestActiveOrders(orders) {
         </tr>`;
     });
     tbody.innerHTML = html;
+}
+
+// ==========================================
+// USER ACTIVITY & TRACKING ANALYTICS
+// ==========================================
+let exitPagesChartInstance = null;
+
+async function fetchUserTrackingAnalytics() {
+    try {
+        const res = await fetchWithAuth('/api/admin/analytics/activity');
+        if (!res) return;
+        const data = await res.json();
+        
+        if (data.success) {
+            renderExitPagesChart(data.exitPages);
+            renderTopClicksTable(data.topClicks);
+            renderDeadClicksTable(data.deadClicks);
+        }
+    } catch (err) {
+        console.error("Error fetching analytics:", err);
+    }
+}
+
+function renderExitPagesChart(exitPages) {
+    const ctx = document.getElementById('exitPagesChart');
+    if (!ctx) return;
+
+    if (exitPagesChartInstance) {
+        exitPagesChartInstance.destroy();
+    }
+
+    if (!exitPages || exitPages.length === 0) {
+        ctx.style.display = 'none';
+        ctx.parentElement.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">No exit page data available for the last 7 days.</p>';
+        return;
+    }
+
+    const labels = exitPages.map(p => p._id || '/');
+    const values = exitPages.map(p => p.count);
+
+    exitPagesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Exit Count',
+                data: values,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function renderTopClicksTable(clicks) {
+    const tbody = document.getElementById('top-clicks-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!clicks || clicks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No click data available.</td></tr>';
+        return;
+    }
+
+    clicks.forEach(click => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${escapeHTML(click._id.page || '/')}</td>
+                <td><span style="background:#e0f7fa; color:#00838f; padding:3px 8px; border-radius:4px; font-size:11px;">${escapeHTML(click._id.element || 'N/A')}</span></td>
+                <td>${escapeHTML(click._id.text || '-')}</td>
+                <td><strong>${click.count}</strong></td>
+            </tr>
+        `;
+    });
+}
+
+function renderDeadClicksTable(deadClicks) {
+    const tbody = document.getElementById('dead-clicks-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!deadClicks || deadClicks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No dead clicks recorded. Great job!</td></tr>';
+        return;
+    }
+
+    deadClicks.forEach(click => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${escapeHTML(click._id.page || '/')}</td>
+                <td><span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:4px; font-size:11px;">${escapeHTML(click._id.element || 'N/A')}</span></td>
+                <td>${escapeHTML(click._id.className || '-')}</td>
+                <td>${escapeHTML(click._id.text || '-')}</td>
+                <td><strong>${click.count}</strong></td>
+            </tr>
+        `;
+    });
 }
