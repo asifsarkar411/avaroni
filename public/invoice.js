@@ -209,53 +209,50 @@ async function triggerPDFDownload(htmlContent, fileName) {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
         document.head.appendChild(script);
-        await new Promise(resolve => script.onload = resolve);
-    }
-    
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = htmlContent;
-    
-    // We append it to body temporarily off-screen so html2pdf can render it correctly
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px';
-    wrapper.style.top = '-9999px';
-    document.body.appendChild(wrapper);
-
-    const opt = {
-      margin:       0,
-      filename:     fileName,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    
-    html2pdf().set(opt).from(wrapper).save().then(() => {
-        document.body.removeChild(wrapper);
-    });
-}
-
-function downloadInvoice(orderNumber) {
-    // Show a loading toast if available
-    if (typeof showToast === 'function') {
-        showToast('Preparing invoice for download...', 'info');
-    }
-
-    fetch(`/api/orders/${orderNumber}`)
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success || !data.order) {
-                alert('Could not load order details for invoice.');
-                return;
-            }
-            generatePDFInvoice(data.order);
-        })
-        .catch(err => {
-            console.error('Invoice generation error:', err);
-            alert('Failed to generate invoice. Please try again.');
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
         });
-}
+    }
+    
+    return new Promise((resolve, reject) => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = htmlContent;
+        wrapper.style.padding = '20px';
+        wrapper.style.width = '800px';
+        wrapper.style.background = '#ffffff';
+        
+        // Append to body but visually hide it using height 0 and overflow hidden, 
+        // or just put it far away. A common reliable way is:
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '200vw'; // far right offscreen
+        wrapper.style.top = '0';
+        document.body.appendChild(wrapper);
 
-// Export for ES modules (Next.js)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generatePDFInvoice, triggerPDFDownload, downloadInvoice };
+        const opt = {
+          margin:       0.1,
+          filename:     fileName,
+          image:        { type: 'jpeg', quality: 1 },
+          html2canvas:  { scale: 2, useCORS: true, logging: true, windowWidth: 800 },
+          jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Wait a bit for fonts to load and browser to compute layout
+        setTimeout(() => {
+            try {
+                html2pdf().set(opt).from(wrapper).save().then(() => {
+                    document.body.removeChild(wrapper);
+                    resolve();
+                }).catch(e => {
+                    console.error('html2pdf error:', e);
+                    if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+                    reject(e);
+                });
+            } catch (e) {
+                console.error('html2pdf sync error:', e);
+                if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+                reject(e);
+            }
+        }, 500);
+    });
 }

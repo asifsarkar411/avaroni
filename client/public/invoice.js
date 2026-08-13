@@ -218,74 +218,41 @@ async function triggerPDFDownload(htmlContent, fileName) {
     return new Promise((resolve, reject) => {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = htmlContent;
-        
-        // Use a more robust off-screen positioning that doesn't break html2canvas
-        wrapper.style.position = 'absolute';
-        wrapper.style.top = '-9999px';
-        wrapper.style.left = '0';
+        wrapper.style.padding = '20px';
         wrapper.style.width = '800px';
-        wrapper.style.zIndex = '-9999';
-        // wrapper.style.visibility = 'hidden'; // Removed as it causes blank PDF
+        wrapper.style.background = '#ffffff';
+        
+        // Append to body but visually hide it using height 0 and overflow hidden, 
+        // or just put it far away. A common reliable way is:
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '200vw'; // far right offscreen
+        wrapper.style.top = '0';
         document.body.appendChild(wrapper);
 
         const opt = {
-          margin:       0,
+          margin:       0.1,
           filename:     fileName,
           image:        { type: 'jpeg', quality: 1 },
-          html2canvas:  { scale: 2, useCORS: true, logging: false },
+          html2canvas:  { scale: 2, useCORS: true, logging: true, windowWidth: 800 },
           jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
         
-        try {
-            html2pdf().set(opt).from(wrapper).save().then(() => {
-                document.body.removeChild(wrapper);
-                resolve();
-            }).catch(e => {
-                document.body.removeChild(wrapper);
+        // Wait a bit for fonts to load and browser to compute layout
+        setTimeout(() => {
+            try {
+                html2pdf().set(opt).from(wrapper).save().then(() => {
+                    document.body.removeChild(wrapper);
+                    resolve();
+                }).catch(e => {
+                    console.error('html2pdf error:', e);
+                    if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+                    reject(e);
+                });
+            } catch (e) {
+                console.error('html2pdf sync error:', e);
+                if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
                 reject(e);
-            });
-        } catch (e) {
-            document.body.removeChild(wrapper);
-            reject(e);
-        }
-    });
-}
-
-async function downloadInvoice(orderNumber) {
-    // Show a loading toast if available
-    if (typeof showToast === 'function') {
-        showToast('Preparing invoice for download...', 'info');
-    }
-
-    try {
-        const res = await fetch(`/api/orders/${orderNumber}`);
-        const data = await res.json();
-        
-        if (!data.success || !data.order) {
-            if (typeof showToast === 'function') {
-                showToast('Could not load order details for invoice.', 'error');
-            } else {
-                alert('Could not load order details for invoice.');
             }
-            return;
-        }
-        
-        await generatePDFInvoice(data.order);
-        
-        if (typeof showToast === 'function') {
-            showToast('Invoice downloaded successfully!', 'success');
-        }
-    } catch (err) {
-        console.error('Invoice generation error:', err);
-        if (typeof showToast === 'function') {
-            showToast('Failed to generate invoice. Please try again.', 'error');
-        } else {
-            alert('Failed to generate invoice. Please try again.');
-        }
-    }
-}
-
-// Export for ES modules (Next.js)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generatePDFInvoice, triggerPDFDownload, downloadInvoice };
+        }, 500);
+    });
 }
