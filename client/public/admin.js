@@ -253,6 +253,7 @@ async function showDashboard() {
         fetchDashboardStats();
         fetchAnalyticsCharts();
         fetchDashboardVisuals(); // Load new visual charts + tables
+        fetchManageProducts(); // For low stock card
         fetchSettings();
     }
 }
@@ -550,7 +551,7 @@ function switchTab(tabName) {
     }
 
     // Fetch data dynamically based on the active tab
-    if (tabName === 'dashboard') { fetchDashboardStats(); fetchDashboardVisuals(); }
+    if (tabName === 'dashboard') { fetchDashboardStats(); fetchDashboardVisuals(); fetchManageProducts(); }
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'manage-products') fetchManageProducts();
     if (tabName === 'add-product') populateAddProductCategories();
