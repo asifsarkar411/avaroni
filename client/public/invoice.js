@@ -216,7 +216,7 @@ async function triggerPDFDownload(htmlContent, fileName) {
     }
     
     return new Promise((resolve, reject) => {
-        const finalHtml = '<div style=\"width: 800px; padding: 20px; background: #ffffff;\">' + htmlContent + '</div>';
+        const finalHtml = '<div style="width: 800px; max-width: 100%; box-sizing: border-box; padding: 0; background: #ffffff;">' + htmlContent + '</div>';
         
         const opt = {
           margin:       0.1,
