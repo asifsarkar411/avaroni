@@ -216,19 +216,8 @@ async function triggerPDFDownload(htmlContent, fileName) {
     }
     
     return new Promise((resolve, reject) => {
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = htmlContent;
-        wrapper.style.padding = '20px';
-        wrapper.style.width = '800px';
-        wrapper.style.background = '#ffffff';
+        const finalHtml = '<div style=\"width: 800px; padding: 20px; background: #ffffff;\">' + htmlContent + '</div>';
         
-        // Append to body but visually hide it using height 0 and overflow hidden, 
-        // or just put it far away. A common reliable way is:
-        wrapper.style.position = 'fixed';
-        wrapper.style.left = '200vw'; // far right offscreen
-        wrapper.style.top = '0';
-        document.body.appendChild(wrapper);
-
         const opt = {
           margin:       0.1,
           filename:     fileName,
@@ -237,22 +226,16 @@ async function triggerPDFDownload(htmlContent, fileName) {
           jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
         
-        // Wait a bit for fonts to load and browser to compute layout
-        setTimeout(() => {
-            try {
-                html2pdf().set(opt).from(wrapper).save().then(() => {
-                    document.body.removeChild(wrapper);
-                    resolve();
-                }).catch(e => {
-                    console.error('html2pdf error:', e);
-                    if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
-                    reject(e);
-                });
-            } catch (e) {
-                console.error('html2pdf sync error:', e);
-                if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+        try {
+            html2pdf().set(opt).from(finalHtml).save().then(() => {
+                resolve();
+            }).catch(e => {
+                console.error('html2pdf error:', e);
                 reject(e);
-            }
-        }, 500);
+            });
+        } catch (e) {
+            console.error('html2pdf sync error:', e);
+            reject(e);
+        }
     });
 }
