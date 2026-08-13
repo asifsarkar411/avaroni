@@ -1693,29 +1693,30 @@
                             <h2><i class="fas fa-store" style="color: var(--primary);"></i> Global Store Settings</h2>
                         </div>
                         <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
-                            <!-- Form: Change Brand Logo -->
+                            <!-- Form 1: Change Brand Logo & Favicon -->
                             <div style="background: #fafafa; padding: 20px; border-radius: 10px; border: 1px solid #eaeaea;">
-                                <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c2c3e;"><i class="fas fa-image" style="color: var(--primary); margin-right: 8px;"></i> Change Brand Logo</h3>
+                                <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c2c3e;"><i class="fas fa-image" style="color: var(--primary); margin-right: 8px;"></i> Change Brand Logo & Favicon</h3>
                                 <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                    <div style="flex-shrink: 0;">
-                                        <img id="current-brand-logo-preview" src="./img/profile_image.jpg" alt="Current Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;">
+                                    <div style="flex-shrink: 0; text-align: center;">
+                                        <img id="current-brand-logo-preview" src="./img/profile_image.jpg" alt="Current Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                        <div style="font-size: 11px; color: #888; margin-top: 5px;">Logo & Favicon</div>
                                     </div>
                                     <div style="flex-grow: 1;">
                                         <form id="brand-logo-form">
                                             <div class="form-group" style="margin-bottom: 12px;">
                                                 <label for="brand-logo-input">Upload New Logo (Image):</label>
                                                 <input type="file" id="brand-logo-input" accept="image/*" required>
+                                                <small style="display: block; color: #777; margin-top: 4px; font-size: 11px;">Automatically updates storefront logo and browser tab favicon.</small>
                                             </div>
-                                            <button type="submit" class="btn" style="background: #111111;"><i class="fas fa-save"></i> Save Logo</button>
+                                            <button type="submit" class="btn" style="background: #111111;"><i class="fas fa-save"></i> Save Logo & Favicon</button>
                                         </form>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Form: Change Brand Name -->
+                            <!-- Form 2: Change Brand Name -->
                             <div style="background: #fafafa; padding: 20px; border-radius: 10px; border: 1px solid #eaeaea;">
-                                <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c2c3e;"><i class="fas fa-tag" style="color: var(--primary); margin-right: 8px;"></i> Change Brand Name</h3>
-                                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">This name will appear across the entire website — Navbar, Footer, Sidebar, Invoices, and all pages.</p>
+                                <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c2c3e;"><i class="fas fa-signature" style="color: var(--primary); margin-right: 8px;"></i> Change Brand Name</h3>
                                 <form id="brand-name-form">
                                     <div class="form-group" style="margin-bottom: 12px;">
                                         <label for="brand-name-input">Brand Name:</label>

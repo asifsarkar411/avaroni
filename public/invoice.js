@@ -91,11 +91,29 @@ async function generatePDFInvoice(order) {
     const charSum = String(displayOrderNum).split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     const dynamicAccent = accentColors[charSum % accentColors.length];
 
+    let dynamicBrandName = 'AVARONI';
+    let dynamicBrandLogo = '/img/profile_image.jpg';
+    try {
+        const cachedName = localStorage.getItem('site_brand_name');
+        const cachedLogo = localStorage.getItem('site_brand_logo');
+        if (cachedName) dynamicBrandName = cachedName;
+        if (cachedLogo) dynamicBrandLogo = cachedLogo;
+    } catch(e) {}
+
+    try {
+        const sRes = await fetch('/api/settings');
+        const sData = await sRes.json();
+        if (sData.success && sData.settings) {
+            if (sData.settings.brandName) dynamicBrandName = sData.settings.brandName;
+            if (sData.settings.brandLogo) dynamicBrandLogo = sData.settings.brandLogo;
+        }
+    } catch(e) {}
+
     const invoiceHtml = `
         <div id="invoice-doc" style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; width: 800px; min-width: 800px; max-width: 800px; box-sizing: border-box; margin: 0; background: #ffffff; color: #334155; position: relative; overflow: hidden;">
             
             <!-- Dynamic Background Watermark -->
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 120px; font-weight: 900; color: rgba(15, 23, 42, 0.025); white-space: nowrap; pointer-events: none; z-index: 0;">AVARONI</div>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 110px; font-weight: 900; color: rgba(15, 23, 42, 0.025); white-space: nowrap; pointer-events: none; z-index: 0; text-transform: uppercase;">${dynamicBrandName}</div>
 
             <!-- Top Header Accent -->
             <div style="height: 8px; width: 100%; background: linear-gradient(90deg, #0f172a, ${dynamicAccent}, #0f172a); position: relative; z-index: 1;"></div>
@@ -104,10 +122,10 @@ async function generatePDFInvoice(order) {
                 <!-- Header Section with Round Brand Logo & Invoice Number Box -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="/img/profile_image.jpg" alt="AVARONI Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='./img/profile_image.jpg';">
+                        <img src="${dynamicBrandLogo}" alt="${dynamicBrandName} Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='./img/profile_image.jpg';">
                         <div>
                             <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.1;">
-                                AVARONI
+                                ${dynamicBrandName}
                             </h1>
                             <p style="margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Premium Fashion & Lifestyle</p>
                         </div>

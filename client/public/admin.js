@@ -153,6 +153,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const brandLogoForm = document.getElementById('brand-logo-form');
     if (brandLogoForm) brandLogoForm.addEventListener('submit', handleChangeBrandLogo);
 
+    const brandNameForm = document.getElementById('brand-name-form');
+    if (brandNameForm) brandNameForm.addEventListener('submit', handleChangeBrandName);
+
 
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
@@ -268,13 +271,32 @@ async function fetchSettings() {
     try {
         const response = await fetch('/api/settings');
         const data = await response.json();
-        if (data.success && data.settings.brandLogo) {
-            const logoPreview = document.getElementById('current-brand-logo-preview');
-            if (logoPreview) logoPreview.src = data.settings.brandLogo;
+        if (data.success && data.settings) {
+            if (data.settings.brandLogo) {
+                const logoPreview = document.getElementById('current-brand-logo-preview');
+                if (logoPreview) logoPreview.src = data.settings.brandLogo;
+                updateFavicon(data.settings.brandLogo);
+            }
+            if (data.settings.brandName) {
+                const nameInput = document.getElementById('brand-name-input');
+                if (nameInput) nameInput.value = data.settings.brandName;
+            }
         }
     } catch (err) {
         console.error("Error fetching settings:", err);
     }
+}
+
+function updateFavicon(iconUrl) {
+    if (!iconUrl) return;
+    let favicon = document.querySelector("link[rel='icon'], link[rel='shortcut icon']");
+    if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+    }
+    favicon.type = 'image/png';
+    favicon.href = iconUrl;
 }
 
 let chartInstances = {};
@@ -2533,8 +2555,13 @@ async function handleChangeBrandLogo(e) {
 
         const data = await response.json();
         if (data.success) {
-            showToast("Brand logo updated successfully! Changes apply globally.");
-            document.getElementById('current-brand-logo-preview').src = base64Image;
+            showToast("Brand logo & favicon updated successfully! Changes apply globally.");
+            const logoPreview = document.getElementById('current-brand-logo-preview');
+            if (logoPreview) logoPreview.src = base64Image;
+            updateFavicon(base64Image);
+            try {
+                localStorage.setItem('site_brand_logo', base64Image);
+            } catch(e) {}
             document.getElementById('brand-logo-form').reset();
         } else {
             showToast(data.message || "Failed to update logo.", "error");
@@ -2542,6 +2569,38 @@ async function handleChangeBrandLogo(e) {
     } catch (err) {
         console.error("Change Brand Logo Error:", err);
         showToast("Error processing the image.", "error");
+    }
+}
+
+async function handleChangeBrandName(e) {
+    e.preventDefault();
+    const nameInput = document.getElementById('brand-name-input');
+    const newName = nameInput ? nameInput.value.trim() : '';
+    if (!newName) {
+        showToast("Please enter a brand name.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/brandName', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brandName: newName })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Brand name updated successfully! All pages updated.");
+            try {
+                localStorage.setItem('site_brand_name', newName);
+            } catch(e) {}
+        } else {
+            showToast(data.message || "Failed to update brand name.", "error");
+        }
+    } catch (err) {
+        console.error("Change Brand Name Error:", err);
+        showToast("Error updating brand name.", "error");
     }
 }
 

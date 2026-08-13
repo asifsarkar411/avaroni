@@ -2188,20 +2188,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Fetch and apply Dynamic Brand Logo for Static HTML pages
-document.addEventListener('DOMContentLoaded', async () => {
+// ==========================================
+// DYNAMIC GLOBAL BRANDING (Logo, Favicon & Brand Name)
+// ==========================================
+function updateBrandLogoAndFaviconInDOM(logoUrl) {
+    if (!logoUrl) return;
+    document.querySelectorAll('.nav-logo, .sidebar-logo, .footer-logo, .header-logo, #brand-logo, #admin-logo, .site-logo, .brand-logo-img').forEach(img => {
+        if (img.tagName === 'IMG') img.src = logoUrl;
+    });
+
+    let favicon = document.querySelector("link[rel='icon'], link[rel='shortcut icon']");
+    if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+    }
+    favicon.type = 'image/png';
+    favicon.href = logoUrl;
+}
+
+function updateBrandNameInDOM(brandName) {
+    if (!brandName) return;
+
+    if (document.title.includes('AVARONI') || document.title.includes('আভরণী')) {
+        document.title = document.title.replace(/AVARONI|আভরণী/g, brandName);
+    }
+
+    document.querySelectorAll('.brand-name, .logo-text, .nav-brand, .sidebar-brand-name, .footer-brand-name, .brand-title, .site-brand').forEach(el => {
+        el.innerText = brandName;
+    });
+
+    document.querySelectorAll('.footer-bottom p, .copyright-text, .footer-section h3').forEach(el => {
+        if (el.innerHTML.includes('AVARONI') || el.innerHTML.includes('আভরণী')) {
+            el.innerHTML = el.innerHTML.replace(/AVARONI|আভরণী/g, brandName);
+        }
+    });
+}
+
+async function applyGlobalBrandSettings() {
+    try {
+        const cachedName = localStorage.getItem('site_brand_name');
+        const cachedLogo = localStorage.getItem('site_brand_logo');
+        if (cachedName) updateBrandNameInDOM(cachedName);
+        if (cachedLogo) updateBrandLogoAndFaviconInDOM(cachedLogo);
+    } catch(e) {}
+
     try {
         const response = await fetch('/api/settings');
         const data = await response.json();
-        if (data.success && data.settings.brandLogo) {
-            document.querySelectorAll('.nav-logo, .sidebar-logo, .footer-logo').forEach(img => {
-                img.src = data.settings.brandLogo;
-            });
+        if (data.success && data.settings) {
+            if (data.settings.brandName) {
+                try { localStorage.setItem('site_brand_name', data.settings.brandName); } catch(e) {}
+                updateBrandNameInDOM(data.settings.brandName);
+            }
+            if (data.settings.brandLogo) {
+                try { localStorage.setItem('site_brand_logo', data.settings.brandLogo); } catch(e) {}
+                updateBrandLogoAndFaviconInDOM(data.settings.brandLogo);
+            }
         }
     } catch (err) {
-        console.error('Error fetching brand logo:', err);
+        console.error('Error fetching global brand settings:', err);
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', applyGlobalBrandSettings);
 
 // Dynamically load analytics tracking for static pages
 (function() {

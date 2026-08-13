@@ -271,14 +271,15 @@ async function fetchSettings() {
     try {
         const response = await fetch('/api/settings');
         const data = await response.json();
-        if (data.success) {
+        if (data.success && data.settings) {
             if (data.settings.brandLogo) {
                 const logoPreview = document.getElementById('current-brand-logo-preview');
                 if (logoPreview) logoPreview.src = data.settings.brandLogo;
+                updateFavicon(data.settings.brandLogo);
             }
             if (data.settings.brandName) {
-                const brandNameInput = document.getElementById('brand-name-input');
-                if (brandNameInput) brandNameInput.value = data.settings.brandName;
+                const nameInput = document.getElementById('brand-name-input');
+                if (nameInput) nameInput.value = data.settings.brandName;
             }
         }
     } catch (err) {
@@ -2542,8 +2543,13 @@ async function handleChangeBrandLogo(e) {
 
         const data = await response.json();
         if (data.success) {
-            showToast("Brand logo updated successfully! Changes apply globally.");
-            document.getElementById('current-brand-logo-preview').src = base64Image;
+            showToast("Brand logo & favicon updated successfully! Changes apply globally.");
+            const logoPreview = document.getElementById('current-brand-logo-preview');
+            if (logoPreview) logoPreview.src = base64Image;
+            updateFavicon(base64Image);
+            try {
+                localStorage.setItem('site_brand_logo', base64Image);
+            } catch(e) {}
             document.getElementById('brand-logo-form').reset();
         } else {
             showToast(data.message || "Failed to update logo.", "error");
@@ -2556,9 +2562,9 @@ async function handleChangeBrandLogo(e) {
 
 async function handleChangeBrandName(e) {
     e.preventDefault();
-    const brandNameInput = document.getElementById('brand-name-input');
-    const brandName = brandNameInput.value.trim();
-    if (!brandName) {
+    const nameInput = document.getElementById('brand-name-input');
+    const newName = nameInput ? nameInput.value.trim() : '';
+    if (!newName) {
         showToast("Please enter a brand name.", "error");
         return;
     }
@@ -2567,13 +2573,16 @@ async function handleChangeBrandName(e) {
         const response = await fetchWithAuth('/api/admin/settings/brandName', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ brandName })
+            body: JSON.stringify({ brandName: newName })
         });
         if (!response) return;
 
         const data = await response.json();
         if (data.success) {
-            showToast("Brand name updated successfully! It will now appear across the entire website.");
+            showToast("Brand name updated successfully! All pages updated.");
+            try {
+                localStorage.setItem('site_brand_name', newName);
+            } catch(e) {}
         } else {
             showToast(data.message || "Failed to update brand name.", "error");
         }
@@ -2582,6 +2591,7 @@ async function handleChangeBrandName(e) {
         showToast("Error updating brand name.", "error");
     }
 }
+
 
 async function handleChangePassword(e) {
     e.preventDefault();
