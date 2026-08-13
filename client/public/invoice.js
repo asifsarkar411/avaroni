@@ -204,8 +204,8 @@ async function generatePDFInvoice(order) {
 }
 
 async function triggerPDFDownload(htmlContent, fileName) {
-    // Ensure html2pdf bundle (which contains html2canvas & jsPDF) is loaded
-    if (!window.html2pdf && !window.html2canvas) {
+    // Ensure html2pdf bundle is loaded
+    if (!window.html2pdf) {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
         document.head.appendChild(script);
@@ -249,57 +249,28 @@ async function triggerPDFDownload(htmlContent, fileName) {
         `);
         iframeDoc.close();
 
-        // Wait a short tick for iframe to parse HTML and render fonts
+        // Wait a brief tick for iframe to parse HTML and fonts
         setTimeout(async () => {
             try {
                 const targetElement = iframeDoc.getElementById('invoice-doc') || iframeDoc.body;
                 
-                const canvas = await window.html2canvas(targetElement, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    width: 800,
-                    windowWidth: 800,
-                    scrollY: 0,
-                    scrollX: 0
-                });
+                const opt = {
+                    margin: 0,
+                    filename: fileName,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        width: 800,
+                        windowWidth: 800,
+                        scrollY: 0,
+                        scrollX: 0
+                    },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-                
-                if (jsPDFConstructor) {
-                    const pdf = new jsPDFConstructor('p', 'in', 'a4');
-                    const pdfWidth = pdf.internal.pageSize.getWidth(); // 8.27in
-                    const pdfPageHeight = pdf.internal.pageSize.getHeight(); // 11.69in
-                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                    
-                    if (pdfHeight <= pdfPageHeight) {
-                        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                    } else {
-                        // Multi-page handling if invoice is unusually tall
-                        let heightLeft = pdfHeight;
-                        let position = 0;
-                        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-                        heightLeft -= pdfPageHeight;
-                        while (heightLeft > 0) {
-                            position -= pdfPageHeight;
-                            pdf.addPage();
-                            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-                            heightLeft -= pdfPageHeight;
-                        }
-                    }
-                    pdf.save(fileName);
-                } else {
-                    // Fallback to html2pdf if direct constructor is not found
-                    const opt = {
-                        margin: 0,
-                        filename: fileName,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, logging: false },
-                        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                    };
-                    await window.html2pdf().set(opt).from(targetElement).save();
-                }
+                await window.html2pdf().set(opt).from(targetElement).save();
                 resolve();
             } catch (err) {
                 console.error("PDF generation error:", err);
