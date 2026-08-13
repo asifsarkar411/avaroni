@@ -530,10 +530,11 @@
                         </div>
                     </div>
                     <div class="info-section">
-                        <div class="info-label">Payment Information</div>
-                        <div class="info-text"><strong>Method:</strong> \${order.paymentMethod || 'Cash on Delivery'}</div>
-                        <div class="info-text"><strong>Transaction ID:</strong> \${order.transactionId || 'N/A'}</div>
-                        <div class="status-badge \${getStatusClass(order.status)}">\${order.status || 'Pending'}</div>
+                        <div class="info-label">Order Details</div>
+                        <div class="info-text"><strong>Order ID:</strong> \${order.orderNumber || order._id}</div>
+                        <div class="info-text"><strong>Invoice No:</strong> \${(String(order.orderNumber || order._id || '1').replace(/\\D/g, '') || String(order.orderNumber || '1').slice(-7)).padStart(7, '0')}</div>
+                        <div class="info-text"><strong>Method:</strong> \${order.paymentMethod === 'cod' ? 'Cash on Delivery' : (order.paymentMethod || 'Cash on Delivery')}</div>
+                        <div class="info-text"><strong>Transaction ID:</strong> \${order.transactionId || order.trxId || 'N/A'}</div>
                     </div>
                 </div>
 

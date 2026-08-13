@@ -36,10 +36,11 @@ async function generatePDFInvoice(order) {
         day: '2-digit', month: 'short', year: 'numeric'
     });
 
-    let rawNum = order.orderNumber || order._id || '1';
-    let cleanDigits = String(rawNum).replace(/\D/g, '');
-    if (!cleanDigits) cleanDigits = String(rawNum).slice(-7);
-    const invoiceDisplayNum = cleanDigits.padStart(7, '0');
+    const orderNumRaw = order.orderNumber || order.orderId || order._id || '1';
+    let digitsOnly = String(orderNumRaw).replace(/\D/g, '');
+    if (!digitsOnly) digitsOnly = String(orderNumRaw).slice(-7);
+    const invoiceDisplayNum = digitsOnly.padStart(7, '0');
+    const displayOrderNum = order.orderNumber ? String(order.orderNumber) : ('ORD-' + invoiceDisplayNum);
 
     let itemsHtml = '';
     let subtotal = 0;
@@ -85,16 +86,9 @@ async function generatePDFInvoice(order) {
     const discount = order.discountAmount !== undefined ? Number(order.discountAmount) : 0;
     const delivery = order.shippingFee !== undefined ? Number(order.shippingFee) : (order.totalAmount - subtotal + discount > 0 ? order.totalAmount - subtotal + discount : 0);
     
-    const getStatusStyle = (status) => {
-        const s = (status || '').toLowerCase();
-        if (s.includes('cancel') || s.includes('reject')) return 'background: #fee2e2; color: #991b1b; border: 1px solid #f87171;';
-        if (s.includes('pending')) return 'background: #fef3c7; color: #b45309; border: 1px solid #fbbf24;';
-        return 'background: #dcfce7; color: #166534; border: 1px solid #4ade80;';
-    };
-    
     // Dynamic Accent Color Based on Order Number
-    const accentColors = ['#4f46e5', '#2563eb', '#0ea5e9', '#0d9488', '#059669', '#ca8a04', '#ea580c', '#e11d48', '#db2777', '#9333ea'];
-    const charSum = (order.orderNumber || '').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const accentColors = ['#0d9488', '#2563eb', '#4f46e5', '#059669', '#ca8a04', '#ea580c', '#e11d48', '#db2777', '#9333ea'];
+    const charSum = String(displayOrderNum).split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     const dynamicAccent = accentColors[charSum % accentColors.length];
 
     const invoiceHtml = `
@@ -110,7 +104,7 @@ async function generatePDFInvoice(order) {
                 <!-- Header Section with Round Brand Logo & Invoice Number Box -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="/img/profile_image.jpg" alt="AVARONI Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='./img/profile_image.jpg';">
+                        <img src="/img/profile_image.jpg" alt="AVARONI Logo" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='./img/profile_image.jpg';">
                         <div>
                             <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.1;">
                                 AVARONI
@@ -118,12 +112,12 @@ async function generatePDFInvoice(order) {
                             <p style="margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Premium Fashion & Lifestyle</p>
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="display: inline-block; background: #f8fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: right;">
-                            <h2 style="margin: 0 0 3px; font-size: 16px; font-weight: 800; letter-spacing: 2px; color: ${dynamicAccent};">INVOICE</h2>
-                            <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 800; letter-spacing: 0.5px;">INVOICE ${invoiceDisplayNum}</p>
-                            <p style="margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: 600;">Order: ${order.orderNumber || order._id}</p>
-                        </div>
+                    
+                    <!-- Top Right Invoice Box -->
+                    <div style="width: 220px; min-width: 220px; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: right; box-sizing: border-box;">
+                        <div style="font-size: 15px; font-weight: 800; letter-spacing: 1px; color: ${dynamicAccent}; margin-bottom: 4px; text-transform: uppercase;">INVOICE</div>
+                        <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 3px;">Invoice ${invoiceDisplayNum}</div>
+                        <div style="font-size: 11px; font-weight: 600; color: #475569;">Order ID: ${displayOrderNum}</div>
                     </div>
                 </div>
 
@@ -152,25 +146,29 @@ async function generatePDFInvoice(order) {
                         </div>
                     </div>
 
-                    <!-- Payment Details -->
+                    <!-- Payment & Order Details (No Status Option) -->
                     <div style="flex: 1; background: #f8fafc; padding: 14px 18px; border-radius: 10px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; box-sizing: border-box;">
                         <div style="font-size: 10px; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 6px; font-weight: 700;">Order Details</div>
                         
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; font-size: 11px;">
+                            <span style="color: #64748b;">Order ID:</span>
+                            <strong style="color: #0f172a;">${displayOrderNum}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; font-size: 11px;">
+                            <span style="color: #64748b;">Invoice No:</span>
+                            <strong style="color: #0f172a;">${invoiceDisplayNum}</strong>
+                        </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; font-size: 11px;">
                             <span style="color: #64748b;">Order Date:</span>
                             <strong style="color: #0f172a;">${orderDate}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; font-size: 11px;">
                             <span style="color: #64748b;">Payment Method:</span>
-                            <strong style="color: #0f172a; text-transform: capitalize;">${order.paymentMethod || 'Cash on Delivery'}</strong>
+                            <strong style="color: #0f172a; text-transform: capitalize;">${order.paymentMethod === 'cod' ? 'Cash on Delivery' : (order.paymentMethod || 'Cash on Delivery')}</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px;">
                             <span style="color: #64748b;">Transaction ID:</span>
                             <strong style="color: #0f172a; word-break: break-all; max-width: 60%; text-align: right;">${order.transactionId || order.trxId || 'N/A'}</strong>
-                        </div>
-                        
-                        <div style="display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; ${getStatusStyle(order.status)}">
-                            STATUS: ${order.status || 'Pending'}
                         </div>
                     </div>
                 </div>
