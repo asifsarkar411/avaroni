@@ -139,6 +139,7 @@ export default function CheckoutPage() {
             if (data.success) {
                 setPlacedOrderDetails(data.order);
                 setOrderPlaced(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 alert(data.message || 'Failed to place order');
             }
