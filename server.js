@@ -1720,7 +1720,8 @@ app.post(['/api/orders', '/api/checkout'], async (req, res) => {
             success: true, 
             message: 'Order placed successfully!', 
             orderNumber,
-            totalAmount: serverTotalAmount 
+            totalAmount: serverTotalAmount,
+            order: newOrder
         });
     } catch (error) { 
         console.error("Checkout Error:", error);
