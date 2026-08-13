@@ -3009,7 +3009,7 @@ app.get('/api/admin/analytics/activity', verifyAdminToken, async (req, res) => {
 
         // Top Exit Pages
         const exitPages = await ActivityLog.aggregate([
-            { $match: { type: 'exit_page', timestamp: { $gte: last7Days } } },
+            { $match: { type: 'exit_page', timestamp: { $gte: last7Days }, page: { $nin: ['/admin.html', '/admin-login.html', '/admin'] } } },
             { $group: { _id: "$page", count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 10 }
@@ -3017,7 +3017,7 @@ app.get('/api/admin/analytics/activity', verifyAdminToken, async (req, res) => {
 
         // Top Dead Clicks
         const deadClicks = await ActivityLog.aggregate([
-            { $match: { type: 'dead_click', timestamp: { $gte: last7Days } } },
+            { $match: { type: 'dead_click', timestamp: { $gte: last7Days }, page: { $nin: ['/admin.html', '/admin-login.html', '/admin'] } } },
             { $group: { 
                 _id: { page: "$page", element: "$element", className: "$className", text: "$text" }, 
                 count: { $sum: 1 } 
@@ -3028,7 +3028,7 @@ app.get('/api/admin/analytics/activity', verifyAdminToken, async (req, res) => {
 
         // Top Normal Clicks
         const topClicks = await ActivityLog.aggregate([
-            { $match: { type: 'click', timestamp: { $gte: last7Days } } },
+            { $match: { type: 'click', timestamp: { $gte: last7Days }, page: { $nin: ['/admin.html', '/admin-login.html', '/admin'] } } },
             { $group: { 
                 _id: { page: "$page", element: "$element", text: "$text" }, 
                 count: { $sum: 1 } 
