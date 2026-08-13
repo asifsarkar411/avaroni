@@ -216,17 +216,7 @@ async function triggerPDFDownload(htmlContent, fileName) {
     }
     
     return new Promise((resolve, reject) => {
-        const container = document.createElement('div');
-        container.innerHTML = htmlContent;
-        container.style.width = '800px';
-        container.style.position = 'absolute';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.zIndex = '-9999';
-        container.style.background = '#ffffff';
-        container.style.textAlign = 'left';
-        
-        document.body.appendChild(container);
+        const finalHtml = '<div style="width: 800px !important; min-width: 800px !important; margin: 0; padding: 0; background: #ffffff; text-align: left;">' + htmlContent + '</div>';
         
         const opt = {
           margin:       0.1,
@@ -237,18 +227,30 @@ async function triggerPDFDownload(htmlContent, fileName) {
         };
         
         try {
-            html2pdf().set(opt).from(container).save().then(() => {
-                document.body.removeChild(container);
+            html2pdf().set(opt).from(finalHtml).save().then(() => {
                 resolve();
             }).catch(e => {
-                document.body.removeChild(container);
                 console.error('html2pdf error:', e);
                 reject(e);
             });
         } catch (e) {
-            document.body.removeChild(container);
             console.error('html2pdf sync error:', e);
             reject(e);
         }
     });
 }
+window.downloadInvoice = async function(orderNumber) {
+    try {
+        const response = await fetch('/api/orders/' + orderNumber);
+        const data = await response.json();
+        if (data.success && data.order) {
+            await generatePDFInvoice(data.order);
+        } else {
+            console.error('Order not found', data);
+            alert('Failed to load invoice details.');
+        }
+    } catch (e) {
+        console.error('Error downloading invoice:', e);
+        alert('An error occurred while generating the invoice.');
+    }
+};
