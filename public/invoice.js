@@ -122,7 +122,7 @@ async function generatePDFInvoice(order) {
                             <span style="color: #64748b;">Payment Method:</span>
                             <strong style="color: #0f172a; text-transform: capitalize;">${order.paymentMethod || 'Cash on Delivery'}</strong>
                         </div>
-                        <div style="display: justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
                             <span style="color: #64748b;">Transaction ID:</span>
                             <strong style="color: #0f172a; word-break: break-all; max-width: 60%; text-align: right;">${order.transactionId || order.trxId || 'N/A'}</strong>
                         </div>
@@ -204,7 +204,8 @@ async function generatePDFInvoice(order) {
 }
 
 async function triggerPDFDownload(htmlContent, fileName) {
-    if (!window.html2pdf) {
+    // Ensure html2pdf bundle (which contains html2canvas & jsPDF) is loaded
+    if (!window.html2pdf && !window.html2canvas) {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
         document.head.appendChild(script);
@@ -213,54 +214,103 @@ async function triggerPDFDownload(htmlContent, fileName) {
             script.onerror = reject;
         });
     }
-    
-    // Create an isolated container explicitly sized to 800px attached directly to document.body
-    const container = document.createElement('div');
-    container.id = 'pdf-render-wrapper';
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '800px';
-    container.style.minWidth = '800px';
-    container.style.maxWidth = '800px';
-    container.style.zIndex = '9999999';
-    container.style.background = '#ffffff';
-    container.style.margin = '0';
-    container.style.padding = '0';
-    container.style.boxSizing = 'border-box';
-    container.innerHTML = htmlContent;
-    
-    document.body.appendChild(container);
-    
-    // Allow brief render tick for DOM
-    await new Promise(r => setTimeout(r, 120));
-    
-    const opt = {
-        margin:       0, // 0 margin ensures the 800px canvas expands to 100% of A4 width with zero white border bars
-        filename:     fileName,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            logging: false,
-            width: 800,
-            windowWidth: 800,
-            scrollY: 0,
-            scrollX: 0
-        },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    
-    try {
-        await html2pdf().set(opt).from(container).save();
-    } catch (e) {
-        console.error('html2pdf execution error:', e);
-        throw e;
-    } finally {
-        if (container && container.parentNode) {
-            container.parentNode.removeChild(container);
-        }
-    }
+
+    return new Promise((resolve, reject) => {
+        // Create an isolated completely offscreen iframe (NO popup will ever be visible on screen)
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.top = '0';
+        iframe.style.left = '-99999px';
+        iframe.style.width = '800px';
+        iframe.style.height = '1200px';
+        iframe.style.border = 'none';
+        iframe.style.opacity = '0';
+        iframe.style.pointerEvents = 'none';
+        iframe.style.zIndex = '-9999';
+        document.body.appendChild(iframe);
+
+        const iframeDoc = iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body { background: #ffffff; width: 800px; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+                </style>
+            </head>
+            <body>
+                ${htmlContent}
+            </body>
+            </html>
+        `);
+        iframeDoc.close();
+
+        // Wait a short tick for iframe to parse HTML and render fonts
+        setTimeout(async () => {
+            try {
+                const targetElement = iframeDoc.getElementById('invoice-doc') || iframeDoc.body;
+                
+                const canvas = await window.html2canvas(targetElement, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    width: 800,
+                    windowWidth: 800,
+                    scrollY: 0,
+                    scrollX: 0
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                
+                if (jsPDFConstructor) {
+                    const pdf = new jsPDFConstructor('p', 'in', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth(); // 8.27in
+                    const pdfPageHeight = pdf.internal.pageSize.getHeight(); // 11.69in
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    
+                    if (pdfHeight <= pdfPageHeight) {
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                    } else {
+                        // Multi-page handling if invoice is unusually tall
+                        let heightLeft = pdfHeight;
+                        let position = 0;
+                        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                        heightLeft -= pdfPageHeight;
+                        while (heightLeft > 0) {
+                            position -= pdfPageHeight;
+                            pdf.addPage();
+                            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                            heightLeft -= pdfPageHeight;
+                        }
+                    }
+                    pdf.save(fileName);
+                } else {
+                    // Fallback to html2pdf if direct constructor is not found
+                    const opt = {
+                        margin: 0,
+                        filename: fileName,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, logging: false },
+                        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                    };
+                    await window.html2pdf().set(opt).from(targetElement).save();
+                }
+                resolve();
+            } catch (err) {
+                console.error("PDF generation error:", err);
+                reject(err);
+            } finally {
+                if (iframe && iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+            }
+        }, 180);
+    });
 }
 
 window.generatePDFInvoice = generatePDFInvoice;
