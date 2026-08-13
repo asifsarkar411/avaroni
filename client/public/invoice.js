@@ -216,24 +216,37 @@ async function triggerPDFDownload(htmlContent, fileName) {
     }
     
     return new Promise((resolve, reject) => {
-        const finalHtml = '<div style="width: 800px; max-width: 100%; box-sizing: border-box; padding: 0; background: #ffffff;">' + htmlContent + '</div>';
+        const container = document.createElement('div');
+        container.innerHTML = htmlContent;
+        container.style.width = '800px';
+        container.style.position = 'absolute';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.zIndex = '-9999';
+        container.style.background = '#ffffff';
+        container.style.textAlign = 'left';
+        
+        document.body.appendChild(container);
         
         const opt = {
           margin:       0.1,
           filename:     fileName,
           image:        { type: 'jpeg', quality: 1 },
-          html2canvas:  { scale: 2, useCORS: true, logging: true, windowWidth: 800 },
+          html2canvas:  { scale: 2, useCORS: true, logging: true, windowWidth: 800, width: 800, scrollX: 0, scrollY: 0 },
           jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
         
         try {
-            html2pdf().set(opt).from(finalHtml).save().then(() => {
+            html2pdf().set(opt).from(container).save().then(() => {
+                document.body.removeChild(container);
                 resolve();
             }).catch(e => {
+                document.body.removeChild(container);
                 console.error('html2pdf error:', e);
                 reject(e);
             });
         } catch (e) {
+            document.body.removeChild(container);
             console.error('html2pdf sync error:', e);
             reject(e);
         }
