@@ -220,12 +220,12 @@ async function triggerPDFDownload(htmlContent, fileName) {
         wrapper.innerHTML = htmlContent;
         
         // Use a more robust off-screen positioning that doesn't break html2canvas
-        wrapper.style.position = 'fixed';
-        wrapper.style.top = '0';
+        wrapper.style.position = 'absolute';
+        wrapper.style.top = '-9999px';
         wrapper.style.left = '0';
         wrapper.style.width = '800px';
         wrapper.style.zIndex = '-9999';
-        wrapper.style.visibility = 'hidden';
+        // wrapper.style.visibility = 'hidden'; // Removed as it causes blank PDF
         document.body.appendChild(wrapper);
 
         const opt = {

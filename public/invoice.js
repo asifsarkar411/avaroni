@@ -218,7 +218,7 @@ async function triggerPDFDownload(htmlContent, fileName) {
     // We append it to body temporarily off-screen so html2pdf can render it correctly
     wrapper.style.position = 'absolute';
     wrapper.style.left = '-9999px';
-    wrapper.style.top = '0';
+    wrapper.style.top = '-9999px';
     document.body.appendChild(wrapper);
 
     const opt = {
