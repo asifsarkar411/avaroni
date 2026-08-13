@@ -513,7 +513,8 @@
                     </div>
                     <div class="invoice-title-wrapper">
                         <h2 class="invoice-title">INVOICE</h2>
-                        <div class="invoice-meta">Order No: <strong>\${order.orderNumber}</strong></div>
+                        <div class="invoice-meta" style="font-size: 15px; font-weight: 800; color: var(--primary);">INVOICE \${(String(order.orderNumber || order._id || '1').replace(/\\D/g, '') || String(order.orderNumber || '1').slice(-7)).padStart(7, '0')}</div>
+                        <div class="invoice-meta">Order Ref: <strong>\${order.orderNumber}</strong></div>
                         <div class="invoice-meta">Date: <strong>\${orderDate}</strong></div>
                     </div>
                 </div>

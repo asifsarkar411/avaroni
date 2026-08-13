@@ -2,6 +2,30 @@
 // AVARONI PREMIUM INVOICE GENERATOR
 // ==========================================
 
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            return resolve();
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+async function ensureLibraries() {
+    const promises = [];
+    if (!window.html2canvas) {
+        promises.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'));
+    }
+    if (!window.jspdf) {
+        promises.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'));
+    }
+    await Promise.all(promises);
+}
+
 async function generatePDFInvoice(order) {
     if (!order) {
         console.error("Cannot generate invoice: No order data provided.");
@@ -11,6 +35,11 @@ async function generatePDFInvoice(order) {
     const orderDate = new Date(order.orderDate || order.createdAt || Date.now()).toLocaleDateString('en-GB', {
         day: '2-digit', month: 'short', year: 'numeric'
     });
+
+    let rawNum = order.orderNumber || order._id || '1';
+    let cleanDigits = String(rawNum).replace(/\D/g, '');
+    if (!cleanDigits) cleanDigits = String(rawNum).slice(-7);
+    const invoiceDisplayNum = cleanDigits.padStart(7, '0');
 
     let itemsHtml = '';
     let subtotal = 0;
@@ -78,10 +107,10 @@ async function generatePDFInvoice(order) {
             <div style="height: 8px; width: 100%; background: linear-gradient(90deg, #0f172a, ${dynamicAccent}, #0f172a); position: relative; z-index: 1;"></div>
 
             <div style="padding: 28px 35px 20px; position: relative; z-index: 1; box-sizing: border-box;">
-                <!-- Header Section with Round Brand Logo -->
+                <!-- Header Section with Round Brand Logo & Invoice Number Box -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="./img/profile_image.jpg" alt="AVARONI Logo" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='/img/profile_image.jpg';">
+                        <img src="/img/profile_image.jpg" alt="AVARONI Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='./img/profile_image.jpg';">
                         <div>
                             <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.1;">
                                 AVARONI
@@ -90,9 +119,10 @@ async function generatePDFInvoice(order) {
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="display: inline-block; background: #f8fafc; padding: 8px 18px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                            <h2 style="margin: 0 0 2px; font-size: 18px; font-weight: 800; letter-spacing: 2px; color: ${dynamicAccent};">INVOICE</h2>
-                            <p style="margin: 0; font-size: 12px; color: #475569; font-weight: 700;"># ${order.orderNumber}</p>
+                        <div style="display: inline-block; background: #f8fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: right;">
+                            <h2 style="margin: 0 0 3px; font-size: 16px; font-weight: 800; letter-spacing: 2px; color: ${dynamicAccent};">INVOICE</h2>
+                            <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 800; letter-spacing: 0.5px;">INVOICE ${invoiceDisplayNum}</p>
+                            <p style="margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: 600;">Order: ${order.orderNumber || order._id}</p>
                         </div>
                     </div>
                 </div>
@@ -208,7 +238,7 @@ async function generatePDFInvoice(order) {
     `;
 
     try {
-        await triggerPDFDownload(invoiceHtml, `AVARONI_Invoice_${order.orderNumber}.pdf`);
+        await triggerPDFDownload(invoiceHtml, `AVARONI_Invoice_${invoiceDisplayNum}.pdf`);
     } catch (e) {
         console.error("PDF generation error:", e);
         throw e;
@@ -216,25 +246,16 @@ async function generatePDFInvoice(order) {
 }
 
 async function triggerPDFDownload(htmlContent, fileName) {
-    // Ensure html2pdf bundle is loaded
-    if (!window.html2pdf) {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        document.head.appendChild(script);
-        await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-        });
-    }
+    await ensureLibraries();
 
     return new Promise((resolve, reject) => {
-        // Create an isolated completely offscreen iframe (NO popup will ever be visible on screen)
+        // Create an isolated hidden iframe
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
         iframe.style.top = '0';
         iframe.style.left = '-99999px';
         iframe.style.width = '800px';
-        iframe.style.height = '1200px';
+        iframe.style.height = '1400px';
         iframe.style.border = 'none';
         iframe.style.opacity = '0';
         iframe.style.pointerEvents = 'none';
@@ -261,28 +282,50 @@ async function triggerPDFDownload(htmlContent, fileName) {
         `);
         iframeDoc.close();
 
-        // Wait a brief tick for iframe to parse HTML and fonts
+        // Wait a short tick for iframe to render fonts and image
         setTimeout(async () => {
             try {
                 const targetElement = iframeDoc.getElementById('invoice-doc') || iframeDoc.body;
                 
-                const opt = {
-                    margin: 0,
-                    filename: fileName,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        logging: false,
-                        width: 800,
-                        windowWidth: 800,
-                        scrollY: 0,
-                        scrollX: 0
-                    },
-                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                };
+                const canvas = await window.html2canvas(targetElement, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    width: 800,
+                    windowWidth: 800,
+                    scrollY: 0,
+                    scrollX: 0
+                });
 
-                await window.html2pdf().set(opt).from(targetElement).save();
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                
+                if (!jsPDFConstructor) {
+                    throw new Error("jsPDF library not available");
+                }
+
+                const pdf = new jsPDFConstructor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+                const pdfPageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                
+                if (pdfHeight <= pdfPageHeight) {
+                    // Fits perfectly on single page with 100% full width coverage
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                } else {
+                    // Multi-page slicing if order has many items
+                    let heightLeft = pdfHeight;
+                    let position = 0;
+                    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pdfPageHeight;
+                    while (heightLeft > 0) {
+                        position -= pdfPageHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                        heightLeft -= pdfPageHeight;
+                    }
+                }
+                pdf.save(fileName);
                 resolve();
             } catch (err) {
                 console.error("PDF generation error:", err);
@@ -292,7 +335,7 @@ async function triggerPDFDownload(htmlContent, fileName) {
                     iframe.parentNode.removeChild(iframe);
                 }
             }
-        }, 180);
+        }, 220);
     });
 }
 
