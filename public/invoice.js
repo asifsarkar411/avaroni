@@ -22,12 +22,22 @@ async function generatePDFInvoice(order) {
         const itemTotal = price * quantity;
         subtotal += itemTotal;
         
-        let itemDetails = item.name || 'Product';
+        let itemTitle = 'Product Item';
+        if (item) {
+            if (typeof item === 'string') {
+                itemTitle = item;
+            } else {
+                itemTitle = item.name || item.dressName || item.productName || item.title || (item.product && (item.product.name || item.product.title)) || 'Product Item';
+            }
+        }
+        
         let extras = [];
         if (item.size || item.selectedSize) extras.push(`Size: ${item.size || item.selectedSize}`);
         if (item.color || item.colour || item.selectedColour) extras.push(`Color: ${item.color || item.colour || item.selectedColour}`);
+        
+        let itemDetails = `<span style="font-weight: 700; color: #0f172a; font-size: 13px;">${itemTitle}</span>`;
         if (extras.length > 0) {
-            itemDetails += `<br><span style="font-size: 11px; color: #8892b0; margin-top: 3px; display: inline-block;">${extras.join(' &bull; ')}</span>`;
+            itemDetails += `<br><span style="font-size: 11px; color: #64748b; margin-top: 3px; display: inline-block;">${extras.join(' &bull; ')}</span>`;
         }
 
         const rowBg = index % 2 === 0 ? 'background: #ffffff;' : 'background: #f8fafc;';
@@ -35,7 +45,7 @@ async function generatePDFInvoice(order) {
         itemsHtml += `
             <tr style="${rowBg} border-bottom: 1px solid #f1f5f9;">
                 <td style="padding: 10px 14px; font-size: 12px; color: #64748b; vertical-align: middle;">${String(index + 1).padStart(2, '0')}</td>
-                <td style="padding: 10px 14px; font-size: 13px; color: #1e293b; font-weight: 600; vertical-align: middle;">${itemDetails}</td>
+                <td style="padding: 10px 14px; vertical-align: middle;">${itemDetails}</td>
                 <td style="padding: 10px 14px; text-align: center; font-size: 12px; color: #64748b; font-weight: 600; vertical-align: middle;">${quantity}</td>
                 <td style="padding: 10px 14px; text-align: right; font-size: 12px; color: #64748b; font-weight: 600; vertical-align: middle;">৳${price.toLocaleString()}</td>
                 <td style="padding: 10px 14px; text-align: right; font-size: 13px; color: #0f172a; font-weight: 700; vertical-align: middle;">৳${itemTotal.toLocaleString()}</td>
@@ -67,15 +77,17 @@ async function generatePDFInvoice(order) {
             <!-- Top Header Accent -->
             <div style="height: 8px; width: 100%; background: linear-gradient(90deg, #0f172a, ${dynamicAccent}, #0f172a); position: relative; z-index: 1;"></div>
 
-            <div style="padding: 30px 35px 20px; position: relative; z-index: 1; box-sizing: border-box;">
-                <!-- Header Section -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                    <div>
-                        <h1 style="margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                            <span style="display: inline-block; width: 24px; height: 24px; background: ${dynamicAccent}; border-radius: 6px;"></span>
-                            AVARONI
-                        </h1>
-                        <p style="margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: 500; letter-spacing: 0.5px;">Premium E-Commerce Platform</p>
+            <div style="padding: 28px 35px 20px; position: relative; z-index: 1; box-sizing: border-box;">
+                <!-- Header Section with Round Brand Logo -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="./img/profile_image.jpg" alt="AVARONI Logo" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid ${dynamicAccent}; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onerror="this.src='/img/profile_image.jpg';">
+                        <div>
+                            <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.1;">
+                                AVARONI
+                            </h1>
+                            <p style="margin: 3px 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Premium Fashion & Lifestyle</p>
+                        </div>
                     </div>
                     <div style="text-align: right;">
                         <div style="display: inline-block; background: #f8fafc; padding: 8px 18px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -139,7 +151,7 @@ async function generatePDFInvoice(order) {
                         <thead>
                             <tr style="background: #0f172a;">
                                 <th style="color: #ffffff; padding: 9px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 40px;">#</th>
-                                <th style="color: #ffffff; padding: 9px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Description</th>
+                                <th style="color: #ffffff; padding: 9px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Item / Dress Name</th>
                                 <th style="color: #ffffff; padding: 9px 14px; text-align: center; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 60px;">Qty</th>
                                 <th style="color: #ffffff; padding: 9px 14px; text-align: right; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 110px;">Price</th>
                                 <th style="color: #ffffff; padding: 9px 14px; text-align: right; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; width: 120px;">Total</th>

@@ -504,9 +504,12 @@
 
             const content = \`
                 <div class="header">
-                    <div class="brand-section">
-                        <h1 class="brand-name">AVARONI</h1>
-                        <div class="brand-tagline">Premium Fashion & Beauty</div>
+                    <div class="brand-section" style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+                        <img src="./img/profile_image.jpg" alt="AVARONI" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);" onerror="this.src='/img/profile_image.jpg';">
+                        <div>
+                            <h1 class="brand-name" style="margin: 0; line-height: 1.1;">AVARONI</h1>
+                            <div class="brand-tagline">Premium Fashion & Beauty</div>
+                        </div>
                     </div>
                     <div class="invoice-title-wrapper">
                         <h2 class="invoice-title">INVOICE</h2>
