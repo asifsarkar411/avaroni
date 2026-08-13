@@ -647,6 +647,7 @@ async function fetchManageProducts() {
         }
 
         currentInventoryProducts = data.products;
+        renderLowStockCard(data.products);
 
         if (data.products.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products in inventory.</td></tr>';
@@ -3439,4 +3440,33 @@ function renderDeadClicksTable(deadClicks) {
             </tr>
         `;
     });
+}
+
+function renderLowStockCard(products) {
+    const container = document.getElementById('low-stock-container');
+    if (!container) return;
+
+    const lowStock = products.filter(p => p.stockQuantity <= 5).sort((a, b) => a.stockQuantity - b.stockQuantity);
+
+    if (lowStock.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #4caf50; margin-top: 20px;">All products are well stocked.</div>';
+        return;
+    }
+
+    let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+    lowStock.forEach(prod => {
+        const color = prod.stockQuantity === 0 ? '#dc3545' : '#ffc107';
+        html += `
+            <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;">
+                <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;" title="${prod.name}">
+                    ${prod.name}
+                </span>
+                <span style="background-color: ${color}; color: ${prod.stockQuantity === 0 ? 'white' : 'black'}; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                    ${prod.stockQuantity}
+                </span>
+            </li>
+        `;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
 }
