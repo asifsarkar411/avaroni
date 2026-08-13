@@ -776,7 +776,8 @@ app.get('/api/user/auth/me', async (req, res) => {
                     username: user.username,
                     email: user.email || '',
                     phone: user.phone || '',
-                    avatar: user.avatar || ''
+                    avatar: user.avatar || '',
+                    address: user.address || ''
                 }
             });
         });
@@ -815,7 +816,8 @@ app.put('/api/user/profile', async (req, res) => {
                     username: user.username,
                     email: user.email || '',
                     phone: user.phone || '',
-                    avatar: user.avatar || ''
+                    avatar: user.avatar || '',
+                    address: user.address || ''
                 }
             });
         });
