@@ -65,8 +65,14 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = 'admin-login.html';
         return; // Important: Stops the rest of the script from running if not logged in
     } else {
+        // Run validation and initial dashboard fetches
         showDashboard().catch(err => console.error('Dashboard init error:', err));
+        
+        // Restore tab
+        const savedTab = localStorage.getItem('activeAdminTab') || 'dashboard';
+        switchTab(savedTab);
     }
+
 
     // 2. Attach Static Event Listeners
     const logoutBtn = document.getElementById('logout-btn');
@@ -528,6 +534,7 @@ function initMobileAdminSidebar() {
 }
 
 function switchTab(tabName) {
+    localStorage.setItem('activeAdminTab', tabName);
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
