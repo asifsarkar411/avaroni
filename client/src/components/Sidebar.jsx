@@ -6,6 +6,7 @@ import { getImageUrl } from '@/utils/image';
 export default function Sidebar({ isOpen, onClose }) {
     const [categories, setCategories] = useState([]);
     const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
+    const [brandName, setBrandName] = useState('AVARONI');
 
     useEffect(() => {
         async function fetchSettingsAndCategories() {
@@ -21,8 +22,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 }
 
                 const setData = await setRes.json();
-                if (setData.success && setData.settings.brandLogo) {
-                    setBrandLogo(setData.settings.brandLogo);
+                if (setData.success) {
+                    if (setData.settings.brandLogo) setBrandLogo(setData.settings.brandLogo);
+                    if (setData.settings.brandName) setBrandName(setData.settings.brandName);
                 }
             } catch (err) {
                 console.error("Sidebar category fetch error", err);
@@ -36,7 +38,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="sidebar-header">
                 <Link href="/" className="sidebar-brand" onClick={onClose}>
                     <img src={brandLogo} alt="Logo" className="sidebar-logo" />
-                    <span>AVARONI</span>
+                    <span>{brandName}</span>
                 </Link>
                 <a href="#" onClick={(e) => { e.preventDefault(); onClose(); }} className="close-btn">&times;</a>
             </div>

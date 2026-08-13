@@ -147,6 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const brandLogoForm = document.getElementById('brand-logo-form');
     if (brandLogoForm) brandLogoForm.addEventListener('submit', handleChangeBrandLogo);
 
+    const brandNameForm = document.getElementById('brand-name-form');
+    if (brandNameForm) brandNameForm.addEventListener('submit', handleChangeBrandName);
+
 
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
@@ -261,9 +264,15 @@ async function fetchSettings() {
     try {
         const response = await fetch('/api/settings');
         const data = await response.json();
-        if (data.success && data.settings.brandLogo) {
-            const logoPreview = document.getElementById('current-brand-logo-preview');
-            if (logoPreview) logoPreview.src = data.settings.brandLogo;
+        if (data.success) {
+            if (data.settings.brandLogo) {
+                const logoPreview = document.getElementById('current-brand-logo-preview');
+                if (logoPreview) logoPreview.src = data.settings.brandLogo;
+            }
+            if (data.settings.brandName) {
+                const brandNameInput = document.getElementById('brand-name-input');
+                if (brandNameInput) brandNameInput.value = data.settings.brandName;
+            }
         }
     } catch (err) {
         console.error("Error fetching settings:", err);
@@ -293,6 +302,8 @@ async function fetchDashboardStats() {
             const countReturns = document.getElementById('count-returns');
             const countMessages = document.getElementById('count-messages');
             const totalRevenue = document.getElementById('total-revenue');
+            const totalExpense = document.getElementById('total-expense');
+            const totalProfit = document.getElementById('total-profit');
 
             if (countOrders) countOrders.innerText = data.stats.ordersCount || 0;
             if (countProducts) countProducts.innerText = data.stats.productsCount || 0;
@@ -301,6 +312,8 @@ async function fetchDashboardStats() {
             if (countReturns) countReturns.innerText = data.stats.returnsCount || 0;
             if (countMessages) countMessages.innerText = data.stats.messagesCount || 0;
             if (totalRevenue) totalRevenue.innerText = Number(data.stats.totalRevenue || 0).toLocaleString();
+            if (totalExpense) totalExpense.innerText = Number(data.stats.totalExpense || 0).toLocaleString();
+            if (totalProfit) totalProfit.innerText = Number(data.stats.totalProfit || 0).toLocaleString();
         }
     } catch (err) {
         console.error("Error loading dashboard stats:", err);
@@ -760,6 +773,7 @@ async function handleAddProduct(e) {
 
     const payload = {
         name: document.getElementById('prod-name').value,
+        buyingPrice: document.getElementById('prod-buying-price') ? document.getElementById('prod-buying-price').value : 0,
         price: document.getElementById('prod-price').value,
         category: document.getElementById('prod-category').value,
         subcategory: document.getElementById('prod-subcategory').value,
@@ -2213,6 +2227,7 @@ async function openEditModal(id) {
 
     document.getElementById('edit-prod-id').value = prod._id;
     document.getElementById('edit-prod-name').value = prod.name;
+    if (document.getElementById('edit-prod-buying-price')) document.getElementById('edit-prod-buying-price').value = prod.buyingPrice || 0;
     document.getElementById('edit-prod-price').value = prod.price;
     document.getElementById('edit-prod-stock').value = prod.stockQuantity;
     document.getElementById('edit-prod-size').value = prod.size || '';
@@ -2296,6 +2311,7 @@ async function handleEditProductSubmit(e) {
 
     const payload = {
         name: document.getElementById('edit-prod-name').value,
+        buyingPrice: document.getElementById('edit-prod-buying-price') ? document.getElementById('edit-prod-buying-price').value : 0,
         price: document.getElementById('edit-prod-price').value,
         category: document.getElementById('edit-prod-category').value,
         subcategory: document.getElementById('edit-prod-subcategory').value,
@@ -2526,6 +2542,35 @@ async function handleChangeBrandLogo(e) {
     } catch (err) {
         console.error("Change Brand Logo Error:", err);
         showToast("Error processing the image.", "error");
+    }
+}
+
+async function handleChangeBrandName(e) {
+    e.preventDefault();
+    const brandNameInput = document.getElementById('brand-name-input');
+    const brandName = brandNameInput.value.trim();
+    if (!brandName) {
+        showToast("Please enter a brand name.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/brandName', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brandName })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Brand name updated successfully! It will now appear across the entire website.");
+        } else {
+            showToast(data.message || "Failed to update brand name.", "error");
+        }
+    } catch (err) {
+        console.error("Change Brand Name Error:", err);
+        showToast("Error updating brand name.", "error");
     }
 }
 

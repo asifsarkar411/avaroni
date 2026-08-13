@@ -907,6 +907,24 @@
                                 <i class="fas fa-hand-holding-usd"></i>
                             </div>
                         </div>
+                        <div class="stat-card" data-aos="fade-up">
+                            <div class="stat-info">
+                                <h3>Total Expense</h3>
+                                <div class="stat-value">৳<span id="total-expense">0</span></div>
+                            </div>
+                            <div class="stat-icon" style="background-color: #fdeaea; color: #f44336;">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-aos="fade-up">
+                            <div class="stat-info">
+                                <h3>Total Profit</h3>
+                                <div class="stat-value">৳<span id="total-profit">0</span></div>
+                            </div>
+                            <div class="stat-icon" style="background-color: #e8f5e9; color: #4caf50;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 📊 ADMIN ANALYTICS GRAPHS GRID -->
@@ -1169,8 +1187,16 @@
                                 <input type="text" id="prod-name" placeholder="Product Name (e.g., Red Silk Saree)" required>
                             </div>
                             <div class="form-group">
-                                <label for="prod-price">Price in BDT</label>
-                                <input type="number" id="prod-price" placeholder="Price in BDT" required>
+                                <div class="form-row" style="display: flex; gap: 15px;">
+                                    <div style="flex:1;">
+                                        <label>Buying Price (৳)</label>
+                                        <input type="number" id="prod-buying-price" placeholder="Buying Price in BDT" value="0" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label for="prod-price">Selling Price (৳)</label>
+                                        <input type="number" id="prod-price" placeholder="Price in BDT" required>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="prod-stock">Amount in Stock</label>
@@ -1674,6 +1700,19 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Form: Change Brand Name -->
+                            <div style="background: #fafafa; padding: 20px; border-radius: 10px; border: 1px solid #eaeaea;">
+                                <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c2c3e;"><i class="fas fa-tag" style="color: var(--primary); margin-right: 8px;"></i> Change Brand Name</h3>
+                                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">This name will appear across the entire website — Navbar, Footer, Sidebar, Invoices, and all pages.</p>
+                                <form id="brand-name-form">
+                                    <div class="form-group" style="margin-bottom: 12px;">
+                                        <label for="brand-name-input">Brand Name:</label>
+                                        <input type="text" id="brand-name-input" placeholder="e.g. AVARONI" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;">
+                                    </div>
+                                    <button type="submit" class="btn" style="background: #111111;"><i class="fas fa-save"></i> Save Brand Name</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
@@ -1848,9 +1887,16 @@
 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Price (৳):</label>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Buying Price (৳):</label>
+                        <input type="number" id="edit-prod-buying-price" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Selling Price (৳):</label>
                         <input type="number" id="edit-prod-price" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
                     </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600;">Stock Quantity:</label>
                         <input type="number" id="edit-prod-stock" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">

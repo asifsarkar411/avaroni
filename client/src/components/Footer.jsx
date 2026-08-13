@@ -1,12 +1,31 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Footer() {
+  const [brandName, setBrandName] = useState('AVARONI');
+
+  useEffect(() => {
+    async function fetchBrandName() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success && data.settings.brandName) {
+          setBrandName(data.settings.brandName);
+        }
+      } catch (err) {
+        // Fallback to default
+      }
+    }
+    fetchBrandName();
+  }, []);
+
   return (
     <>
     <footer className="site-footer">
         <div className="footer-container">
             <div className="footer-section">
-                <h3>AVARONI</h3>
+                <h3>{brandName}</h3>
                 <p>Elegance Redefined for Every Moment.</p>
                 <div className="social-icons">
                     <a href="https://www.facebook.com/profile.php?id=61572879166588#" target="_blank" rel="noopener noreferrer" className="social-facebook"><i className="fab fa-facebook-f"></i></a>
@@ -30,7 +49,7 @@ export default function Footer() {
             </div>
         </div>
         <div className="footer-bottom" style={{ textAlign: 'center', padding: '20px', color: '#777', fontSize: '14px' }}>
-            <p>&copy; {new Date().getFullYear()} AVARONI. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} {brandName}. All rights reserved.</p>
             <p style={{ marginTop: '5px' }}>
                 <a href="https://port-v-eno-m.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#777', textDecoration: 'underline' }}>
                     Developed By "SM FERDOUS AHMMED"
@@ -54,3 +73,4 @@ export default function Footer() {
     </>
   );
 }
+

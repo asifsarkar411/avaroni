@@ -1589,6 +1589,7 @@ app.post(['/api/orders', '/api/checkout'], async (req, res) => {
             verifiedCartItems.push({
                 id: dbProduct._id,
                 name: dbProduct.name,
+                buyingPrice: Number(dbProduct.buyingPrice) || 0,
                 price: dbPrice,
                 quantity: requestedQty,
                 image: formatImageUrl(dbProduct.imageUrl)
@@ -1842,6 +1843,25 @@ app.put('/api/admin/settings/logo', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Update global brand name
+app.put('/api/admin/settings/brandName', verifyAdminToken, async (req, res) => {
+    try {
+        const { brandName } = req.body;
+        if (!brandName || !brandName.trim()) return res.status(400).json({ success: false, message: "Brand name is required." });
+        
+        await Settings.findOneAndUpdate(
+            { key: 'brandName' },
+            { value: brandName.trim() },
+            { upsert: true, new: true }
+        );
+        
+        res.json({ success: true, message: "Brand name updated successfully." });
+    } catch (err) {
+        console.error("Update Brand Name Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
 // Get global settings (public)
 app.get('/api/settings', async (req, res) => {
     try {
@@ -2040,6 +2060,7 @@ app.post('/api/admin/products', verifyAdminToken, async (req, res) => {
 
         const productData = {
             name: bodyData.name, 
+            buyingPrice: Number(bodyData.buyingPrice) || 0,
             price: Number(bodyData.price), 
             category: bodyData.category,
             subcategory: bodyData.subcategory || "",
@@ -2087,7 +2108,7 @@ app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
 // Edit / Update Product (Admin)
 app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
     try {
-        const { name, price, category, subcategory, size, colour, brand, weight, care, additionalInfo, description, stock, discountType, discountValue, image, isTopSelling, isTrending, isTopRated } = req.body;
+        const { name, buyingPrice, price, category, subcategory, size, colour, brand, weight, care, additionalInfo, description, stock, discountType, discountValue, image, isTopSelling, isTrending, isTopRated } = req.body;
         
         const product = await Product.findById(req.params.id);
         if (!product) {
@@ -2095,6 +2116,7 @@ app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
         }
 
         if (name !== undefined) product.name = name.trim();
+        if (buyingPrice !== undefined) product.buyingPrice = Number(buyingPrice);
         if (price !== undefined) product.price = Number(price);
         if (category !== undefined) product.category = category;
         if (subcategory !== undefined) product.subcategory = subcategory;
@@ -2155,6 +2177,25 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
         ]);
         const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
 
+        const expenseData = await Order.aggregate([
+            { $unwind: "$cartItems" },
+            {
+                $group: {
+                    _id: null,
+                    totalExpense: { 
+                        $sum: { 
+                            $multiply: [
+                                { $toDouble: { $ifNull: ["$cartItems.buyingPrice", 0] } },
+                                { $toDouble: { $ifNull: ["$cartItems.quantity", 1] } }
+                            ] 
+                        } 
+                    }
+                }
+            }
+        ]);
+        const totalExpense = expenseData.length > 0 ? expenseData[0].totalExpense : 0;
+        const totalProfit = totalRevenue - totalExpense;
+
         res.json({
             success: true,
             stats: {
@@ -2164,7 +2205,9 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
                 slidersCount,
                 returnsCount,
                 messagesCount,
-                totalRevenue
+                totalRevenue,
+                totalExpense,
+                totalProfit
             }
         });
     } catch (error) {

@@ -293,6 +293,8 @@ async function fetchDashboardStats() {
             const countReturns = document.getElementById('count-returns');
             const countMessages = document.getElementById('count-messages');
             const totalRevenue = document.getElementById('total-revenue');
+            const totalExpense = document.getElementById('total-expense');
+            const totalProfit = document.getElementById('total-profit');
 
             if (countOrders) countOrders.innerText = data.stats.ordersCount || 0;
             if (countProducts) countProducts.innerText = data.stats.productsCount || 0;
@@ -301,6 +303,8 @@ async function fetchDashboardStats() {
             if (countReturns) countReturns.innerText = data.stats.returnsCount || 0;
             if (countMessages) countMessages.innerText = data.stats.messagesCount || 0;
             if (totalRevenue) totalRevenue.innerText = Number(data.stats.totalRevenue || 0).toLocaleString();
+            if (totalExpense) totalExpense.innerText = Number(data.stats.totalExpense || 0).toLocaleString();
+            if (totalProfit) totalProfit.innerText = Number(data.stats.totalProfit || 0).toLocaleString();
         }
     } catch (err) {
         console.error("Error loading dashboard stats:", err);
@@ -760,6 +764,7 @@ async function handleAddProduct(e) {
 
     const payload = {
         name: document.getElementById('prod-name').value,
+        buyingPrice: document.getElementById('prod-buying-price') ? document.getElementById('prod-buying-price').value : 0,
         price: document.getElementById('prod-price').value,
         category: document.getElementById('prod-category').value,
         subcategory: document.getElementById('prod-subcategory').value,
@@ -2213,6 +2218,7 @@ async function openEditModal(id) {
 
     document.getElementById('edit-prod-id').value = prod._id;
     document.getElementById('edit-prod-name').value = prod.name;
+    if (document.getElementById('edit-prod-buying-price')) document.getElementById('edit-prod-buying-price').value = prod.buyingPrice || 0;
     document.getElementById('edit-prod-price').value = prod.price;
     document.getElementById('edit-prod-stock').value = prod.stockQuantity;
     document.getElementById('edit-prod-size').value = prod.size || '';
@@ -2296,6 +2302,7 @@ async function handleEditProductSubmit(e) {
 
     const payload = {
         name: document.getElementById('edit-prod-name').value,
+        buyingPrice: document.getElementById('edit-prod-buying-price') ? document.getElementById('edit-prod-buying-price').value : 0,
         price: document.getElementById('edit-prod-price').value,
         category: document.getElementById('edit-prod-category').value,
         subcategory: document.getElementById('edit-prod-subcategory').value,

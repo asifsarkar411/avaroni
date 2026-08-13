@@ -14,6 +14,7 @@ export default function Navbar({ onMenuClick }) {
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
+    const [brandName, setBrandName] = useState('AVARONI');
     const searchRef = useRef(null);
 
     useEffect(() => {
@@ -30,8 +31,9 @@ export default function Navbar({ onMenuClick }) {
                 }
 
                 const setData = await setRes.json();
-                if (setData.success && setData.settings.brandLogo) {
-                    setBrandLogo(setData.settings.brandLogo);
+                if (setData.success) {
+                    if (setData.settings.brandLogo) setBrandLogo(setData.settings.brandLogo);
+                    if (setData.settings.brandName) setBrandName(setData.settings.brandName);
                 }
 
             } catch (err) {
@@ -87,7 +89,7 @@ export default function Navbar({ onMenuClick }) {
         <nav className="navbar">
             <Link href="/" className="logo">
                 <img src={brandLogo} alt="Logo" className="nav-logo" />
-                <b>AVARONI</b>
+                <b>{brandName}</b>
             </Link>
             
             <div className="search-bar-container" ref={searchRef}>
