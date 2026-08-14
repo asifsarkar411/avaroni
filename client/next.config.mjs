@@ -24,7 +24,6 @@ const nextConfig = {
         ]
     },
     async rewrites() {
-        const isDev = process.env.NODE_ENV !== 'production';
         const rewrites = [
             { source: '/about', destination: '/about.html' },
             { source: '/admin-login', destination: '/admin-login.html' },

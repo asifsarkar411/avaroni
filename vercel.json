@@ -1,34 +1,33 @@
 {
-    "version":  2,
-    "builds":  [
-                   {
-                       "src":  "client/package.json",
-                       "use":  "@vercel/next"
-                   },
-                   {
-                       "src":  "server.js",
-                       "use":  "@vercel/node"
-                   }
-               ],
-    "headers":  [
-                    {
-                        "source":  "/(.*)",
-                        "headers":  [
-                                        {
-                                            "key":  "Content-Security-Policy",
-                                            "value":  "default-src \u0027self\u0027; script-src \u0027self\u0027 \u0027unsafe-inline\u0027 \u0027unsafe-eval\u0027 https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://*.google.com https://cdn.quilljs.com; script-src-elem \u0027self\u0027 \u0027unsafe-inline\u0027 https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://*.google.com https://cdn.quilljs.com; style-src \u0027self\u0027 \u0027unsafe-inline\u0027 https://fonts.googleapis.com https://cdnjs.cloudflare.com https://accounts.google.com https://cdn.quilljs.com https://cdn.jsdelivr.net; font-src \u0027self\u0027 https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src \u0027self\u0027 data: blob: https:; connect-src \u0027self\u0027 https:; frame-src \u0027self\u0027 https://accounts.google.com; frame-ancestors \u0027self\u0027; object-src \u0027none\u0027; base-uri \u0027self\u0027; form-action \u0027self\u0027;"
-                                        }
-                                    ]
-                    }
-                ],
-    "rewrites":  [
-                     {
-                         "destination":  "/server.js",
-                         "source":  "/api/(.*)"
-                     },
-                     {
-                         "destination":  "/server.js",
-                         "source":  "/uploads/(.*)"
-                     }
-                 ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "client/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js",
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+        "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
+      }
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "client/$1"
+    }
+  ]
 }
