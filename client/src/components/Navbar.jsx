@@ -12,22 +12,36 @@ export default function Navbar({ onMenuClick }) {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState('');
+    const [subcategories, setSubcategories] = useState([]);
+    const [featuredProducts, setFeaturedProducts] = useState([]);
+    const [selectedFilter, setSelectedFilter] = useState('all');
     const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
     const [brandName, setBrandName] = useState('AVARONI');
     const searchRef = useRef(null);
 
     useEffect(() => {
-        async function fetchSettingsAndCategories() {
+        async function fetchInitialData() {
             try {
-                const [catRes, setRes] = await Promise.all([
+                const [catRes, setRes, prodRes] = await Promise.all([
                     fetch('/api/categories'),
-                    fetch('/api/settings')
+                    fetch('/api/settings'),
+                    fetch('/api/products')
                 ]);
                 
                 const catData = await catRes.json();
-                if (catData.success) {
+                if (catData.success && Array.isArray(catData.categories)) {
                     setCategories(catData.categories);
+
+                    // Extract all unique subcategories from categories
+                    const subSet = new Set();
+                    catData.categories.forEach(c => {
+                        if (Array.isArray(c.subcategories)) {
+                            c.subcategories.forEach(s => {
+                                if (s && s.trim()) subSet.add(s.trim());
+                            });
+                        }
+                    });
+                    setSubcategories(Array.from(subSet).sort());
                 }
 
                 const setData = await setRes.json();
@@ -36,11 +50,25 @@ export default function Navbar({ onMenuClick }) {
                     if (setData.settings.brandName) setBrandName(setData.settings.brandName);
                 }
 
+                const prodData = await prodRes.json();
+                if (prodData.success && Array.isArray(prodData.products)) {
+                    setFeaturedProducts(prodData.products.slice(0, 12));
+                    
+                    // Also check products for any additional subcategories
+                    setSubcategories(prev => {
+                        const set = new Set(prev);
+                        prodData.products.forEach(p => {
+                            if (p.subcategory && p.subcategory.trim()) set.add(p.subcategory.trim());
+                        });
+                        return Array.from(set).sort();
+                    });
+                }
+
             } catch (err) {
-                console.error("Navbar category fetch error", err);
+                console.error("Navbar data fetch error", err);
             }
         }
-        fetchSettingsAndCategories();
+        fetchInitialData();
     }, []);
 
     useEffect(() => {
@@ -56,15 +84,33 @@ export default function Navbar({ onMenuClick }) {
     useEffect(() => {
         let active = true;
         const delayDebounceFn = setTimeout(async () => {
-            if (searchQuery.trim().length >= 2 || (selectedCategory && searchQuery.trim().length >= 1)) {
+            if (searchQuery.trim().length >= 2 || (selectedFilter !== 'all' && searchQuery.trim().length >= 1)) {
                 setIsSearching(true);
                 try {
-                    const categoryParam = selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : '';
-                    const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}${categoryParam}`);
+                    let filterParam = '';
+                    if (selectedFilter.startsWith('cat:')) {
+                        filterParam = `&category=${encodeURIComponent(selectedFilter.replace('cat:', ''))}`;
+                    }
+                    const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}${filterParam}`);
                     const data = await res.json();
                     if (active) {
-                        if (data.success) {
-                            setSearchResults(data.products.slice(0, 5));
+                        if (data.success && Array.isArray(data.products)) {
+                            let prods = [...data.products];
+                            
+                            // Subcategory filter
+                            if (selectedFilter.startsWith('sub:')) {
+                                const targetSub = selectedFilter.replace('sub:', '').toLowerCase();
+                                prods = prods.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
+                            }
+
+                            // Price sorting
+                            if (selectedFilter === 'price-asc') {
+                                prods.sort((a, b) => Number(a.price) - Number(b.price));
+                            } else if (selectedFilter === 'price-desc') {
+                                prods.sort((a, b) => Number(b.price) - Number(a.price));
+                            }
+
+                            setSearchResults(prods.slice(0, 8));
                         }
                     }
                 } catch (e) {
@@ -83,7 +129,19 @@ export default function Navbar({ onMenuClick }) {
             active = false;
             clearTimeout(delayDebounceFn);
         };
-    }, [searchQuery, selectedCategory]);
+    }, [searchQuery, selectedFilter]);
+
+    const handleFilterChange = (e) => {
+        const val = e.target.value;
+        setSelectedFilter(val);
+
+        // If user selects a specific product from the filter dropdown
+        if (val.startsWith('prod:')) {
+            const prodId = val.replace('prod:', '');
+            window.dispatchEvent(new CustomEvent('openProductModal', { detail: prodId }));
+            setSelectedFilter('all');
+        }
+    };
 
     return (
         <nav className="navbar">
@@ -96,33 +154,52 @@ export default function Navbar({ onMenuClick }) {
                 <div className="search-bar-inner">
                     <div className="search-input-wrap" style={{ display: 'flex', alignItems: 'center' }}>
                         <select 
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            value={selectedFilter}
+                            onChange={handleFilterChange}
                             className="search-category-select"
-                            disabled={categories.length === 0}
-                            style={{ 
-                                opacity: categories.length === 0 ? 0.7 : 1, 
-                                cursor: categories.length === 0 ? 'not-allowed' : 'pointer',
-                                background: categories.length === 0 ? '#f9f9f9' : 'transparent'
-                            }}
-                            title={categories.length === 0 ? 'Loading categories...' : 'Select a category'}
+                            title="Filter by Categories, Subcategories, or Products"
                         >
-                            {categories.length === 0 ? (
-                                <option value="">Loading...</option>
-                            ) : (
-                                <>
-                                    <option value="">All Categories</option>
+                            <optgroup label="⚡ Quick Filters & Sort">
+                                <option value="all">All Products & Categories</option>
+                                <option value="price-asc">Price: Low to High</option>
+                                <option value="price-desc">Price: High to Low</option>
+                            </optgroup>
+
+                            {categories.length > 0 && (
+                                <optgroup label="📁 Categories">
                                     {categories.map(cat => (
-                                        <option key={cat._id} value={cat.name}>{cat.name}</option>
+                                        <option key={cat._id} value={`cat:${cat.slug || cat.name.toLowerCase()}`}>
+                                            Category: {cat.displayName || cat.name}
+                                        </option>
                                     ))}
-                                </>
+                                </optgroup>
+                            )}
+
+                            {subcategories.length > 0 && (
+                                <optgroup label="🏷️ Subcategories">
+                                    {subcategories.map((sub, idx) => (
+                                        <option key={idx} value={`sub:${sub.toLowerCase()}`}>
+                                            Subcategory: {sub}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+
+                            {featuredProducts.length > 0 && (
+                                <optgroup label="⭐ Top / Featured Products">
+                                    {featuredProducts.map(p => (
+                                        <option key={p._id} value={`prod:${p._id}`}>
+                                            Product: {p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name} (৳{p.price})
+                                        </option>
+                                    ))}
+                                </optgroup>
                             )}
                         </select>
                         <i className="fas fa-search search-bar-icon" style={{ marginLeft: '10px' }}></i>
                         <input 
                             type="text" 
                             id="global-search-input" 
-                            placeholder="Search for products..." 
+                            placeholder="Search for products, categories, or styles..." 
                             autoComplete="off" 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -139,11 +216,12 @@ export default function Navbar({ onMenuClick }) {
                 {(searchResults.length > 0 || isSearching) && (
                     <div id="search-results-dropdown" className="search-results-dropdown active" style={{display: 'block'}}>
                         {isSearching ? (
-                            <div style={{padding: '15px', textAlign: 'center', color: '#666'}}>Searching...</div>
+                            <div style={{padding: '15px', textAlign: 'center', color: '#666'}}>
+                                <i className="fas fa-spinner fa-spin" style={{marginRight: '8px', color: '#e60050'}}></i> Searching products...
+                            </div>
                         ) : (
                             searchResults.map(product => (
                                 <div key={product._id} className="search-result-item" onClick={() => {
-                                    // Trigger modal open via custom event
                                     window.dispatchEvent(new CustomEvent('openProductModal', { detail: product._id }));
                                     setSearchQuery('');
                                     setSearchResults([]);
@@ -151,13 +229,18 @@ export default function Navbar({ onMenuClick }) {
                                     <img src={getImageUrl(product.imageUrl)} alt={product.name} />
                                     <div className="search-result-info">
                                         <h4>{product.name}</h4>
-                                        <p>BDT {product.price}</p>
+                                        <span style={{ fontSize: '12px', color: '#888' }}>
+                                            {product.category}{product.subcategory ? ` • ${product.subcategory}` : ''}
+                                        </span>
                                     </div>
+                                    <span className="search-result-price" style={{ fontWeight: '700', color: '#e60050', marginLeft: 'auto' }}>
+                                        ৳{product.price}
+                                    </span>
                                 </div>
                             ))
                         )}
                         {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
-                            <div style={{padding: '15px', textAlign: 'center', color: '#666'}}>No products found</div>
+                            <div style={{padding: '15px', textAlign: 'center', color: '#666'}}>No products found matching &quot;{searchQuery}&quot;</div>
                         )}
                     </div>
                 )}

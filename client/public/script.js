@@ -1265,48 +1265,90 @@ async function loadNewArrivals() {
 // ==========================================
 // GLOBAL SEARCH & FILTER FUNCTIONALITY
 // ==========================================
-let searchTimeout = null;
-
-async function populateGlobalFilterSubcategories() {
-    const subGroup = document.getElementById('filter-subcategories-group');
-    if (!subGroup) return;
+async function populateGlobalFilterOptions() {
+    const filterSelect = document.getElementById('global-filter-select');
+    if (!filterSelect) return;
 
     try {
-        const subcategoriesSet = new Set();
-
-        const response = await fetch('/api/categories');
-        const data = await response.json();
-
-        if (data.success && Array.isArray(data.categories)) {
-            data.categories.forEach(cat => {
-                if (Array.isArray(cat.subcategories)) {
-                    cat.subcategories.forEach(sub => {
-                        if (sub && sub.trim()) subcategoriesSet.add(sub.trim());
-                    });
-                }
-            });
-        }
-
-        // Also check products for custom subcategories
-        const prodRes = await fetch('/api/products');
+        const [catRes, prodRes] = await Promise.all([
+            fetch('/api/categories'),
+            fetch('/api/products')
+        ]);
+        const catData = await catRes.json();
         const prodData = await prodRes.json();
-        if (prodData.success && Array.isArray(prodData.products)) {
-            prodData.products.forEach(p => {
-                if (p.subcategory && p.subcategory.trim()) {
-                    subcategoriesSet.add(p.subcategory.trim());
-                }
+
+        const categories = (catData.success && Array.isArray(catData.categories)) ? catData.categories : [];
+        const products = (prodData.success && Array.isArray(prodData.products)) ? prodData.products : [];
+
+        // Build unique subcategories set
+        const subcategoriesSet = new Set();
+        categories.forEach(cat => {
+            if (Array.isArray(cat.subcategories)) {
+                cat.subcategories.forEach(sub => {
+                    if (sub && sub.trim()) subcategoriesSet.add(sub.trim());
+                });
+            }
+        });
+        products.forEach(p => {
+            if (p.subcategory && p.subcategory.trim()) {
+                subcategoriesSet.add(p.subcategory.trim());
+            }
+        });
+
+        filterSelect.innerHTML = '';
+
+        // Quick Filters & Sort
+        const sortGroup = document.createElement('optgroup');
+        sortGroup.label = "⚡ Quick Filters & Sort";
+        sortGroup.innerHTML = `
+            <option value="all">All Products & Categories</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="newest">Newest Arrivals</option>
+        `;
+        filterSelect.appendChild(sortGroup);
+
+        // Categories Group
+        if (categories.length > 0) {
+            const catGroup = document.createElement('optgroup');
+            catGroup.label = "📁 Categories";
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = `cat:${(cat.slug || cat.name).toLowerCase()}`;
+                opt.textContent = `Category: ${cat.displayName || cat.name}`;
+                catGroup.appendChild(opt);
             });
+            filterSelect.appendChild(catGroup);
         }
 
-        subGroup.innerHTML = '';
-        subcategoriesSet.forEach(sub => {
-            const opt = document.createElement('option');
-            opt.value = `sub:${sub.toLowerCase()}`;
-            opt.textContent = sub;
-            subGroup.appendChild(opt);
-        });
+        // Subcategories Group
+        if (subcategoriesSet.size > 0) {
+            const subGroup = document.createElement('optgroup');
+            subGroup.label = "🏷️ Subcategories";
+            Array.from(subcategoriesSet).sort().forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = `sub:${sub.toLowerCase()}`;
+                opt.textContent = `Subcategory: ${sub}`;
+                subGroup.appendChild(opt);
+            });
+            filterSelect.appendChild(subGroup);
+        }
+
+        // Featured Products Group
+        if (products.length > 0) {
+            const prodGroup = document.createElement('optgroup');
+            prodGroup.label = "⭐ Popular & Featured Products";
+            products.slice(0, 12).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = `prod:${p._id}`;
+                opt.textContent = `Product: ${p.name.length > 28 ? p.name.substring(0, 28) + '...' : p.name} (৳${p.price})`;
+                prodGroup.appendChild(opt);
+            });
+            filterSelect.appendChild(prodGroup);
+        }
+
     } catch (err) {
-        console.error("Error populating filter subcategories:", err);
+        console.error("Error populating filter options:", err);
     }
 }
 
@@ -1314,7 +1356,7 @@ function initGlobalFilter() {
     const filterSelect = document.getElementById('global-filter-select');
     if (!filterSelect) return;
 
-    populateGlobalFilterSubcategories();
+    populateGlobalFilterOptions();
 
     filterSelect.addEventListener('change', () => {
         applyGlobalFilterAndSort();
@@ -1324,6 +1366,15 @@ function initGlobalFilter() {
 function applyGlobalFilterAndSort() {
     const filterSelect = document.getElementById('global-filter-select');
     if (!filterSelect) return;
+    const val = filterSelect.value;
+
+    // If user clicked a specific featured product
+    if (val.startsWith('prod:')) {
+        const prodId = val.replace('prod:', '');
+        openProductModal(prodId);
+        filterSelect.value = 'all';
+        return;
+    }
 
     const searchInput = document.getElementById('global-search-input');
     const query = searchInput ? searchInput.value.trim() : '';
@@ -1333,14 +1384,25 @@ function applyGlobalFilterAndSort() {
         return;
     }
 
+    // Direct category selection redirect or filter
+    if (val.startsWith('cat:') && query.length === 0) {
+        const catSlug = val.replace('cat:', '');
+        const targetUrl = getCategoryPageUrl(catSlug, catSlug);
+        if (!window.location.pathname.endsWith(targetUrl)) {
+            window.location.href = targetUrl;
+            return;
+        }
+    }
+
     const productContainer = document.getElementById('product-list') || 
                              document.getElementById('products-container') || 
                              document.getElementById('new-arrivals-grid');
 
     if (window.currentMasterProducts && Array.isArray(window.currentMasterProducts) && productContainer) {
-        // Re-render product container respecting the global filter select
-        const activeSubBtn = document.querySelector('#subcategory-filters .filter-btn.active');
-        const currentSub = activeSubBtn ? activeSubBtn.getAttribute('data-sub') : 'all';
+        let currentSub = 'all';
+        if (val.startsWith('sub:')) {
+            currentSub = val.replace('sub:', '');
+        }
         renderFilteredProducts(window.currentMasterProducts, currentSub, productContainer);
     }
 }
@@ -1407,6 +1469,12 @@ async function performSearch(query) {
 
         let products = [...data.products];
 
+        // Apply category filter
+        if (filterVal.startsWith('cat:')) {
+            const targetCat = filterVal.replace('cat:', '').toLowerCase();
+            products = products.filter(p => p.category && p.category.trim().toLowerCase() === targetCat);
+        }
+
         // Apply subcategory filter
         if (filterVal.startsWith('sub:')) {
             const targetSub = filterVal.replace('sub:', '').toLowerCase();
@@ -1418,6 +1486,8 @@ async function performSearch(query) {
             products.sort((a, b) => Number(a.price) - Number(b.price));
         } else if (filterVal === 'price-desc') {
             products.sort((a, b) => Number(b.price) - Number(a.price));
+        } else if (filterVal === 'newest') {
+            products.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         }
 
         if (products.length === 0) {
