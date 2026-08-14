@@ -3,218 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frequently Asked Questions (FAQ) |  AVARONI (Avaroni)</title>
-    <meta name="description" content="Find answers to common questions about ordering, delivery, payment options, and returns at  AVARONI (Avaroni).">
+    <title>Frequently Asked Questions (FAQ) - AVARONI (আভরণী)</title>
+    <meta name="description" content="Find answers to common questions about ordering, delivery times, payment options, return policy, and sizes at AVARONI (আভরণী).">
     
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="AVARONI (Avaroni)">
-    <meta property="og:title" content="Frequently Asked Questions (FAQ) -  AVARONI (Avaroni)">
-    <meta property="og:description" content="Find quick answers to your questions about ordering, shipping, and returns at Avaroni!">
+    <meta property="og:site_name" content="AVARONI (আভরণী)">
+    <meta property="og:title" content="Frequently Asked Questions (FAQ) - AVARONI (আভরণী)">
+    <meta property="og:description" content="Find quick answers to your questions about ordering, shipping, and returns at AVARONI!">
     <meta property="og:image" content="./img/profile_image.jpg">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Frequently Asked Questions (FAQ) -  AVARONI (Avaroni)">
-    <meta name="twitter:description" content="Find quick answers to your questions about ordering, shipping, and returns at Avaroni!">
+    <meta name="twitter:title" content="Frequently Asked Questions (FAQ) - AVARONI (আভরণী)">
+    <meta name="twitter:description" content="Find quick answers to your questions about ordering, shipping, and returns at AVARONI!">
     <meta name="twitter:image" content="./img/profile_image.jpg">
 
+    <link rel="icon" href="./fabicon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+
     <style>
+        body {
+            background-color: #f5f5f7;
+            color: #1a1a1a;
+            font-family: 'Plus Jakarta Sans', 'Outfit', 'Hind Siliguri', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
         .faq-hero {
-            background: linear-gradient(135deg, #e60050 0%, #990035 100%);
-            color: #fff;
-            padding: 50px 20px;
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 50%, #2a111e 100%);
+            color: #ffffff;
+            padding: 65px 20px 55px;
             text-align: center;
-            border-radius: 0 0 20px 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.2);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(230, 0, 80, 0.3);
+        }
+
+        .faq-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(230, 0, 80, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .faq-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(230, 0, 80, 0.2);
+            color: #ff80aa;
+            border: 1px solid rgba(230, 0, 80, 0.4);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
         }
 
         .faq-hero h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .faq-hero h1 span {
+            background: linear-gradient(135deg, #ff4d88 0%, #ff80aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .faq-hero p {
-            font-size: 16px;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto 20px;
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: #d1d5db;
+            max-width: 750px;
+            margin: 0 auto 25px;
+            line-height: 1.6;
         }
 
-        .faq-search-box {
-            max-width: 500px;
+        .faq-search-wrapper {
+            max-width: 580px;
             margin: 0 auto;
             position: relative;
         }
 
-        .faq-search-box input {
+        .faq-search-input {
             width: 100%;
-            padding: 14px 20px 14px 45px;
-            border-radius: 30px;
-            border: none;
+            padding: 16px 20px 16px 52px;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
             font-size: 15px;
+            color: #ffffff;
             outline: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s ease;
             box-sizing: border-box;
         }
 
-        .faq-search-box i {
+        .faq-search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .faq-search-input:focus {
+            border-color: #ff80aa;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 35px rgba(230, 0, 80, 0.3);
+        }
+
+        .faq-search-icon {
             position: absolute;
-            left: 18px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
-            font-size: 16px;
+            color: #ff80aa;
+            font-size: 17px;
         }
 
         .faq-container {
-            max-width: 900px;
-            margin: 0 auto 50px;
+            max-width: 950px;
+            margin: 40px auto 70px;
             padding: 0 20px;
         }
 
-        .faq-categories {
+        /* Filter Pills */
+        .faq-filter-bar {
             display: flex;
             gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .faq-cat-btn {
-            background: #fff;
-            border: 1.5px solid #e0e0e0;
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #555;
+            background: #ffffff;
+            border: 1.5px solid #e5e7eb;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #4b5563;
             cursor: pointer;
             transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
 
-        .faq-cat-btn:hover, .faq-cat-btn.active {
-            background: #e60050;
-            color: #fff;
+        .faq-cat-btn:hover {
             border-color: #e60050;
+            color: #e60050;
+            transform: translateY(-2px);
+        }
+
+        .faq-cat-btn.active {
+            background: linear-gradient(135deg, #e60050 0%, #ff1a6e 100%);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.35);
+        }
+
+        /* Accordion List */
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 50px;
         }
 
         .faq-item {
-            background: #fff;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border: 1px solid #eee;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
             overflow: hidden;
             transition: all 0.3s ease;
         }
 
-        .faq-item:hover {
-            box-shadow: 0 4px 12px rgba(230,0,80,0.12);
+        .faq-item.active {
+            border-color: rgba(230, 0, 80, 0.3);
+            box-shadow: 0 8px 25px rgba(230, 0, 80, 0.08);
         }
 
         .faq-question {
-            padding: 18px 22px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
+            padding: 20px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             user-select: none;
+            gap: 15px;
+            transition: background 0.2s ease;
         }
 
-        .faq-question i {
+        .faq-question:hover {
+            background: #fafafa;
+        }
+
+        .faq-question-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .faq-item.active .faq-question-title {
             color: #e60050;
-            transition: transform 0.3s ease;
-            font-size: 14px;
         }
 
-        .faq-item.active .faq-question i {
+        .faq-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #fdf2f6;
+            color: #e60050;
+            text-transform: uppercase;
+        }
+
+        .faq-toggle-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item.active .faq-toggle-icon {
+            background: #e60050;
+            color: #ffffff;
             transform: rotate(180deg);
         }
 
         .faq-answer {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), padding 0.35s ease;
-            background: #fafafa;
+            transition: max-height 0.35s cubic-bezier(0, 1, 0, 1);
+            background: #ffffff;
             border-top: 1px solid transparent;
-            color: #555;
-            line-height: 1.6;
-            font-size: 14.5px;
-            padding: 0 22px;
         }
 
         .faq-item.active .faq-answer {
-            max-height: 500px;
-            padding: 16px 22px 20px;
-            border-top-color: #eee;
+            max-height: 1000px;
+            transition: max-height 0.45s ease-in-out;
+            border-top: 1px solid #f3f4f6;
         }
 
-        .faq-contact-box {
+        .faq-answer-inner {
+            padding: 20px 24px 24px;
+            color: #4b5563;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        .faq-answer-inner strong {
+            color: #111827;
+        }
+
+        .faq-answer-inner ul {
+            margin: 10px 0 0 20px;
+            padding: 0;
+        }
+
+        .faq-answer-inner li {
+            margin-bottom: 6px;
+        }
+
+        /* Still have questions CTA card */
+        .faq-cta-card {
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 100%);
+            border-radius: 20px;
+            padding: 40px 30px;
+            color: #ffffff;
             text-align: center;
-            background: #fff;
-            border: 2px dashed #e60050;
-            padding: 30px 20px;
-            border-radius: 12px;
-            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .faq-contact-box h3 {
-            color: #e60050;
+        .faq-cta-card h3 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
             margin-bottom: 10px;
-            font-size: 20px;
         }
 
-        .faq-contact-box p {
-            color: #666;
-            margin-bottom: 20px;
+        .faq-cta-card p {
+            color: #9ca3af;
+            font-size: 15px;
+            max-width: 600px;
+            margin: 0 auto 25px;
         }
 
-        .faq-contact-btns {
+        .faq-cta-actions {
             display: flex;
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
         }
 
-        .faq-btn-wa {
-            background: #25D366;
-            color: #fff;
-            padding: 10px 22px;
-            border-radius: 25px;
+        .btn-faq-whatsapp {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: #ffffff;
             text-decoration: none;
-            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14.5px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35);
         }
 
-        .faq-btn-phone {
-            background: #e60050;
-            color: #fff;
-            padding: 10px 22px;
-            border-radius: 25px;
+        .btn-faq-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+            color: #ffffff;
+        }
+
+        .btn-faq-contact {
+            background: linear-gradient(135deg, #e60050, #ff1a6e);
+            color: #ffffff;
             text-decoration: none;
-            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14.5px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.35);
+        }
+
+        .btn-faq-contact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 0, 80, 0.5);
+            color: #ffffff;
+        }
+
+        .no-faq-results {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #6b7280;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .faq-hero {
+                padding: 45px 15px 45px;
+            }
+            .faq-question {
+                padding: 16px 18px;
+            }
+            .faq-answer-inner {
+                padding: 16px 18px 20px;
+            }
         }
     </style>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
         <a href="index.html" class="logo">
             <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
-            <B>AVARONI</B>
+            <b>AVARONI</b>
         </a>
         <!-- Search & Filter Bar -->
         <div class="search-bar-container">
@@ -233,8 +411,7 @@
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
                         </optgroup>
-                        <optgroup label="Subcategories" id="filter-subcategories-group">
-                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group"></optgroup>
                     </select>
                 </div>
             </div>
@@ -249,6 +426,7 @@
     <!-- Promo Slider (below navbar) -->
     <div class="nav-promo-slider" id="nav-promo-slider"></div>
 
+    <!-- Sidebar Drawer -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <a href="index.html" class="sidebar-brand">
@@ -261,192 +439,213 @@
         <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;">
         <div style="padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</div>
         <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
-        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="faq.html" style="color: #e60050; font-weight: 700;"><i class="fas fa-question-circle"></i> FAQ</a>
         <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
         <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
         <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
         <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
     </div>
 
-    <!-- FAQ Hero Section -->
+    <!-- Hero Header -->
     <div class="faq-hero">
-        <h1><i class="fas fa-question-circle"></i> Frequently Asked Questions</h1>
-        <p>Find quick answers to common questions about orders, shipping, returns, payment methods, and product care at AVARONI.</p>
-        <div class="faq-search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="faq-search-input" placeholder="Type your question here (e.g. delivery, payment, return)...">
+        <div class="faq-hero-badge" data-aos="fade-down">
+            <i class="fas fa-question-circle"></i> Help Center & FAQs
+        </div>
+        <h1 data-aos="fade-up">Frequently Asked <span>Questions</span></h1>
+        <p data-aos="fade-up" data-aos-delay="100">
+            Quickly find answers about ordering, nationwide delivery times, return procedures, payment security, and sizes.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="faq-search-wrapper" data-aos="zoom-in" data-aos-delay="200">
+            <i class="fas fa-search faq-search-icon"></i>
+            <input type="text" id="faqSearchInput" class="faq-search-input" placeholder="Type your question or keyword (e.g. delivery, return, bKash)..." autocomplete="off">
         </div>
     </div>
 
+    <!-- Main Container -->
     <div class="faq-container">
-        <!-- Category Filter Tabs -->
-        <div class="faq-categories">
-            <button class="faq-cat-btn active" data-cat="all">All Questions</button>
-            <button class="faq-cat-btn" data-cat="orders">Orders & Delivery</button>
-            <button class="faq-cat-btn" data-cat="payment">Payment Methods</button>
-            <button class="faq-cat-btn" data-cat="returns">Returns & Exchange</button>
-            <button class="faq-cat-btn" data-cat="products">Products & Quality</button>
+        <!-- Filter Bar -->
+        <div class="faq-filter-bar" data-aos="fade-up">
+            <button class="faq-cat-btn active" data-filter="all"><i class="fas fa-th-large"></i> All Questions</button>
+            <button class="faq-cat-btn" data-filter="ordering"><i class="fas fa-shopping-cart"></i> Ordering & Payment</button>
+            <button class="faq-cat-btn" data-filter="delivery"><i class="fas fa-truck"></i> Shipping & Delivery</button>
+            <button class="faq-cat-btn" data-filter="returns"><i class="fas fa-undo"></i> Returns & Exchanges</button>
+            <button class="faq-cat-btn" data-filter="products"><i class="fas fa-tshirt"></i> Sizing & Quality</button>
         </div>
 
-        <!-- FAQ Items -->
-        <div id="faq-list">
-            <!-- Item 1 -->
-            <div class="faq-item" data-category="orders">
+        <!-- No Results Fallback -->
+        <div id="noFaqResults" class="no-faq-results">
+            <i class="fas fa-search" style="font-size:32px; color:#d1d5db; margin-bottom:12px;"></i>
+            <h3>No matching questions found</h3>
+            <p>Try searching with different keywords or reach out directly to our customer care team.</p>
+        </div>
+
+        <!-- FAQ Items List -->
+        <div class="faq-list" id="faqList">
+            <!-- 1 -->
+            <div class="faq-item" data-category="ordering" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-truck" style="margin-right:8px;"></i> How long does delivery take inside Bangladesh?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>How do I place an order on AVARONI?</span>
+                        <span class="faq-badge">Ordering</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    Inside Dhaka, orders are delivered within 24 to 48 hours. For orders outside Dhaka, delivery takes 2 to 4 business days via courier services (Steadfast / RedX / SA Paribahan).
+                    <div class="faq-answer-inner">
+                        Placing an order is simple and takes less than 2 minutes:
+                        <ul>
+                            <li>Browse our categories (Women Dress, Ornament, Kids Zone) and click on any product you love.</li>
+                            <li>Choose your desired size, color, or quantity and click <strong>"Add to Cart"</strong> or <strong>"Order Now"</strong>.</li>
+                            <li>Proceed to the cart/checkout page, enter your delivery address and contact number.</li>
+                            <li>Select your preferred payment method (Cash on Delivery, bKash, Nagad, etc.) and click <strong>"Confirm Order"</strong>.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 2 -->
-            <div class="faq-item" data-category="orders">
+            <!-- 2 -->
+            <div class="faq-item" data-category="ordering" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-shipping-fast" style="margin-right:8px;"></i> What are the delivery charges?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>What payment methods do you accept?</span>
+                        <span class="faq-badge">Payment</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    Standard delivery inside Dhaka is ৳60. Outside Dhaka delivery charge is ৳120. Special express delivery options are available upon request.
+                    <div class="faq-answer-inner">
+                        We accept multiple secure payment options for your convenience:
+                        <ul>
+                            <li><strong>Cash on Delivery (COD):</strong> Pay in cash directly to the delivery rider when your package arrives.</li>
+                            <li><strong>bKash / Nagad / Rocket:</strong> Instant mobile wallet payment at checkout.</li>
+                            <li><strong>Credit / Debit Cards:</strong> Visa, MasterCard, and UnionPay.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 3 -->
-            <div class="faq-item" data-category="payment">
+            <!-- 3 -->
+            <div class="faq-item" data-category="delivery" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-wallet" style="margin-right:8px;"></i> Which payment methods do you accept?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>How long does delivery take inside and outside Dhaka?</span>
+                        <span class="faq-badge">Delivery</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    We accept Cash on Delivery (COD), bKash, Nagad, Rocket, and Bank Transfers. You can select your preferred payment option at checkout.
+                    <div class="faq-answer-inner">
+                        Our standard delivery timelines across Bangladesh are:
+                        <ul>
+                            <li><strong>Inside Dhaka City:</strong> 24 to 48 hours (1 - 2 business days).</li>
+                            <li><strong>Dhaka Suburbs & Greater Dhaka:</strong> 2 to 3 business days.</li>
+                            <li><strong>Outside Dhaka (All 64 Districts):</strong> 3 to 5 business days via reputable courier partners (Steadfast, Pathao, RedX).</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 4 -->
-            <div class="faq-item" data-category="payment">
+            <!-- 4 -->
+            <div class="faq-item" data-category="delivery" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-shield-alt" style="margin-right:8px;"></i> Is Cash on Delivery (COD) available everywhere?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>How can I track the live status of my parcel?</span>
+                        <span class="faq-badge">Tracking</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    Yes! We provide Cash on Delivery all across Bangladesh so you can inspect your parcel before handing over payment to the delivery agent.
+                    <div class="faq-answer-inner">
+                        You can track your order in real-time by visiting our <a href="track-order.html" style="color:#e60050; font-weight:700;">Track Order</a> page. Simply input your <strong>Order ID</strong> (sent via SMS/Email) or your registered mobile number to see the step-by-step dispatch and courier status.
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 5 -->
-            <div class="faq-item" data-category="returns">
+            <!-- 5 -->
+            <div class="faq-item" data-category="returns" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-undo-alt" style="margin-right:8px;"></i> What is your return & replacement policy?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>What is your Return and Exchange policy?</span>
+                        <span class="faq-badge">Returns</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    If you receive a defective, damaged, or wrong item, you can request an instant return or exchange within 7 days of delivery. Please visit our <a href="return-product.html" style="color:#e60050; font-weight:600;">Return Product page</a> to submit a request.
+                    <div class="faq-answer-inner">
+                        We offer a <strong>7-Day Hassle-Free Return & Exchange Policy</strong>:
+                        <ul>
+                            <li>If the item received is defective, incorrect in size/color, or damaged during transit, you can request an exchange or full refund within 7 days of delivery.</li>
+                            <li>Items must be unused, unwashed, with original tags and packaging intact.</li>
+                            <li>You can submit a request directly via our <a href="return-product.html" style="color:#e60050; font-weight:700;">Return Product Page</a> or message us on WhatsApp.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 6 -->
-            <div class="faq-item" data-category="returns">
+            <!-- 6 -->
+            <div class="faq-item" data-category="products" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-exchange-alt" style="margin-right:8px;"></i> Can I change my dress size after ordering?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>Are the product photos 100% original and real?</span>
+                        <span class="faq-badge">Quality</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    Yes, if the desired size is in stock, we will exchange it for you free of charge (customer pays the delivery fee for size swaps).
+                    <div class="faq-answer-inner">
+                        <strong>Yes, 100%!</strong> All our product photographs and videos are shot in-house with actual studio samples. What you see is exactly what you receive. Subtle color variations might rarely occur depending on your mobile or monitor screen settings.
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 7 -->
-            <div class="faq-item" data-category="products">
+            <!-- 7 -->
+            <div class="faq-item" data-category="products" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-gem" style="margin-right:8px;"></i> Are the product images 100% real?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>How do I select the right size for dresses and kids wear?</span>
+                        <span class="faq-badge">Sizing</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    Yes! All product images displayed on आभाৰણી are 100% original high-resolution studio photos of our actual stock. What you see is exactly what you receive.
+                    <div class="faq-answer-inner">
+                        Every product modal includes a detailed size guide (Bust, Length, Waist measurements in inches). If you are unsure between two sizes, feel free to chat with our stylists on WhatsApp at <strong>01628628300</strong> for personalized measurement guidance before ordering!
+                    </div>
                 </div>
             </div>
 
-            <!-- Item 8 -->
-            <div class="faq-item" data-category="products">
+            <!-- 8 -->
+            <div class="faq-item" data-category="ordering" data-aos="fade-up">
                 <div class="faq-question">
-                    <span><i class="fas fa-sparkles" style="margin-right:8px;"></i> How should I care for handcrafted jewelry & ornaments?</span>
-                    <i class="fas fa-chevron-down"></i>
+                    <div class="faq-question-title">
+                        <span>Can I cancel or modify my order after placing it?</span>
+                        <span class="faq-badge">Ordering</span>
+                    </div>
+                    <div class="faq-toggle-icon"><i class="fas fa-chevron-down"></i></div>
                 </div>
                 <div class="faq-answer">
-                    Keep your ornaments dry and away from direct perfume, hairspray, or harsh chemicals. Store each piece in a zip-lock pouch or velvet box to maintain shine and prevent tarnishing.
+                    <div class="faq-answer-inner">
+                        Yes! As long as your order has not been handed over to the courier rider (status: <em>Pending</em> or <em>Processing</em>), you can modify your address, items, or cancel your order by calling our helpline <strong>01628628300</strong> or messaging on WhatsApp.
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Contact Box -->
-        <div class="faq-contact-box">
-            <h3><i class="fas fa-headset"></i> Still Have Questions?</h3>
-            <p>Our friendly support team is ready to assist you via phone , WhatsApp  7 days a week. Or Get in Touch "Leave a message with your contact number" We will contact you as soon as possible</p>
-            <div class="faq-contact-btns">
-                <a href="https://wa.me/8801628628300" target="_blank" class="faq-btn-wa">
-                    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
-                </a>
-                <a href="tel:+8801628628300" class="faq-btn-phone">
-                    <i class="fas fa-phone-alt"></i> Call 01743648510
-                </a>
-                <a href="contact.html" class="faq-btn-touch" style="background-color: #c93f8b; color: #ffffff; padding: 10px 20px; border-radius: 25px; text-decoration: none; display: inline-block; font-weight: bold;">
-    <i class="fas fa-envelope"></i> Get In Touch
-</a>
+        <!-- Still Have Questions Card -->
+        <div class="faq-cta-card" data-aos="fade-up">
+            <h3>Still Have Questions or Need Help?</h3>
+            <p>Our friendly customer support team is available every day from 9:00 AM to 10:00 PM to assist you with any questions or order queries.</p>
+            <div class="faq-cta-actions">
+                <a href="https://wa.me/8801628628300" target="_blank" class="btn-faq-whatsapp"><i class="fab fa-whatsapp"></i> Chat on WhatsApp</a>
+                <a href="contact.html" class="btn-faq-contact"><i class="fas fa-envelope"></i> Send Contact Inquiry</a>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="script.js"></script>
-    <script>
-        // Accordion Toggle
-        document.querySelectorAll('.faq-question').forEach(q => {
-            q.addEventListener('click', () => {
-                const item = q.parentElement;
-                const isActive = item.classList.contains('active');
-                
-                // Close other items
-                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-                
-                // Toggle clicked item
-                if (!isActive) {
-                    item.classList.add('active');
-                }
-            });
-        });
-
-        // Search Filter
-        const searchInput = document.getElementById('faq-search-input');
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            document.querySelectorAll('.faq-item').forEach(item => {
-                const qText = item.querySelector('.faq-question').innerText.toLowerCase();
-                const aText = item.querySelector('.faq-answer').innerText.toLowerCase();
-                if (qText.includes(term) || aText.includes(term)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-
-        // Category Filter
-        document.querySelectorAll('.faq-cat-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                const cat = e.target.getAttribute('data-cat');
-                
-                document.querySelectorAll('.faq-item').forEach(item => {
-                    if (cat === 'all' || item.getAttribute('data-category') === cat) {
-                        item.style.display = 'block';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            });
-        });
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -454,11 +653,67 @@
                 AOS.init({
                     duration: 800,
                     once: true,
-                    offset: 50
+                    offset: 40
                 });
+            }
+
+            // Accordion toggle logic
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                question.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    // Close all
+                    faqItems.forEach(otherItem => otherItem.classList.remove('active'));
+                    // If wasn't active, open it
+                    if (!isActive) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+
+            // Category filter logic
+            const filterBtns = document.querySelectorAll('.faq-cat-btn');
+            const searchInput = document.getElementById('faqSearchInput');
+            const noResults = document.getElementById('noFaqResults');
+
+            function filterFaqs() {
+                const activeBtn = document.querySelector('.faq-cat-btn.active');
+                const category = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+                const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                let visibleCount = 0;
+
+                faqItems.forEach(item => {
+                    const itemCat = item.getAttribute('data-category');
+                    const text = item.textContent.toLowerCase();
+                    const matchesCategory = (category === 'all' || itemCat === category);
+                    const matchesSearch = (!searchTerm || text.includes(searchTerm));
+
+                    if (matchesCategory && matchesSearch) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                if (noResults) {
+                    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            }
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterFaqs();
+                });
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', filterFaqs);
             }
         });
     </script>
 </body>
 </html>
-

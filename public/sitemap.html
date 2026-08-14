@@ -3,119 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sitemap -  AVARONI (Avaroni)</title>
-    <meta name="description" content="Navigate all pages and product categories on the  AVARONI (Avaroni) website.">
+    <title>Sitemap - AVARONI (আভরণী)</title>
+    <meta name="description" content="Complete website directory and structure of AVARONI (আভরণী). Explore all shopping categories, services, policies, and customer tools easily.">
     
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="AVARONI (Avaroni)">
-    <meta property="og:title" content="Sitemap -  AVARONI (Avaroni)">
-    <meta property="og:description" content="Navigate all pages and product categories on Avaroni!">
+    <meta property="og:site_name" content="AVARONI (আভরণী)">
+    <meta property="og:title" content="Sitemap - AVARONI (আভরণী)">
+    <meta property="og:description" content="Navigate all pages, categories, and customer support tools on AVARONI!">
     <meta property="og:image" content="./img/profile_image.jpg">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Sitemap -  AVARONI (Avaroni)">
-    <meta name="twitter:description" content="Navigate all pages and product categories on Avaroni!">
+    <meta name="twitter:title" content="Sitemap - AVARONI (আভরণী)">
+    <meta name="twitter:description" content="Navigate all pages and product categories on AVARONI!">
     <meta name="twitter:image" content="./img/profile_image.jpg">
 
+    <link rel="icon" href="./fabicon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+
     <style>
-        .sitemap-hero {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            color: #fff;
-            padding: 50px 20px;
-            text-align: center;
-            border-radius: 0 0 20px 20px;
-            margin-bottom: 40px;
-        }
-
-        .sitemap-hero h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #ffb6d8;
-        }
-
-        .sitemap-hero p {
-            font-size: 16px;
-            color: #9ca3af;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .sitemap-container {
-            max-width: 1000px;
-            margin: 0 auto 60px;
-            padding: 0 20px;
-        }
-
-        .sitemap-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .sitemap-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border: 1px solid #e5e7eb;
-            border-top: 4px solid #e60050;
-        }
-
-        .sitemap-card h3 {
-            font-size: 18px;
-            color: #111827;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sitemap-card h3 i {
-            color: #e60050;
-        }
-
-        .sitemap-list {
-            list-style: none;
-            padding: 0;
+        body {
+            background-color: #f5f5f7;
+            color: #1a1a1a;
+            font-family: 'Plus Jakarta Sans', 'Outfit', 'Hind Siliguri', sans-serif;
             margin: 0;
+            padding: 0;
         }
 
-        .sitemap-list li {
-            margin-bottom: 12px;
+        .sitemap-hero {
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 50%, #2a111e 100%);
+            color: #ffffff;
+            padding: 65px 20px 55px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(230, 0, 80, 0.3);
         }
 
-        .sitemap-list a {
-            color: #4b5563;
-            text-decoration: none;
-            font-size: 14.5px;
-            font-weight: 500;
+        .sitemap-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(230, 0, 80, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .sitemap-hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            background: rgba(230, 0, 80, 0.2);
+            color: #ff80aa;
+            border: 1px solid rgba(230, 0, 80, 0.4);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .sitemap-hero h1 {
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .sitemap-hero h1 span {
+            background: linear-gradient(135deg, #ff4d88 0%, #ff80aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sitemap-hero p {
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: #d1d5db;
+            max-width: 750px;
+            margin: 0 auto 25px;
+            line-height: 1.6;
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .breadcrumb-nav a {
+            color: #d1d5db;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-nav a:hover {
+            color: #ff80aa;
+        }
+
+        .breadcrumb-nav i {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .sitemap-container {
+            max-width: 1100px;
+            margin: 40px auto 70px;
+            padding: 0 20px;
+        }
+
+        /* Search Filter */
+        .sitemap-search-bar {
+            max-width: 500px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+
+        .sitemap-search-bar input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border-radius: 50px;
+            border: 1.5px solid #e5e7eb;
+            background: #ffffff;
+            font-size: 14.5px;
+            outline: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.25s ease;
+            box-sizing: border-box;
+        }
+
+        .sitemap-search-bar input:focus {
+            border-color: #e60050;
+            box-shadow: 0 4px 20px rgba(230,0,80,0.15);
+        }
+
+        .sitemap-search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #e60050;
+            font-size: 16px;
+        }
+
+        /* Sitemap Grid */
+        .sitemap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .sitemap-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 30px 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-top: 4px solid #e60050;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .sitemap-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(230,0,80,0.1);
+        }
+
+        .sitemap-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .sitemap-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #fdf2f6 0%, #fce7f0 100%);
+            color: #e60050;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .sitemap-card-header h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+        }
+
+        .sitemap-links-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sitemap-links-list li a {
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 14.5px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: #fafafa;
+            border: 1px solid transparent;
             transition: all 0.2s ease;
         }
 
-        .sitemap-list a:hover {
+        .sitemap-links-list li a:hover {
             color: #e60050;
+            background: #fdf2f6;
+            border-color: rgba(230,0,80,0.15);
             transform: translateX(4px);
         }
 
-        .sitemap-list a i {
+        .sitemap-links-list li a i.arrow {
             font-size: 11px;
+            color: #9ca3af;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .sitemap-links-list li a:hover i.arrow {
             color: #e60050;
+            transform: translateX(3px);
+        }
+
+        .sitemap-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .sitemap-links-list li a:hover .sitemap-badge {
+            background: #e60050;
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .sitemap-hero {
+                padding: 45px 15px 45px;
+            }
+            .sitemap-card {
+                padding: 24px 20px;
+            }
         }
     </style>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
         <a href="index.html" class="logo">
             <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
-            <B>AVARONI</B>
+            <b>AVARONI</b>
         </a>
         <!-- Search & Filter Bar -->
         <div class="search-bar-container">
@@ -134,8 +298,7 @@
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
                         </optgroup>
-                        <optgroup label="Subcategories" id="filter-subcategories-group">
-                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group"></optgroup>
                     </select>
                 </div>
             </div>
@@ -150,6 +313,7 @@
     <!-- Promo Slider (below navbar) -->
     <div class="nav-promo-slider" id="nav-promo-slider"></div>
 
+    <!-- Sidebar Drawer -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <a href="index.html" class="sidebar-brand">
@@ -164,62 +328,96 @@
         <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
         <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
         <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
-        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="sitemap.html" style="color: #e60050; font-weight: 700;"><i class="fas fa-sitemap"></i> Sitemap</a>
         <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
         <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
     </div>
 
+    <!-- Hero Header -->
     <div class="sitemap-hero">
-        <h1><i class="fas fa-sitemap"></i> Website Sitemap</h1>
-        <p>Complete structure and page directory of AVARONI for easy navigation.</p>
+        <div class="sitemap-hero-badge" data-aos="fade-down">
+            <i class="fas fa-map-marked-alt"></i> Complete Directory
+        </div>
+        <h1 data-aos="fade-up">Website <span>Sitemap</span></h1>
+        <p data-aos="fade-up" data-aos-delay="100">
+            Explore all pages, product categories, policies, and customer support resources on AVARONI.
+        </p>
+        <div class="breadcrumb-nav" data-aos="fade-up" data-aos-delay="200">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Sitemap</span>
+        </div>
     </div>
 
+    <!-- Main Container -->
     <div class="sitemap-container">
+        <!-- Search Filter -->
+        <div class="sitemap-search-bar" data-aos="fade-up">
+            <i class="fas fa-search"></i>
+            <input type="text" id="sitemapFilterInput" placeholder="Filter sitemap links (e.g. saree, return, track)...">
+        </div>
+
         <div class="sitemap-grid">
-            <!-- Section 1 -->
-            <div class="sitemap-card">
-                <h3><i class="fas fa-home"></i> Main Pages</h3>
-                <ul class="sitemap-list">
-                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Homepage</a></li>
-                    <li><a href="cart.html"><i class="fas fa-chevron-right"></i> Shopping Cart & Checkout</a></li>
-                    <li><a href="payment.html"><i class="fas fa-chevron-right"></i> Payment Confirmation</a></li>
+            <!-- 1. Main & Shopping Pages -->
+            <div class="sitemap-card" data-aos="fade-up">
+                <div class="sitemap-card-header">
+                    <div class="sitemap-card-icon"><i class="fas fa-store"></i></div>
+                    <h3>Main Store Pages</h3>
+                </div>
+                <ul class="sitemap-links-list">
+                    <li><a href="index.html"><span><i class="fas fa-home" style="margin-right:8px; color:#e60050;"></i> Homepage</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="cart.html"><span><i class="fas fa-shopping-bag" style="margin-right:8px; color:#e60050;"></i> Shopping Cart & Checkout</span> <span class="sitemap-badge">Cart</span></a></li>
+                    <li><a href="payment.html"><span><i class="fas fa-credit-card" style="margin-right:8px; color:#e60050;"></i> Payment Confirmation</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="wishlist.html"><span><i class="far fa-heart" style="margin-right:8px; color:#e60050;"></i> Saved Wishlist</span> <i class="fas fa-chevron-right arrow"></i></a></li>
                 </ul>
             </div>
 
-            <!-- Section 2 -->
-            <div class="sitemap-card">
-                <h3><i class="fas fa-tags"></i> Shop Collections</h3>
-                <ul class="sitemap-list">
-                    <li><a href="women.html"><i class="fas fa-chevron-right"></i> Women Dress Collection</a></li>
-                    <li><a href="ornament.html"><i class="fas fa-chevron-right"></i> Handcrafted Ornaments</a></li>
-                    <li><a href="kids.html"><i class="fas fa-chevron-right"></i> Kids Zone Collection</a></li>
-                    <li><a href="category.html?cat=new"><i class="fas fa-chevron-right"></i> Dynamic Category Explorer</a></li>
+            <!-- 2. Dynamic Categories -->
+            <div class="sitemap-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="sitemap-card-header">
+                    <div class="sitemap-card-icon"><i class="fas fa-tags"></i></div>
+                    <h3>Shop Collections</h3>
+                </div>
+                <ul class="sitemap-links-list" id="sitemapCategoriesList">
+                    <li><a href="women.html"><span><i class="fas fa-female" style="margin-right:8px; color:#e60050;"></i> Women Dress Collection</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="ornament.html"><span><i class="fas fa-gem" style="margin-right:8px; color:#e60050;"></i> Handcrafted Ornaments</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="kids.html"><span><i class="fas fa-child" style="margin-right:8px; color:#e60050;"></i> Kids Zone Collection</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="category.html"><span><i class="fas fa-layer-group" style="margin-right:8px; color:#e60050;"></i> All Categories Explorer</span> <i class="fas fa-chevron-right arrow"></i></a></li>
                 </ul>
             </div>
 
-            <!-- Section 3 -->
-            <div class="sitemap-card">
-                <h3><i class="fas fa-info-circle"></i> Information & Help</h3>
-                <ul class="sitemap-list">
-                    <li><a href="faq.html"><i class="fas fa-chevron-right"></i> Frequently Asked Questions (FAQ)</a></li>
-                    <li><a href="blog.html"><i class="fas fa-chevron-right"></i> Fashion & Style Blog</a></li>
-                    <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
-                    <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+            <!-- 3. Quick Links & Tracking -->
+            <div class="sitemap-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="sitemap-card-header">
+                    <div class="sitemap-card-icon"><i class="fas fa-compass"></i></div>
+                    <h3>Quick Links & Services</h3>
+                </div>
+                <ul class="sitemap-links-list">
+                    <li><a href="track-order.html"><span><i class="fas fa-truck" style="margin-right:8px; color:#e60050;"></i> Track Your Order</span> <span class="sitemap-badge">Live</span></a></li>
+                    <li><a href="faq.html"><span><i class="fas fa-question-circle" style="margin-right:8px; color:#e60050;"></i> Frequently Asked Questions</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="blog.html"><span><i class="fas fa-newspaper" style="margin-right:8px; color:#e60050;"></i> Fashion & Styling Blog</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="about.html"><span><i class="fas fa-info-circle" style="margin-right:8px; color:#e60050;"></i> About AVARONI</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="contact.html"><span><i class="fas fa-envelope" style="margin-right:8px; color:#e60050;"></i> Contact & Support</span> <i class="fas fa-chevron-right arrow"></i></a></li>
                 </ul>
             </div>
 
-            <!-- Section 4 -->
-            <div class="sitemap-card">
-                <h3><i class="fas fa-shield-alt"></i> Customer Care & Policies</h3>
-                <ul class="sitemap-list">
-                    <li><a href="return-policy.html"><i class="fas fa-chevron-right"></i> Return & Refund Policy</a></li>
-                    <li><a href="return-product.html"><i class="fas fa-chevron-right"></i> Request Product Return</a></li>
-                    <li><a href="sitemap.html"><i class="fas fa-chevron-right"></i> Complete Site Map</a></li>
+            <!-- 4. Customer Policies & Account -->
+            <div class="sitemap-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="sitemap-card-header">
+                    <div class="sitemap-card-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Customer Care & Account</h3>
+                </div>
+                <ul class="sitemap-links-list">
+                    <li><a href="return-policy.html"><span><i class="fas fa-file-contract" style="margin-right:8px; color:#e60050;"></i> Return & Refund Policy</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="return-product.html"><span><i class="fas fa-undo" style="margin-right:8px; color:#e60050;"></i> Request Return / Exchange</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="login.html"><span><i class="fas fa-user-circle" style="margin-right:8px; color:#e60050;"></i> Customer Sign In / Register</span> <i class="fas fa-chevron-right arrow"></i></a></li>
+                    <li><a href="admin-login.html"><span><i class="fas fa-lock" style="margin-right:8px; color:#e60050;"></i> Staff / Admin Portal</span> <i class="fas fa-chevron-right arrow"></i></a></li>
                 </ul>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="script.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
@@ -228,7 +426,37 @@
                 AOS.init({
                     duration: 800,
                     once: true,
-                    offset: 50
+                    offset: 40
+                });
+            }
+
+            // Real-time dynamic category population
+            fetch('/api/categories')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success && data.categories && data.categories.length > 0) {
+                        const list = document.getElementById('sitemapCategoriesList');
+                        list.innerHTML = '';
+                        data.categories.forEach(cat => {
+                            const li = document.createElement('li');
+                            const url = cat.redirectUrl || `category.html?cat=${encodeURIComponent(cat.slug || cat.name)}`;
+                            li.innerHTML = `<a href="${url}"><span><i class="fas fa-tag" style="margin-right:8px; color:#e60050;"></i> ${cat.displayName || cat.name}</span> <i class="fas fa-chevron-right arrow"></i></a>`;
+                            list.appendChild(li);
+                        });
+                    }
+                })
+                .catch(err => console.log('Categories sitemap fetch fallback'));
+
+            // Search Filter logic
+            const filterInput = document.getElementById('sitemapFilterInput');
+            if (filterInput) {
+                filterInput.addEventListener('input', function() {
+                    const query = this.value.toLowerCase().trim();
+                    const links = document.querySelectorAll('.sitemap-links-list li');
+                    links.forEach(li => {
+                        const text = li.textContent.toLowerCase();
+                        li.style.display = (!query || text.includes(query)) ? 'block' : 'none';
+                    });
                 });
             }
         });

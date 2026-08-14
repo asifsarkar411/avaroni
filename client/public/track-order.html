@@ -3,47 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Your Order -  AVARONI (Avaroni)</title>
-    <meta name="description" content="Track your order status live with आभाরণী (Avaroni). Enter your Order ID to see real-time updates and delivery status.">
+    <title>Track Your Order - AVARONI (আভরণী)</title>
+    <meta name="description" content="Track your order status live with AVARONI (আভরণী). Enter your Order ID to see real-time updates and delivery status across Bangladesh.">
     
     <link rel="icon" href="./fabicon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     
     <style>
+        body {
+            background-color: #f5f5f7;
+            color: #1a1a1a;
+            font-family: 'Plus Jakarta Sans', 'Outfit', 'Hind Siliguri', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
         .track-hero {
-            background: linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #0d0d0d 100%);
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 50%, #2a111e 100%);
             color: #ffffff;
-            padding: 50px 20px;
+            padding: 65px 20px 55px;
             text-align: center;
-            border-bottom: 2px solid rgba(230, 0, 80, 0.4);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(230, 0, 80, 0.3);
+        }
+
+        .track-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(230, 0, 80, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .track-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(230, 0, 80, 0.2);
+            color: #ff80aa;
+            border: 1px solid rgba(230, 0, 80, 0.4);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
         }
 
         .track-hero h1 {
-            font-size: 32px;
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
             font-weight: 800;
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .track-hero h1 span {
+            background: linear-gradient(135deg, #ff4d88 0%, #ff80aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .track-hero p {
-            font-size: 15px;
-            color: #cccccc;
-            max-width: 600px;
-            margin: 0 auto 30px auto;
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: #d1d5db;
+            max-width: 750px;
+            margin: 0 auto 25px;
+            line-height: 1.6;
         }
 
         .track-search-box {
-            max-width: 550px;
+            max-width: 580px;
             margin: 0 auto;
             display: flex;
             gap: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
             padding: 8px;
             border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
+        }
+
+        .track-search-box:focus-within {
+            border-color: #ff80aa;
+            box-shadow: 0 8px 35px rgba(230, 0, 80, 0.3);
         }
 
         .track-search-box input {
@@ -53,16 +106,17 @@
             outline: none;
             padding: 12px 20px;
             color: #ffffff;
-            font-size: 16px;
+            font-size: 15.5px;
             font-weight: 600;
+            font-family: inherit;
         }
 
         .track-search-box input::placeholder {
-            color: #aaaaaa;
+            color: #9ca3af;
         }
 
         .track-search-box button {
-            background: linear-gradient(135deg, #e60050, #ff1a6e);
+            background: linear-gradient(135deg, #e60050 0%, #ff1a6e 100%);
             color: #ffffff;
             border: none;
             padding: 12px 28px;
@@ -72,25 +126,28 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(230, 0, 80, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .track-search-box button:hover {
-            transform: scale(1.03);
+            transform: scale(1.02);
             box-shadow: 0 6px 20px rgba(230, 0, 80, 0.6);
         }
 
         .track-container {
-            max-width: 900px;
-            margin: 40px auto;
+            max-width: 950px;
+            margin: 40px auto 70px;
             padding: 0 20px;
         }
 
         /* Tracker Timeline Card */
         .status-card {
             background: #ffffff;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(0, 0, 0, 0.06);
             margin-bottom: 30px;
         }
@@ -99,50 +156,61 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f3f4f6;
+            margin-bottom: 30px;
             flex-wrap: wrap;
             gap: 15px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eeeeee;
         }
 
         .order-id-badge {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
-            color: #111111;
+            color: #111827;
+            letter-spacing: -0.01em;
         }
 
         .order-status-pill {
-            display: inline-block;
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 30px;
             font-weight: 800;
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
+        .status-pending { background: #fff8e1; color: #b78103; border: 1px solid #ffe082; }
+        .status-approved { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+        .status-processing { background: #e0f2f1; color: #00695c; border: 1px solid #80cbc4; }
+        .status-delivered { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .status-cancelled { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
 
-        .status-approved, .status-processing {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Step Timeline Bar */
+        /* Timeline Step Tracker */
         .timeline-wrapper {
-            margin: 40px 0 20px 0;
             position: relative;
+            margin: 40px 0 50px;
+        }
+
+        .timeline-progress-bar {
+            position: absolute;
+            top: 24px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: #e5e7eb;
+            z-index: 1;
+            border-radius: 2px;
+        }
+
+        .timeline-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #111111, #e60050);
+            width: 0%;
+            transition: width 0.6s ease, background 0.4s ease;
+            border-radius: 2px;
         }
 
         .timeline-steps {
@@ -156,123 +224,111 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex: 1;
-            position: relative;
+            text-align: center;
+            width: 25%;
         }
 
         .step-icon {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: #f0f0f0;
-            color: #888888;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            color: #9ca3af;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            font-weight: 700;
-            border: 3px solid #ffffff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s ease;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .timeline-step.active .step-icon {
-            background: #e60050;
+            border-color: #e60050;
+            background: linear-gradient(135deg, #e60050, #ff1a6e);
             color: #ffffff;
-            box-shadow: 0 0 15px rgba(230, 0, 80, 0.5);
+            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.4);
             transform: scale(1.1);
         }
 
         .timeline-step.completed .step-icon {
-            background: #111111;
+            border-color: #111827;
+            background: #111827;
             color: #ffffff;
         }
 
         .step-label {
-            margin-top: 12px;
             font-size: 13px;
             font-weight: 700;
-            color: #666666;
-            text-align: center;
+            color: #6b7280;
         }
 
         .timeline-step.active .step-label {
-            color: #111111;
+            color: #e60050;
+            font-weight: 800;
         }
 
-        .timeline-progress-bar {
-            position: absolute;
-            top: 23px;
-            left: 10%;
-            width: 80%;
-            height: 4px;
-            background: #e0e0e0;
-            z-index: 1;
-            border-radius: 2px;
-        }
-
-        .timeline-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #111111, #e60050);
-            width: 0%;
-            transition: width 0.6s ease;
-            border-radius: 2px;
-        }
-
-        /* Order Info Grid */
+        /* Order Details Grid */
         .order-details-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin: 30px 0;
         }
 
         .info-box {
-            background: #f9f9f9;
+            background: #f9fafb;
+            border-radius: 14px;
             padding: 18px;
-            border-radius: 12px;
-            border: 1px solid #eeeeee;
+            border: 1px solid #f3f4f6;
         }
 
         .info-box h4 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #777777;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: #9ca3af;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .info-box p {
-            margin: 4px 0;
-            font-weight: 600;
-            color: #222222;
-            font-size: 14px;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+            word-break: break-word;
         }
 
         /* Items Table */
         .order-items-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 25px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
         }
 
         .order-items-table th {
             text-align: left;
-            padding: 12px;
-            background: #f5f5f7;
-            font-size: 13px;
+            padding: 12px 16px;
+            background: #f9fafb;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #6b7280;
             text-transform: uppercase;
-            color: #555555;
-            border-bottom: 2px solid #e5e5e5;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .order-items-table td {
-            padding: 14px 12px;
-            border-bottom: 1px solid #eeeeee;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f3f4f6;
             font-size: 14px;
+            color: #374151;
+            vertical-align: middle;
         }
 
         .product-item-cell {
@@ -282,42 +338,25 @@
         }
 
         .product-item-img {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #eee;
+            border: 1px solid #e5e7eb;
         }
 
+        /* Action Buttons */
         .action-btns {
             display: flex;
-            gap: 12px;
-            margin-top: 25px;
+            gap: 15px;
+            margin-top: 30px;
             flex-wrap: wrap;
         }
 
-        .btn-secondary {
-            background: #f0f0f2;
-            color: #111111;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: 700;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            transition: background 0.2s;
-        }
-
-        .btn-secondary:hover {
-            background: #e2e2e5;
-        }
-
         .btn-primary-action {
-            background: #111111;
+            background: linear-gradient(135deg, #111111 0%, #333333 100%);
             color: #ffffff;
-            padding: 10px 22px;
+            padding: 12px 26px;
             border-radius: 30px;
             font-weight: 700;
             text-decoration: none;
@@ -325,11 +364,35 @@
             align-items: center;
             gap: 8px;
             font-size: 14px;
-            transition: opacity 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         .btn-primary-action:hover {
-            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            color: #ffffff;
+        }
+
+        .btn-secondary-action {
+            background: #ffffff;
+            color: #111827;
+            border: 1.5px solid #e5e7eb;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary-action:hover {
+            border-color: #111827;
+            background: #f9fafb;
+            transform: translateY(-2px);
         }
 
         @media (max-width: 600px) {
@@ -339,9 +402,9 @@
             .timeline-progress-bar { top: 19px; }
             .track-search-box { flex-direction: column; border-radius: 16px; background: rgba(255,255,255,0.15); }
             .track-search-box button { width: 100%; border-radius: 12px; }
+            .status-card { padding: 24px 18px; }
         }
     </style>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 </head>
 <body>
     <!-- Navbar -->
@@ -367,8 +430,7 @@
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
                         </optgroup>
-                        <optgroup label="Subcategories" id="filter-subcategories-group">
-                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group"></optgroup>
                     </select>
                 </div>
             </div>
@@ -396,7 +458,7 @@
         <div id="sidebar-categories-container"></div>
         <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;">
         <div style="padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</div>
-        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
+        <a href="track-order.html" style="color: #e60050; font-weight: 700;"><i class="fas fa-truck"></i> Track Order</a>
         <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
         <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
         <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
@@ -406,12 +468,17 @@
 
     <!-- Hero Search Section -->
     <div class="track-hero">
-        <h1><i class="fas fa-search-location" style="color: #ff1a6e;"></i> Track Your Order</h1>
-        <p>Enter your Order Number below to get real-time delivery status & order updates.</p>
+        <div class="track-hero-badge" data-aos="fade-down">
+            <i class="fas fa-satellite-dish"></i> Live Order Tracker
+        </div>
+        <h1 data-aos="fade-up">Track Your <span>Package</span></h1>
+        <p data-aos="fade-up" data-aos-delay="100">
+            Enter your Order Number below to check real-time courier updates, dispatch status, and item details.
+        </p>
         
-        <form id="track-order-form" class="track-search-box">
-            <input type="text" id="track-order-input" placeholder="e.g. ORD-1785236789012" required autocomplete="off">
-            <button type="submit" id="track-submit-btn"><i class="fas fa-search"></i> Track Order</button>
+        <form id="track-order-form" class="track-search-box" data-aos="zoom-in" data-aos-delay="200">
+            <input type="text" id="track-order-input" placeholder="Enter Order ID (e.g. ORD-1785236789012)" required autocomplete="off">
+            <button type="submit" id="track-submit-btn"><i class="fas fa-search"></i> Track Now</button>
         </form>
     </div>
 
@@ -419,20 +486,20 @@
     <div class="track-container">
         <div id="track-loading" style="display: none; text-align: center; padding: 40px;">
             <i class="fas fa-spinner fa-spin" style="font-size: 36px; color: #e60050;"></i>
-            <p style="margin-top: 15px; font-weight: 600; color: #555;">Fetching your order details...</p>
+            <p style="margin-top: 15px; font-weight: 600; color: #555;">Fetching live order details from database...</p>
         </div>
 
-        <div id="track-error" style="display: none; background: #fff0f5; border: 1.5px solid #ffccd8; color: #c93f8b; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+        <div id="track-error" style="display: none; background: #fff0f5; border: 1.5px solid #ffccd8; color: #c93f8b; padding: 20px; border-radius: 14px; text-align: center; margin-bottom: 30px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 26px; margin-bottom: 8px; display: block;"></i>
             <span id="track-error-msg">Order not found. Please verify your Order ID.</span>
         </div>
 
         <div id="track-result" style="display: none;">
             <!-- Status Timeline Card -->
-            <div class="status-card">
+            <div class="status-card" data-aos="fade-up">
                 <div class="status-header">
                     <div>
-                        <span style="font-size: 13px; color: #777; text-transform: uppercase; font-weight: 700; display: block;">Order Reference</span>
+                        <span style="font-size: 12px; color: #9ca3af; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Order Reference</span>
                         <span id="res-order-number" class="order-id-badge">ORD-0000000000000</span>
                     </div>
                     <div>
@@ -456,7 +523,7 @@
                         </div>
                         <div id="step-shipped" class="timeline-step">
                             <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
-                            <span class="step-label">Processing / Shipping</span>
+                            <span class="step-label">Shipping</span>
                         </div>
                         <div id="step-delivered" class="timeline-step">
                             <div class="step-icon"><i class="fas fa-box-open"></i></div>
@@ -478,50 +545,49 @@
                     </div>
 
                     <div class="info-box">
-                        <h4><i class="fas fa-credit-card"></i> Payment Info</h4>
+                        <h4><i class="fas fa-credit-card"></i> Payment Method</h4>
                         <p id="res-payment-method">-</p>
                     </div>
 
                     <div class="info-box" style="grid-column: span 1 / -1;">
-                        <h4><i class="fas fa-map-marker-alt"></i> Shipping Address</h4>
-                        <p id="res-shipping-address" style="font-weight: 500; line-height: 1.5;">-</p>
+                        <h4><i class="fas fa-map-marker-alt"></i> Delivery Address</h4>
+                        <p id="res-shipping-address" style="font-weight: 600; line-height: 1.5;">-</p>
                     </div>
                 </div>
 
                 <!-- Items Table -->
-                <h3 style="margin-top: 30px; font-size: 18px; font-weight: 800; color: #111;"><i class="fas fa-boxes"></i> Ordered Items</h3>
+                <h3 style="margin-top: 35px; font-size: 18px; font-weight: 800; color: #111827;"><i class="fas fa-boxes" style="color:#e60050; margin-right:8px;"></i> Ordered Items</h3>
                 <div style="overflow-x: auto;">
                     <table class="order-items-table">
                         <thead>
                             <tr>
-                                <th>Item</th>
+                                <th>Item Description</th>
                                 <th>Quantity</th>
-                                <th>Price</th>
-                                <th style="text-align: right;">Total</th>
+                                <th>Unit Price</th>
+                                <th style="text-align: right;">Total Price</th>
                             </tr>
                         </thead>
-                        <tbody id="res-items-body">
-                        </tbody>
+                        <tbody id="res-items-body"></tbody>
                     </table>
                 </div>
 
                 <!-- Total Breakdown -->
-                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-                    <div style="width: 100%; max-width: 320px; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #555;">
+                <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
+                    <div style="width: 100%; max-width: 340px; background: #f9fafb; padding: 20px; border-radius: 14px; border: 1px solid #f3f4f6;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
                             <span>Subtotal:</span>
-                            <span id="res-subtotal">৳0</span>
+                            <span id="res-subtotal" style="font-weight:700; color:#111;">৳0</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #555;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
                             <span>Shipping Fee:</span>
-                            <span id="res-shipping">৳0</span>
+                            <span id="res-shipping" style="font-weight:700; color:#111;">৳0</span>
                         </div>
-                        <div id="res-discount-row" style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: #28a745; display: none;">
-                            <span>Discount Promo:</span>
-                            <span id="res-discount">-৳0</span>
+                        <div id="res-discount-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #059669; display: none;">
+                            <span>Promo Discount:</span>
+                            <span id="res-discount" style="font-weight:700;">-৳0</span>
                         </div>
-                        <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
-                        <div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 800; color: #111;">
+                        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 12px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; color: #111827;">
                             <span>Grand Total:</span>
                             <span id="res-total" style="color: #e60050;">৳0</span>
                         </div>
@@ -530,28 +596,23 @@
 
                 <!-- Actions -->
                 <div class="action-btns">
-                    <a id="res-invoice-btn" href="#" target="_blank" class="btn-primary-action"><i class="fas fa-file-invoice"></i> View Tax Invoice</a>
-                    <a href="contact.html" class="btn-secondary"><i class="fas fa-headset"></i> Need Help? Contact Support</a>
+                    <a id="res-invoice-btn" href="#" target="_blank" class="btn-primary-action"><i class="fas fa-file-invoice"></i> View Official Invoice</a>
+                    <a href="https://wa.me/8801628628300" target="_blank" class="btn-secondary-action" style="color: #059669; border-color: #a7f3d0;"><i class="fab fa-whatsapp"></i> WhatsApp Support</a>
+                    <a href="index.html" class="btn-secondary-action"><i class="fas fa-shopping-bag"></i> Continue Shopping</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="site-footer" style="margin-top: 60px;">
-        <div class="footer-bottom" style="text-align: center; padding: 20px; color: #777; font-size: 14px;">
-            <p>&copy; 2026 <strong>AVARONI (Avaroni)</strong>. All Rights Reserved.</p>
-            <p>
-                <a href="https://port-v-eno-m.vercel.app/" target="_blank" style="color: #777; text-decoration: underline">
-                    Developed By "SM FERDOUS AHMMED"
-                </a>
-            </p>
-        </div>
-    </footer>
-
+    <!-- Scripts -->
     <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            if (typeof AOS !== "undefined") {
+                AOS.init({ duration: 800, once: true, offset: 40 });
+            }
+
             const form = document.getElementById('track-order-form');
             const input = document.getElementById('track-order-input');
             const loading = document.getElementById('track-loading');
@@ -587,7 +648,7 @@
                     if (res.ok && data.success && data.order) {
                         renderOrderResult(data.order);
                     } else {
-                        errorMsg.textContent = data.message || "No order found with this ID. Please check your Order ID.";
+                        errorMsg.textContent = data.message || "No order found with this reference. Please check your Order ID.";
                         errorBox.style.display = 'block';
                     }
                 } catch (err) {
@@ -609,22 +670,16 @@
                     badge.className = 'order-status-pill ';
                     if (status === 'approved') {
                         badge.classList.add('status-approved');
-                    } else if (status === 'processing') {
-                        badge.style.background = '#17a2b8';
-                        badge.style.color = '#ffffff';
+                    } else if (status === 'processing' || status === 'shipped') {
+                        badge.classList.add('status-processing');
                     } else if (status === 'delivered') {
-                        badge.style.background = '#20c997';
-                        badge.style.color = '#ffffff';
+                        badge.classList.add('status-delivered');
                     } else if (status === 'cancelled') {
                         badge.classList.add('status-cancelled');
                     } else {
                         badge.classList.add('status-pending');
                     }
                 }
-
-                // Remove old cancelled banner if exists
-                const oldCancelBanner = document.getElementById('res-cancelled-alert');
-                if (oldCancelBanner) oldCancelBanner.remove();
 
                 // Timeline updates
                 const stepPlaced = document.getElementById('step-placed');
@@ -633,7 +688,6 @@
                 const stepDelivered = document.getElementById('step-delivered');
                 const progressFill = document.getElementById('timeline-fill');
 
-                // Reset classes & styles
                 [stepPlaced, stepApproved, stepShipped, stepDelivered].forEach(s => {
                     s.classList.remove('active', 'completed');
                 });
@@ -643,7 +697,7 @@
                     stepPlaced.classList.add('active', 'completed');
                     stepApproved.classList.add('active', 'completed');
                     progressFill.style.width = '33%';
-                } else if (status === 'processing') {
+                } else if (status === 'processing' || status === 'shipped') {
                     stepPlaced.classList.add('active', 'completed');
                     stepApproved.classList.add('active', 'completed');
                     stepShipped.classList.add('active', 'completed');
@@ -654,23 +708,11 @@
                     stepShipped.classList.add('active', 'completed');
                     stepDelivered.classList.add('active', 'completed');
                     progressFill.style.width = '100%';
-                    progressFill.style.background = '#20c997';
+                    progressFill.style.background = '#2e7d32';
                 } else if (status === 'cancelled') {
                     progressFill.style.width = '0%';
                     progressFill.style.background = '#dc3545';
-                    
-                    // Show clear Cancellation Notice Alert
-                    const cancelBanner = document.createElement('div');
-                    cancelBanner.id = 'res-cancelled-alert';
-                    cancelBanner.style.cssText = 'background: #f8d7da; border: 1.5px solid #f5c6cb; color: #721c24; padding: 16px 20px; border-radius: 12px; margin: 20px 0; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;';
-                    cancelBanner.innerHTML = `<i class="fas fa-times-circle" style="font-size: 22px;"></i> Order Cancelled — This order was cancelled by the store administration. Please contact support if you need assistance.`;
-                    
-                    const statusHeader = document.querySelector('.status-header');
-                    if (statusHeader && statusHeader.parentNode) {
-                        statusHeader.parentNode.insertBefore(cancelBanner, statusHeader.nextSibling);
-                    }
                 } else {
-                    // Pending
                     stepPlaced.classList.add('active', 'completed');
                     progressFill.style.width = '15%';
                 }
@@ -682,8 +724,8 @@
                     timeStyle: 'short'
                 });
 
-                document.getElementById('res-customer-name').textContent = order.customerName || 'Customer';
-                document.getElementById('res-payment-method').textContent = `${order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'bKash Mobile Payment'} (TxID: ${order.transactionId || 'N/A'})`;
+                document.getElementById('res-customer-name').textContent = order.customerName || 'Valued Customer';
+                document.getElementById('res-payment-method').textContent = `${order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'bKash / Mobile Payment'} (TxID: ${order.transactionId || 'N/A'})`;
                 document.getElementById('res-shipping-address').textContent = `${order.address} | Phone: ${order.phone}`;
 
                 // Invoice Link
@@ -709,12 +751,12 @@
                         <td>
                             <div class="product-item-cell">
                                 <img src="${imgUrl}" alt="${item.name}" class="product-item-img">
-                                <span style="font-weight: 700; color: #222;">${item.name}</span>
+                                <span style="font-weight: 700; color: #111827;">${item.name}</span>
                             </div>
                         </td>
                         <td style="font-weight: 600;">x${itemQty}</td>
                         <td>৳${itemPrice}</td>
-                        <td style="text-align: right; font-weight: 700; color: #111;">৳${itemTotal}</td>
+                        <td style="text-align: right; font-weight: 700; color: #111827;">৳${itemTotal}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -738,18 +780,7 @@
                 document.getElementById('res-total').textContent = `৳${total}`;
 
                 resultCard.style.display = 'block';
-            }
-        });
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            if (typeof AOS !== "undefined") {
-                AOS.init({
-                    duration: 800,
-                    once: true,
-                    offset: 50
-                });
+                resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
     </script>

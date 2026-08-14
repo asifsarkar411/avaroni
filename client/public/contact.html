@@ -3,120 +3,719 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us -  আভরণী (Avaroni)</title>
-    <meta name="description" content="Get in touch with  আভরণী (Avaroni) for customer support, order inquiries, or assistance via phone or WhatsApp.">
+    <title>Contact Us - AVARONI (আভরণী)</title>
+    <meta name="description" content="Get in touch with AVARONI (আভরণী) for order inquiries, custom styling, product questions, or fast support via WhatsApp, phone, or email.">
     
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="আভরণী (Avaroni)">
-    <meta property="og:title" content="Contact Us -  আভরণী (Avaroni)">
-    <meta property="og:description" content="Have questions or need assistance? Reach out to the Avaroni customer support team!">
+    <meta property="og:site_name" content="AVARONI (আভরণী)">
+    <meta property="og:title" content="Contact Us - AVARONI (আভরণী)">
+    <meta property="og:description" content="Have questions or need assistance? Reach out to the AVARONI customer support team!">
     <meta property="og:image" content="./img/profile_image.jpg">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Contact Us -  আভরণী (Avaroni)">
-    <meta name="twitter:description" content="Have questions or need assistance? Reach out to the Avaroni customer support team!">
+    <meta name="twitter:title" content="Contact Us - AVARONI (আভরণী)">
+    <meta name="twitter:description" content="Have questions or need assistance? Reach out to the AVARONI customer support team!">
     <meta name="twitter:image" content="./img/profile_image.jpg">
 
+    <link rel="icon" href="./fabicon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; color: #333; }
-        .header { background-color: #ba217b; padding: 20px; color: white; text-align: center; }
-        .container { max-width: 800px; margin: 40px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-wrap: wrap; gap: 30px; }
-        .contact-info, .contact-form { flex: 1; min-width: 300px; }
-        h2 { color: #ba217b; margin-top: 0; }
-        .back-link { display: block; margin-bottom: 20px; color: #ba217b; text-decoration: none; font-weight: bold; width: 100%; }
-        .back-link:hover { text-decoration: underline; }
-        .info-item { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .info-item i { font-size: 20px; color: #ba217b; width: 30px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #ba217b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .btn:hover { background: #961861; }
-    </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f5f5f7;
+            color: #1a1a1a;
+            font-family: 'Plus Jakarta Sans', 'Outfit', 'Hind Siliguri', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .contact-hero {
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 50%, #2a111e 100%);
+            color: #ffffff;
+            padding: 65px 20px 55px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(230, 0, 80, 0.3);
+        }
+
+        .contact-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(230, 0, 80, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .contact-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(230, 0, 80, 0.2);
+            color: #ff80aa;
+            border: 1px solid rgba(230, 0, 80, 0.4);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .contact-hero h1 {
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .contact-hero h1 span {
+            background: linear-gradient(135deg, #ff4d88 0%, #ff80aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .contact-hero p {
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: #d1d5db;
+            max-width: 750px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .breadcrumb-nav a {
+            color: #d1d5db;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-nav a:hover {
+            color: #ff80aa;
+        }
+
+        .breadcrumb-nav i {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .contact-container {
+            max-width: 1100px;
+            margin: -30px auto 70px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Left Info Cards */
+        .info-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .info-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .info-header p {
+            color: #6b7280;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .channels-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .channel-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #fdf2f6;
+            border: 1px solid rgba(230, 0, 80, 0.1);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .channel-item:hover {
+            transform: translateX(4px);
+            border-color: rgba(230, 0, 80, 0.3);
+            background: #fce7f0;
+        }
+
+        .channel-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e60050 0%, #ff1a6e 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .channel-info h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 3px;
+        }
+
+        .channel-info p {
+            font-size: 14px;
+            color: #4b5563;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .channel-info .badge-active {
+            font-size: 11px;
+            color: #059669;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .channel-info .badge-active::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Quick Help Banner */
+        .self-service-box {
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 100%);
+            color: #ffffff;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .self-service-box h4 {
+            color: #ff80aa;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .self-service-box p {
+            color: #9ca3af;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .self-service-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .self-service-links a {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .self-service-links a:hover {
+            background: #e60050;
+            color: #fff;
+        }
+
+        /* Right Form Card */
+        .form-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .form-card h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .form-card > p {
+            color: #6b7280;
+            font-size: 14.5px;
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group-modern {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group-modern label {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 7px;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 15px;
+        }
+
+        .input-with-icon input,
+        .input-with-icon select {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border-radius: 12px;
+            border: 1.5px solid #e5e7eb;
+            font-size: 14.5px;
+            outline: none;
+            background: #f9fafb;
+            color: #111827;
+            transition: all 0.25s ease;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .form-group-modern textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1.5px solid #e5e7eb;
+            font-size: 14.5px;
+            outline: none;
+            background: #f9fafb;
+            color: #111827;
+            transition: all 0.25s ease;
+            box-sizing: border-box;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .input-with-icon input:focus,
+        .input-with-icon select:focus,
+        .form-group-modern textarea:focus {
+            border-color: #e60050;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(230, 0, 80, 0.1);
+        }
+
+        .btn-submit-contact {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e60050 0%, #ff1a6e 100%);
+            color: #ffffff;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(230, 0, 80, 0.35);
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit-contact:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(230, 0, 80, 0.5);
+        }
+
+        .btn-submit-contact:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Success Alert */
+        .alert-success {
+            background: #ecfdf5;
+            border: 1.5px solid #10b981;
+            color: #065f46;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-size: 14.5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Location Card */
+        .location-banner {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .location-info h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .location-info p {
+            color: #4b5563;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .store-hours-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        .store-hours-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e5e7eb;
+            font-size: 13.5px;
+            color: #374151;
+        }
+
+        .store-hours-list li strong {
+            color: #111827;
+        }
+
+        @media (max-width: 850px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            .location-banner {
+                grid-template-columns: 1fr;
+                padding: 25px 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-card, .info-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>আভরণী</h1>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <b>AVARONI</b>
+        </a>
+        <!-- Search & Filter Bar -->
+        <div class="search-bar-container">
+            <div class="search-bar-inner">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search search-bar-icon"></i>
+                    <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                    <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="search-filter-divider"></div>
+                <div class="search-filter-wrapper">
+                    <i class="fas fa-sliders-h search-filter-icon"></i>
+                    <select id="global-filter-select" class="search-filter-select" title="Filter & Sort Products">
+                        <option value="all">Filter & Sort</option>
+                        <optgroup label="Price">
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group"></optgroup>
+                    </select>
+                </div>
+            </div>
+            <div id="search-results-dropdown" class="search-results-dropdown"></div>
+        </div>
+        <div class="nav-links">
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="far fa-heart"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Promo Slider (below navbar) -->
+    <div class="nav-promo-slider" id="nav-promo-slider"></div>
+
+    <!-- Sidebar Drawer -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span style="font-size:20px; font-weight:700; color:#333333; letter-spacing:0.5px;">AVARONI</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn" style="color:#555555; text-decoration:none; font-size:32px; border-bottom:none;">&times;</a>
+        </div>
+        <div id="sidebar-categories-container"></div>
+        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;">
+        <div style="padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</div>
+        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html" style="color: #e60050; font-weight: 700;"><i class="fas fa-envelope"></i> Contact</a>
     </div>
-    <div class="container">
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Store</a>
-        
-        <div class="contact-info">
-            <h2><i class="fas fa-envelope"></i> Get in Touch</h2>
-            <p>Have questions about your order, our products, or our store? Send us a message or reach out directly.</p>
-            <div class="info-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Mirpur 2, Dhaka-1216 , Bangladesh</span>
+
+    <!-- Hero Header -->
+    <div class="contact-hero">
+        <div class="contact-hero-badge" data-aos="fade-down">
+            <i class="fas fa-headset"></i> We're Here For You
+        </div>
+        <h1 data-aos="fade-up">Get in Touch with <span>AVARONI</span></h1>
+        <p data-aos="fade-up" data-aos-delay="100">
+            Have questions about your order, sizing, payment methods, or custom inquiries? Our friendly support team is always ready to assist you.
+        </p>
+        <div class="breadcrumb-nav" data-aos="fade-up" data-aos-delay="200">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Contact Us</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="contact-container">
+        <div class="contact-grid">
+            <!-- Left Info Card -->
+            <div class="info-card" data-aos="fade-right">
+                <div>
+                    <div class="info-header">
+                        <h2><i class="fas fa-paper-plane" style="color:#e60050; font-size:20px; margin-right:6px;"></i> Direct Support Channels</h2>
+                        <p>Choose your preferred channel below or send us a message through the form.</p>
+                    </div>
+
+                    <div class="channels-list">
+                        <!-- WhatsApp -->
+                        <a href="https://wa.me/8801628628300" target="_blank" class="channel-item">
+                            <div class="channel-icon" style="background: linear-gradient(135deg, #25D366, #128C7E);">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <div class="channel-info">
+                                <h4>WhatsApp Instant Chat</h4>
+                                <p>+880 1628628300</p>
+                                <span class="badge-active">Online • Instant Reply</span>
+                            </div>
+                        </a>
+
+                        <!-- Phone -->
+                        <a href="tel:+8801628628300" class="channel-item">
+                            <div class="channel-icon" style="background: linear-gradient(135deg, #0284c7, #0369a1);">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div class="channel-info">
+                                <h4>Phone Support</h4>
+                                <p>01628628300</p>
+                                <span class="badge-active">9:00 AM - 10:00 PM Daily</span>
+                            </div>
+                        </a>
+
+                        <!-- Email -->
+                        <a href="mailto:avaroni0000@gmail.com" class="channel-item">
+                            <div class="channel-icon" style="background: linear-gradient(135deg, #e60050, #990035);">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="channel-info">
+                                <h4>Official Email</h4>
+                                <p>avaroni0000@gmail.com</p>
+                                <span class="badge-active">Response within 2-4 hours</span>
+                            </div>
+                        </a>
+
+                        <!-- Address -->
+                        <div class="channel-item">
+                            <div class="channel-icon" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="channel-info">
+                                <h4>Store & Dispatch Office</h4>
+                                <p>Mirpur 2, Dhaka-1216, Bangladesh</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Self Service Widget -->
+                <div class="self-service-box">
+                    <h4><i class="fas fa-bolt"></i> Need Immediate Help?</h4>
+                    <p>Track your package live or check answers to our most frequent questions.</p>
+                    <div class="self-service-links">
+                        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
+                        <a href="faq.html"><i class="fas fa-question-circle"></i> View FAQ</a>
+                    </div>
+                </div>
             </div>
-            <div class="info-item">
-                <i class="fas fa-phone-alt"></i>
-                <span>01628628300</span>
-            </div>
-            <div class="info-item">
-                <i class="fas fa-envelope"></i>
-                <span>avaroni0000@gmail.com</span>
+
+            <!-- Right Form Card -->
+            <div class="form-card" data-aos="fade-left">
+                <h2>Send Us a Message</h2>
+                <p>Fill out the details below and our team will get back to you promptly.</p>
+
+                <!-- Success Alert -->
+                <div id="contactSuccessAlert" class="alert-success">
+                    <i class="fas fa-check-circle" style="font-size:22px;"></i>
+                    <div>
+                        <strong>Thank you!</strong> Your message has been sent successfully. We will get back to you shortly.
+                    </div>
+                </div>
+
+                <form id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group-modern">
+                            <label for="contact-name">Your Full Name *</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="contact-name" placeholder="e.g. Sadia Islam" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label for="contact-phone">Phone Number *</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-phone"></i>
+                                <input type="tel" id="contact-phone" placeholder="e.g. 017xxxxxxxx" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group-modern">
+                            <label for="contact-email">Email Address *</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="contact-email" placeholder="e.g. you@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label for="contact-subject">Inquiry Subject</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-tag"></i>
+                                <select id="contact-subject">
+                                    <option value="General Inquiry">General Inquiry</option>
+                                    <option value="Order Status / Tracking">Order Status / Tracking</option>
+                                    <option value="Product & Sizing Help">Product & Sizing Help</option>
+                                    <option value="Return / Exchange Request">Return / Exchange Request</option>
+                                    <option value="Wholesale / Partnership">Wholesale / Partnership</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-modern">
+                        <label for="contact-message">Your Message / Questions *</label>
+                        <textarea id="contact-message" rows="5" placeholder="Please describe how we can assist you in detail..." required></textarea>
+                    </div>
+
+                    <button type="submit" id="contactSubmitBtn" class="btn-submit-contact">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
             </div>
         </div>
 
-        <div class="contact-form">
-            <form id="contactForm">
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" placeholder="Your Name" required>
-                </div>
-                <div class="form-group">
-                    <label for="contact-email">Email Address</label>
-                    <input type="email" id="contact-email" placeholder="Your Email" required>
-                </div>
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" rows="5" placeholder="How can we help you?" required></textarea>
-                </div>
-                <button type="submit" class="btn">Send Message</button>
-            </form>
+        <!-- Location Banner -->
+        <div class="location-banner" data-aos="fade-up">
+            <div class="location-info">
+                <h3><i class="fas fa-store" style="color:#e60050; margin-right:8px;"></i> Visit Our Mirpur Display Center</h3>
+                <p>Experience our premium fabrics, try on hand-crafted ethnic wear, and explore our newest festive ornaments in person.</p>
+                <ul class="store-hours-list">
+                    <li><span>Saturday – Thursday:</span> <strong>10:00 AM – 9:00 PM</strong></li>
+                    <li><span>Friday:</span> <strong>3:00 PM – 9:30 PM</strong></li>
+                    <li><span>Online Orders & Delivery:</span> <strong>24/7 Nationwide</strong></li>
+                </ul>
+            </div>
+            <div>
+                <a href="https://maps.google.com/?q=Mirpur+2+Dhaka" target="_blank" style="display:block; border-radius:14px; overflow:hidden; border:1px solid #e5e7eb; box-shadow:0 4px 15px rgba(0,0,0,0.05); text-decoration:none;">
+                    <div style="background:linear-gradient(135deg, #111, #333); color:#fff; padding:35px 25px; text-align:center;">
+                        <i class="fas fa-map-marked-alt" style="font-size:36px; color:#ff80aa; margin-bottom:12px;"></i>
+                        <h4 style="font-size:17px; margin-bottom:6px; color:#fff;">Mirpur 2, Dhaka-1216</h4>
+                        <p style="color:#9ca3af; font-size:13px; margin:0;">Click to Open in Google Maps <i class="fas fa-external-link-alt" style="font-size:11px; margin-left:4px;"></i></p>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
-    <script>
-        document.getElementById('contactForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('contact-email').value;
-            const message = document.getElementById('message').value;
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Sending Message...";
-
-            try {
-                const response = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, message })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    alert("Thank you! Your message has been sent successfully. We will get back to you soon.");
-                    this.reset();
-                } else {
-                    alert(data.message || "Failed to send message.");
-                }
-            } catch (err) {
-                console.error("Contact submission error:", err);
-                alert("An error occurred. Please check your internet connection.");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Send Message";
-            }
-        });
-    </script>
+    <!-- Scripts -->
+    <script src="script.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -124,7 +723,53 @@
                 AOS.init({
                     duration: 800,
                     once: true,
-                    offset: 50
+                    offset: 40
+                });
+            }
+
+            const form = document.getElementById('contactForm');
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            const successAlert = document.getElementById('contactSuccessAlert');
+
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const name = document.getElementById('contact-name').value.trim();
+                    const phone = document.getElementById('contact-phone').value.trim();
+                    const email = document.getElementById('contact-email').value.trim();
+                    const subject = document.getElementById('contact-subject').value;
+                    const message = document.getElementById('contact-message').value.trim();
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Message...';
+
+                    try {
+                        const response = await fetch('/api/contact', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, email, phone, subject, message })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            successAlert.style.display = 'flex';
+                            form.reset();
+                            window.scrollTo({ top: form.offsetTop - 100, behavior: 'smooth' });
+                            setTimeout(() => {
+                                successAlert.style.display = 'none';
+                            }, 8000);
+                        } else {
+                            alert(data.message || "Failed to send message. Please try again or reach out on WhatsApp.");
+                        }
+                    } catch (err) {
+                        console.error("Contact submission error:", err);
+                        alert("Network error. Please try reaching us directly on WhatsApp at 01628628300.");
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+                    }
                 });
             }
         });
