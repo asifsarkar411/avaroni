@@ -109,12 +109,14 @@ export default function Sidebar({ isOpen, onClose }) {
             <hr style={{ border: '0', borderTop: '1px solid rgba(0,0,0,0.1)', margin: '15px 0' }} />
             
             <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Links</div>
-            <a href="/track-order"><i className="fas fa-truck"></i> Track Order</a>
-            <a href="/faq"><i className="fas fa-question-circle"></i> FAQ</a>
-            <a href="/blog"><i className="fas fa-newspaper"></i> Blog</a>
-            <a href="/sitemap"><i className="fas fa-sitemap"></i> Sitemap</a>
-            <a href="/about"><i className="fas fa-info-circle"></i> About Us</a>
-            <Link href="/contact"><i className="fas fa-envelope"></i> Contact</Link>
+            <Link href="/track-order" onClick={onClose}><i className="fas fa-truck"></i> Track Order</Link>
+            <Link href="/faq" onClick={onClose}><i className="fas fa-question-circle"></i> FAQ & Help</Link>
+            <Link href="/blog" onClick={onClose}><i className="fas fa-newspaper"></i> Fashion Blog</Link>
+            <Link href="/sitemap" onClick={onClose}><i className="fas fa-sitemap"></i> Sitemap</Link>
+            <a href="/return-product.html" onClick={onClose}><i className="fas fa-undo"></i> Return Product</a>
+            <a href="/return-policy.html" onClick={onClose}><i className="fas fa-file-contract"></i> Return Policy</a>
+            <Link href="/about" onClick={onClose}><i className="fas fa-info-circle"></i> About Us</Link>
+            <Link href="/contact" onClick={onClose}><i className="fas fa-envelope"></i> Contact Us</Link>
         </div>
     );
 }

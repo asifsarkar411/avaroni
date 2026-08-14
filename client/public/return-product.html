@@ -3,112 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Product Return -  আভরণী (Avaroni)</title>
-    <meta name="description" content="Submit a return or exchange request for damaged or incorrect items delivered by  আভরণী (Avaroni).">
+    <title>Submit Product Return - AVARONI (আভরণী)</title>
+    <meta name="description" content="Submit an online return or exchange request for damaged, defective, or incorrect items delivered by AVARONI (আভরণী). Fast, smooth, customer-first service.">
     
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="আভরণী (Avaroni)">
-    <meta property="og:title" content="Submit Product Return -  আভরণী (Avaroni)">
-    <meta property="og:description" content="Submit a product return or exchange request online with Avaroni.">
+    <meta property="og:site_name" content="AVARONI (আভরণী)">
+    <meta property="og:title" content="Submit Product Return - AVARONI (আভরণী)">
+    <meta property="og:description" content="Submit an online return or exchange request with AVARONI.">
     <meta property="og:image" content="./img/profile_image.jpg">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Submit Product Return -  আভরণী (Avaroni)">
-    <meta name="twitter:description" content="Submit a product return or exchange request online with Avaroni.">
+    <meta name="twitter:title" content="Submit Product Return - AVARONI (আভরণী)">
+    <meta name="twitter:description" content="Submit an online return or exchange request with AVARONI.">
     <meta name="twitter:image" content="./img/profile_image.jpg">
 
+    <link rel="icon" href="./fabicon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
-        .header { background-color: #ba217b; padding: 20px; color: white; text-align: center; }
-        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { color: #ba217b; margin-top: 0; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: #ba217b; text-decoration: none; font-weight: bold; }
-        .back-link:hover { text-decoration: underline; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #ba217b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .btn:hover { background: #961861; }
-    </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f5f5f7;
+            color: #1a1a1a;
+            font-family: 'Plus Jakarta Sans', 'Outfit', 'Hind Siliguri', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .return-hero {
+            background: linear-gradient(135deg, #111111 0%, #1f1f1f 50%, #2a111e 100%);
+            color: #ffffff;
+            padding: 65px 20px 55px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(230, 0, 80, 0.3);
+        }
+
+        .return-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(230, 0, 80, 0.12) 0%, transparent 60%);
+            animation: pulseGlow 12s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .return-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(230, 0, 80, 0.15);
+            border: 1px solid rgba(230, 0, 80, 0.35);
+            color: #ffb6d8;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 18px;
+        }
+
+        .return-hero h1 {
+            font-size: 38px;
+            font-weight: 800;
+            margin: 0 0 14px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .return-hero h1 span {
+            background: linear-gradient(135deg, #ff4d82 0%, #ff85a2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .return-hero p {
+            font-size: 16px;
+            color: #d1d5db;
+            max-width: 680px;
+            margin: 0 auto 20px auto;
+            line-height: 1.6;
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .breadcrumb-nav a {
+            color: #ff85a2;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb-nav a:hover {
+            color: #ffffff;
+        }
+
+        .return-container {
+            max-width: 800px;
+            margin: -35px auto 60px auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .return-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.04);
+        }
+
+        .return-form-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .return-form-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #111111;
+            margin: 0 0 8px 0;
+        }
+
+        .return-form-header p {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .return-form-group {
+            margin-bottom: 20px;
+        }
+
+        .return-form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .return-form-group input,
+        .return-form-group select,
+        .return-form-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #111827;
+            background: #f9fafb;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .return-form-group input:focus,
+        .return-form-group select:focus,
+        .return-form-group textarea:focus {
+            border-color: #e60050;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(230, 0, 80, 0.1);
+        }
+
+        .return-submit-btn {
+            width: 100%;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #111111 0%, #2a111e 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .return-submit-btn:hover {
+            background: #e60050;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(230, 0, 80, 0.3);
+        }
+
+        .return-success-alert {
+            display: none;
+            background: #ecfdf5;
+            border: 1.5px solid #a7f3d0;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 25px;
+            color: #065f46;
+            text-align: center;
+        }
+
+        .return-success-alert i {
+            font-size: 32px;
+            color: #10b981;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .return-success-alert h4 {
+            margin: 0 0 4px 0;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .return-success-alert p {
+            margin: 0;
+            font-size: 13px;
+            color: #047857;
+        }
+
+        @media (max-width: 768px) {
+            .return-hero { padding: 45px 15px 40px; }
+            .return-hero h1 { font-size: 28px; }
+            .return-card { padding: 25px 20px; }
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>আভরণী</h1>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <b class="brand-name">AVARONI</b>
+        </a>
+        <div class="search-bar-container">
+            <div class="search-input-group">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-bar-icon"></i>
+                    <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                    <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="search-filter-divider"></div>
+                <div class="search-filter-wrapper">
+                    <i class="fas fa-sliders-h search-filter-icon"></i>
+                    <select id="global-filter-select" class="search-filter-select" title="Filter & Sort Products">
+                        <option value="all">Filter & Sort</option>
+                        <optgroup label="Price">
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group"></optgroup>
+                    </select>
+                </div>
+            </div>
+            <div id="search-results-dropdown" class="search-results-dropdown"></div>
+        </div>
+        <div class="nav-links">
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="far fa-heart"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <!-- Sidebar Drawer -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span class="sidebar-brand-name">AVARONI</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
+        </div>
+        <div id="sidebar-categories-container"></div>
+        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;">
+        <div style="padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</div>
+        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="return-product.html" class="active-sidebar-link" style="color: #e60050; font-weight: 700;"><i class="fas fa-undo"></i> Return Product</a>
+        <a href="return-policy.html"><i class="fas fa-file-contract"></i> Return Policy</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
     </div>
-    <div class="container">
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Store</a>
-        <h2><i class="fas fa-undo"></i> Return a Product</h2>
-        <p>If you're not satisfied with your purchase, let us help you with a return.</p>
-        
-        <form id="returnForm">
-            <div class="form-group">
-                <label for="order-id">Order ID</label>
-                <input type="text" id="order-id" placeholder="e.g. ORD-12345" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="Your account email" required>
-            </div>
-            <div class="form-group">
-                <label for="reason">Reason for Return</label>
-                <select id="reason" required>
-                    <option value="" disabled selected>Select a reason...</option>
-                    <option value="defective">Product is defective/damaged</option>
-                    <option value="wrong_item">Received the wrong item</option>
-                    <option value="size_issue">Size does not fit</option>
-                    <option value="not_needed">No longer needed</option>
-                    <option value="not_needed">Others</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="details">Additional Details</label>
-                <textarea id="details" rows="4" placeholder="Please provide any other details..."></textarea>
-            </div>
-            <button type="submit" class="btn">Submit Return Request</button>
-        </form>
+
+    <!-- Hero Header -->
+    <div class="return-hero">
+        <div class="return-hero-badge" data-aos="fade-down">
+            <i class="fas fa-undo"></i> Online Return Portal
+        </div>
+        <h1 data-aos="fade-up">Submit Product <span>Return</span></h1>
+        <p data-aos="fade-up" data-aos-delay="100">
+            Received an item that does not fit or requires an exchange? Fill out the form below and our support team will get in touch within 24 hours.
+        </p>
+        <div class="breadcrumb-nav" data-aos="fade-up" data-aos-delay="200">
+            <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Return Product</span>
+        </div>
     </div>
 
-    <script>
-        document.getElementById('returnForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+    <!-- Main Container -->
+    <div class="return-container">
+        <div class="return-card" data-aos="fade-up">
+            
+            <div id="return-success-alert" class="return-success-alert">
+                <i class="fas fa-check-circle"></i>
+                <h4>Return Request Received!</h4>
+                <p>Your return inquiry has been recorded. Our team will contact you shortly to coordinate parcel pickup or exchange.</p>
+            </div>
 
-            const orderId = document.getElementById('order-id').value;
-            const email = document.getElementById('email').value;
-            const reason = document.getElementById('reason').value;
-            const details = document.getElementById('details').value;
+            <div class="return-form-header">
+                <h2>Product Return / Exchange Request</h2>
+                <p>Please enter accurate details matching your recent order.</p>
+            </div>
 
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Submitting Request...";
+            <form id="returnForm">
+                <div class="return-form-group">
+                    <label for="order-id"><i class="fas fa-receipt" style="color: #e60050; margin-right: 6px;"></i> Order ID <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="order-id" placeholder="e.g. ORD-12345 or your invoice number" required>
+                </div>
 
-            try {
-                const response = await fetch('/api/returns', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId, email, reason, details })
-                });
+                <div class="return-form-group">
+                    <label for="email"><i class="fas fa-envelope" style="color: #e60050; margin-right: 6px;"></i> Email Address <span style="color:#ef4444;">*</span></label>
+                    <input type="email" id="email" placeholder="e.g. customer@example.com" required>
+                </div>
 
-                const data = await response.json();
+                <div class="return-form-group">
+                    <label for="reason"><i class="fas fa-question-circle" style="color: #e60050; margin-right: 6px;"></i> Reason for Return / Exchange <span style="color:#ef4444;">*</span></label>
+                    <select id="reason" required>
+                        <option value="" disabled selected>Select a reason...</option>
+                        <option value="defective">Product is defective / damaged</option>
+                        <option value="wrong_item">Received the wrong item</option>
+                        <option value="size_issue">Size does not fit (Exchange Requested)</option>
+                        <option value="color_issue">Color / Fabric mismatch</option>
+                        <option value="not_needed">No longer needed</option>
+                        <option value="other">Other reason</option>
+                    </select>
+                </div>
 
-                if (response.ok && data.success) {
-                    alert("Your return request has been submitted successfully. A confirmation updates email will be sent once processed.");
-                    this.reset();
-                } else {
-                    alert(data.message || "Failed to submit return request.");
-                }
-            } catch (err) {
-                console.error("Return submission error:", err);
-                alert("An error occurred. Please check your internet connection.");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Submit Return Request";
-            }
-        });
-    </script>
+                <div class="return-form-group">
+                    <label for="details"><i class="fas fa-align-left" style="color: #e60050; margin-right: 6px;"></i> Additional Details / Preferred Size</label>
+                    <textarea id="details" rows="4" placeholder="Please describe any issues or specify the exchange size/color you prefer..."></textarea>
+                </div>
+
+                <button type="submit" id="submit-return-btn" class="return-submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Return Request
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -116,7 +380,52 @@
                 AOS.init({
                     duration: 800,
                     once: true,
-                    offset: 50
+                    offset: 40
+                });
+            }
+
+            const form = document.getElementById('returnForm');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const orderId = document.getElementById('order-id').value.trim();
+                    const email = document.getElementById('email').value.trim();
+                    const reason = document.getElementById('reason').value;
+                    const details = document.getElementById('details').value.trim();
+
+                    const submitBtn = document.getElementById('submit-return-btn');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                    }
+
+                    try {
+                        const response = await fetch('/api/returns', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderId, email, reason, details })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            const alertBox = document.getElementById('return-success-alert');
+                            if (alertBox) alertBox.style.display = 'block';
+                            form.reset();
+                            window.scrollTo({ top: form.offsetTop - 80, behavior: 'smooth' });
+                        } else {
+                            alert(data.message || "Failed to submit return request.");
+                        }
+                    } catch (err) {
+                        console.error("Return submission error:", err);
+                        alert("An error occurred connecting to the server. Please try again.");
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Return Request';
+                        }
+                    }
                 });
             }
         });

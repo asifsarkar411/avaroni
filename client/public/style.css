@@ -708,14 +708,29 @@ body.no-scroll {
 }
 
 .sidebar a:hover {
-    color: #ff4d4f;
-    background-color: rgba(0, 0, 0, 0.02);
-    padding-left: 35px;
-    box-shadow: inset 6px 0 0 #ff4d4f;
+    color: #e60050;
+    background-color: rgba(230, 0, 80, 0.04);
+    padding-left: 32px;
+    box-shadow: inset 4px 0 0 #e60050;
 }
-.sidebar a i:hover {
-    color: #ff4d4f;
-    background-color: transparent;
+.sidebar a:hover i {
+    color: #e60050;
+}
+
+.sidebar a.active-sidebar-link {
+    color: #e60050 !important;
+    background-color: rgba(230, 0, 80, 0.06) !important;
+    font-weight: 700 !important;
+    padding-left: 32px !important;
+    box-shadow: inset 4px 0 0 #e60050 !important;
+}
+.sidebar a.active-sidebar-link i {
+    color: #e60050 !important;
+}
+
+.sidebar-section-heading {
+    user-select: none;
+    font-family: inherit;
 }
 
 /* The X Close Button */

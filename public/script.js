@@ -566,175 +566,202 @@ function loadSidebarCategories(categories) {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
 
-    // Preserve footer links (faq, blog, sitemap, return, policy, about, contact)
-    const footerLinks = [];
-    sidebar.querySelectorAll('a').forEach(a => {
-        const href = a.getAttribute('href') || '';
-        if (href.includes('return') || href.includes('about') || href.includes('contact') || href.includes('policy') || href.includes('faq') || href.includes('blog') || href.includes('sitemap')) {
-            footerLinks.push(a.cloneNode(true));
-        }
-    });
+    const currentPath = window.location.pathname.toLowerCase();
+    const currentPage = currentPath.substring(currentPath.lastIndexOf('/') + 1) || 'index.html';
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentCatParam = (currentParams.get('cat') || '').toLowerCase();
+    const currentSubParam = (currentParams.get('sub') || '').toLowerCase();
+
+    let brandLogo = './img/profile_image.jpg';
+    let brandName = 'AVARONI';
+    try {
+        const cachedLogo = localStorage.getItem('site_brand_logo');
+        const cachedName = localStorage.getItem('site_brand_name');
+        if (cachedLogo) brandLogo = cachedLogo;
+        if (cachedName) brandName = cachedName;
+    } catch(e) {}
 
     sidebar.innerHTML = '';
 
-    // Create sidebar header with website logo and close button
-const headerDiv = document.createElement('div');
-headerDiv.className = 'sidebar-header';
-headerDiv.innerHTML = `
-    <a href="index.html" class="sidebar-brand">
-        <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
-        <span>আভরণী</span>
-    </a>
-    <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn">&times;</a>
-`;
-sidebar.appendChild(headerDiv);
-
-    // Re-attach close button event listener
-    const closeBtn = headerDiv.querySelector('#close-sidebar-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleSidebar();
-        });
-    }
+    // Create sidebar header with website logo, brand name, and close button
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'sidebar-header';
+    headerDiv.innerHTML = `
+        <a href="index.html" class="sidebar-brand">
+            <img src="${escapeHTML(brandLogo)}" alt="Logo" class="sidebar-logo" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+            <span class="sidebar-brand-name">${escapeHTML(brandName)}</span>
+        </a>
+        <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn" aria-label="Close menu">&times;</a>
+    `;
+    sidebar.appendChild(headerDiv);
 
     const iconMap = {
         'women': 'fas fa-female',
         'womendress': 'fas fa-female',
+        'sarees': 'fas fa-female',
+        'salwar-kameez': 'fas fa-female',
         'ornament': 'fas fa-gem',
+        'jewellery': 'fas fa-gem',
         'kids': 'fas fa-child',
-        'kidszone': 'fas fa-child'
+        'kidszone': 'fas fa-child',
+        'handbags': 'fas fa-shopping-bag',
+        'footwear': 'fas fa-shoe-prints'
     };
 
+    // Categories Section Heading
     const catHeading = document.createElement('div');
-    catHeading.style.cssText = 'padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;';
-    catHeading.textContent = 'Categories';
+    catHeading.className = 'sidebar-section-heading';
+    catHeading.style.cssText = 'padding: 12px 20px 6px; color: #888; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;';
+    catHeading.textContent = 'Shop Categories';
     sidebar.appendChild(catHeading);
 
-    categories.forEach(cat => {
-        const pageFile = getCategoryPageUrl(cat.slug, cat.name);
-        const iconClass = iconMap[cat.slug] || iconMap[cat.name] || 'fas fa-tag';
-        const hasSubs = Array.isArray(cat.subcategories) && cat.subcategories.length > 0;
+    if (Array.isArray(categories) && categories.length > 0) {
+        categories.forEach(cat => {
+            const rawSlug = (cat.slug || cat.name || '').toLowerCase();
+            const rawName = cat.displayName || cat.name || 'Category';
+            const pageFile = cat.redirectUrl && cat.redirectUrl.trim() ? cat.redirectUrl.trim() : getCategoryPageUrl(cat.slug, cat.name);
+            const iconClass = iconMap[rawSlug] || iconMap[cat.name ? cat.name.toLowerCase() : ''] || 'fas fa-tag';
+            
+            let subs = [];
+            if (Array.isArray(cat.subcategories)) subs = cat.subcategories;
+            else if (typeof cat.subcategories === 'string' && cat.subcategories.trim()) subs = cat.subcategories.split(',');
+            else if (Array.isArray(cat.subCategories)) subs = cat.subCategories;
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'sidebar-category-wrapper';
+            const hasSubs = subs.length > 0;
+            const isCatActive = currentPage === pageFile.toLowerCase() || (currentPage === 'category.html' && currentCatParam === rawSlug);
 
-        if (hasSubs) {
-            const toggleBtn = document.createElement('button');
-            toggleBtn.type = 'button';
-            toggleBtn.className = 'sidebar-category-btn';
-            toggleBtn.innerHTML = `
-                <span class="cat-btn-content">
-                    <i class="${iconClass}"></i>
-                    <span>${escapeHTML(cat.displayName || cat.name)}</span>
-                </span>
-                <i class="fas fa-chevron-down sidebar-chevron"></i>
-            `;
+            const wrapper = document.createElement('div');
+            wrapper.className = `sidebar-category-wrapper ${isCatActive ? 'open' : ''}`;
 
-            const subContainer = document.createElement('div');
-            subContainer.className = 'sidebar-subcategories';
+            if (hasSubs) {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.type = 'button';
+                toggleBtn.className = 'sidebar-category-btn';
+                toggleBtn.innerHTML = `
+                    <span class="cat-btn-content">
+                        <i class="${iconClass}"></i>
+                        <span>${escapeHTML(rawName)}</span>
+                    </span>
+                    <i class="fas fa-chevron-down sidebar-chevron"></i>
+                `;
 
-            const allLink = document.createElement('a');
-            allLink.href = pageFile;
-            allLink.className = 'sidebar-sub-link all-sub-link';
-            allLink.innerHTML = `<i class="fas fa-th-large"></i> All ${escapeHTML(cat.displayName || cat.name)}`;
-            subContainer.appendChild(allLink);
+                const subContainer = document.createElement('div');
+                subContainer.className = 'sidebar-subcategories';
 
-            cat.subcategories.forEach(sub => {
-                if (!sub || !sub.trim()) return;
-                const subClean = sub.trim();
-                const subLink = document.createElement('a');
-                const subUrl = pageFile.includes('?') 
-                    ? `${pageFile}&sub=${encodeURIComponent(subClean)}` 
-                    : `${pageFile}?sub=${encodeURIComponent(subClean)}`;
-                subLink.href = subUrl;
-                subLink.className = 'sidebar-sub-link';
-                subLink.innerHTML = `<i class="fas fa-minus"></i> ${escapeHTML(subClean)}`;
-                subContainer.appendChild(subLink);
-            });
+                const allLink = document.createElement('a');
+                allLink.href = pageFile;
+                allLink.className = `sidebar-sub-link all-sub-link ${isCatActive && !currentSubParam ? 'active-sidebar-link' : ''}`;
+                allLink.innerHTML = `<i class="fas fa-th-large"></i> All ${escapeHTML(rawName)}`;
+                subContainer.appendChild(allLink);
 
-            toggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const wasOpen = wrapper.classList.contains('open');
-                sidebar.querySelectorAll('.sidebar-category-wrapper.open').forEach(w => {
-                    if (w !== wrapper) w.classList.remove('open');
+                subs.forEach(subItem => {
+                    const subClean = typeof subItem === 'string' ? subItem.trim() : (subItem.name || subItem.title || String(subItem)).trim();
+                    if (!subClean) return;
+
+                    const subUrl = pageFile.includes('?') 
+                        ? `${pageFile}&sub=${encodeURIComponent(subClean)}` 
+                        : `${pageFile}?sub=${encodeURIComponent(subClean)}`;
+                    const isSubActive = isCatActive && currentSubParam === subClean.toLowerCase();
+
+                    const subLink = document.createElement('a');
+                    subLink.href = subUrl;
+                    subLink.className = `sidebar-sub-link ${isSubActive ? 'active-sidebar-link' : ''}`;
+                    subLink.innerHTML = `<i class="fas fa-minus"></i> ${escapeHTML(subClean)}`;
+                    subContainer.appendChild(subLink);
                 });
-                wrapper.classList.toggle('open', !wasOpen);
-            });
 
-            wrapper.appendChild(toggleBtn);
-            wrapper.appendChild(subContainer);
-            sidebar.appendChild(wrapper);
-        } else {
-            const link = document.createElement('a');
-            link.href = pageFile;
-            link.className = 'sidebar-category-btn';
-            link.style.textDecoration = 'none';
-            link.innerHTML = `
-                <span class="cat-btn-content">
-                    <i class="${iconClass}"></i>
-                    <span>${escapeHTML(cat.displayName || cat.name)}</span>
-                </span>
-            `;
-            wrapper.appendChild(link);
-            sidebar.appendChild(wrapper);
-        }
-    });
+                toggleBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const wasOpen = wrapper.classList.contains('open');
+                    sidebar.querySelectorAll('.sidebar-category-wrapper.open').forEach(w => {
+                        if (w !== wrapper) w.classList.remove('open');
+                    });
+                    wrapper.classList.toggle('open', !wasOpen);
+                });
 
-    // Add divider
+                wrapper.appendChild(toggleBtn);
+                wrapper.appendChild(subContainer);
+                sidebar.appendChild(wrapper);
+            } else {
+                const link = document.createElement('a');
+                link.href = pageFile;
+                link.className = `sidebar-category-btn ${isCatActive ? 'active-sidebar-link' : ''}`;
+                link.style.textDecoration = 'none';
+                link.innerHTML = `
+                    <span class="cat-btn-content">
+                        <i class="${iconClass}"></i>
+                        <span>${escapeHTML(rawName)}</span>
+                    </span>
+                `;
+                wrapper.appendChild(link);
+                sidebar.appendChild(wrapper);
+            }
+        });
+    }
+
+    // Divider
     const hr = document.createElement('hr');
-    hr.style.cssText = 'border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;';
+    hr.style.cssText = 'border: 0; border-top: 1px solid rgba(0,0,0,0.08); margin: 12px 0;';
     sidebar.appendChild(hr);
 
-    const createSidebarLink = (href, iconClass, text) => {
+    const createSidebarLink = (href, iconClass, text, isCurrent = false) => {
         const a = document.createElement('a');
         a.href = href;
+        a.className = isCurrent ? 'active-sidebar-link' : '';
         a.innerHTML = `<i class="${iconClass}"></i> ${text}`;
+        if (isCurrent) {
+            a.style.color = '#e60050';
+            a.style.fontWeight = '700';
+            a.style.backgroundColor = 'rgba(230, 0, 80, 0.06)';
+            a.style.boxShadow = 'inset 4px 0 0 #e60050';
+            a.style.paddingLeft = '32px';
+        }
         return a;
     };
 
-    // Add dynamic Sign In / Account link to sidebar
+    // Add dynamic Sign In / Account link
     let savedUser = null;
     try {
         const profile = localStorage.getItem('userProfile');
         if (profile) savedUser = JSON.parse(profile);
     } catch(e) {}
 
+    const isLoginActive = currentPage === 'login.html';
     if (savedUser && savedUser.username) {
-        const userAccountLink = createSidebarLink('login.html', 'fas fa-user-check', `My Account (${escapeHTML(savedUser.username)})`);
+        const userAccountLink = createSidebarLink('login.html', 'fas fa-user-check', `My Account (${escapeHTML(savedUser.username)})`, isLoginActive);
         userAccountLink.style.color = '#28a745';
+        userAccountLink.style.fontWeight = '700';
         sidebar.appendChild(userAccountLink);
     } else {
-        const signInLink = createSidebarLink('login.html', 'fas fa-user-circle', 'Sign In / Register');
+        const signInLink = createSidebarLink('login.html', 'fas fa-user-circle', 'Sign In / Register', isLoginActive);
         sidebar.appendChild(signInLink);
     }
 
+    // Quick Links Section Heading
     const quickHeading = document.createElement('div');
-    quickHeading.style.cssText = 'padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;';
+    quickHeading.className = 'sidebar-section-heading';
+    quickHeading.style.cssText = 'padding: 14px 20px 6px; color: #888; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;';
     quickHeading.textContent = 'Quick Links';
     sidebar.appendChild(quickHeading);
 
-    // Guarantee Track Order link is always included at the top of quick links
-    const hasTrackOrder = footerLinks.some(link => link.getAttribute('href') === 'track-order.html');
-    if (!hasTrackOrder) {
-        footerLinks.unshift(createSidebarLink('track-order.html', 'fas fa-truck', 'Track Order'));
-    }
+    // Standard complete list of Quick Links
+    const standardQuickLinks = [
+        { href: 'track-order.html', icon: 'fas fa-truck', text: 'Track Order' },
+        { href: 'faq.html', icon: 'fas fa-question-circle', text: 'FAQ & Help' },
+        { href: 'blog.html', icon: 'fas fa-newspaper', text: 'Fashion Blog' },
+        { href: 'sitemap.html', icon: 'fas fa-sitemap', text: 'Sitemap' },
+        { href: 'return-product.html', icon: 'fas fa-undo', text: 'Return Product' },
+        { href: 'return-policy.html', icon: 'fas fa-file-contract', text: 'Return Policy' },
+        { href: 'about.html', icon: 'fas fa-info-circle', text: 'About Us' },
+        { href: 'contact.html', icon: 'fas fa-envelope', text: 'Contact Us' }
+    ];
 
-    // If default quick links were missing, add remaining standard links
-    const hasFaq = footerLinks.some(link => link.getAttribute('href') === 'faq.html');
-    if (!hasFaq) {
-        footerLinks.push(createSidebarLink('faq.html', 'fas fa-question-circle', 'FAQ'));
-        footerLinks.push(createSidebarLink('blog.html', 'fas fa-newspaper', 'Blog'));
-        footerLinks.push(createSidebarLink('sitemap.html', 'fas fa-sitemap', 'Sitemap'));
-        footerLinks.push(createSidebarLink('return-product.html', 'fas fa-undo', 'Return Product'));
-        footerLinks.push(createSidebarLink('return-policy.html', 'fas fa-file-contract', 'Return Policy'));
-        footerLinks.push(createSidebarLink('about.html', 'fas fa-info-circle', 'About Us'));
-        footerLinks.push(createSidebarLink('contact.html', 'fas fa-envelope', 'Contact'));
-    }
-
-    // Re-add footer links
-    footerLinks.forEach(link => sidebar.appendChild(link));
+    standardQuickLinks.forEach(item => {
+        const isCurrent = (currentPage === item.href) || currentPath.endsWith('/' + item.href);
+        const linkEl = createSidebarLink(item.href, item.icon, item.text, isCurrent);
+        sidebar.appendChild(linkEl);
+    });
 
     // Attach closeSidebar to all navigation links in sidebar
     sidebar.querySelectorAll('a').forEach(a => {
@@ -1191,6 +1218,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
         toggleSidebar();
+    });
+
+    // Global Event Delegation for sidebar triggers (handles any dynamic navbar or menu icons)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#menu-icon-btn, .menu-icon, .nav-menu-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+        } else if (e.target.closest('#close-sidebar-btn, .sidebar-close-btn') || (e.target.closest('.close-btn') && e.target.closest('#sidebar'))) {
+            e.preventDefault();
+            closeSidebar();
+        } else if (e.target.closest('#sidebar-overlay')) {
+            e.preventDefault();
+            closeSidebar();
+        }
+    });
+
+    // Close sidebar on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('active')) {
+                closeSidebar();
+            }
+        }
     });
 
     // Securely listen to Payment Method radio buttons changing
