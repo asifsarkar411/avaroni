@@ -205,6 +205,129 @@ async function seedCategories() {
   }
 }
 
+// Preset Default Blogs
+const DEFAULT_PRESET_BLOGS = [
+    {
+        title: "Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh",
+        slug: "trending-salwar-kameez-styles",
+        category: "Ethnic Trends",
+        tag: "Ethnic Trends",
+        author: "AVARONI Styling Team",
+        readTime: "4 min read",
+        excerpt: "Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bangladeshi festive celebrations by storm this season...",
+        description: "Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bangladeshi festive celebrations by storm this season...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Ethnic fashion in Bangladesh is undergoing an exciting renaissance where centuries-old regal silhouettes blend effortlessly with lightweight contemporary drapes.</p>
+        <h4>1. Flared Anarkali Suits with Heavy Gota Patti</h4>
+        <p>Floor-length Anarkalis featuring intricate neckline embroidery and flowy organza dupattas remain the gold standard for Eid mornings and wedding galas.</p>
+        <h4>2. Straight Cut Minimalist Kurtis</h4>
+        <p>For casual gatherings and corporate elegance, straight-cut silk and linen kurtis paired with matching cigarette pants provide unparalleled comfort.</p>
+        <h4>3. Pastel Organza & Chiffon Coordinates</h4>
+        <p>Soft mint green, blush pink, and lavender palettes with subtle pearl and mirror work are dominating evening festive parties.</p>
+        <h4>4. Layered Cape & Jacket Kurtis</h4>
+        <p>Adding a sheer embroidered cape over a solid inner tunic creates instant drama and movement without weighing down your ensemble.</p>`,
+        isPublished: true,
+        views: 128
+    },
+    {
+        title: "How to Maintain & Preserve Your Hand-Crafted Ornaments & Gold-Plated Jewelry",
+        slug: "preserve-handcrafted-ornaments-jewelry",
+        category: "Jewelry Care",
+        tag: "Jewelry Care",
+        author: "Jewelry Experts",
+        readTime: "3 min read",
+        excerpt: "Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple, proven home care techniques...",
+        description: "Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple, proven home care techniques...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Hand-crafted ornaments and gold-plated jewelry are exquisite statement pieces. With basic precautions, their brilliant shine can last for generations.</p>
+        <h4>The Golden Rule: Last On, First Off</h4>
+        <p>Always put on your jewelry <em>after</em> applying perfumes, lotions, body sprays, and hair chemicals. Harsh chemicals can quickly oxidize plating.</p>
+        <h4>Proper Storage is Key</h4>
+        <p>Store each piece separately in airtight zip-lock bags or soft velvet pouches to prevent scratches and exposure to humid air.</p>
+        <h4>Cleaning Without Harsh Chemicals</h4>
+        <p>Gently wipe your ornaments with a clean microfiber cloth after each wear to remove sweat and oils before storing them away.</p>`,
+        isPublished: true,
+        views: 94
+    },
+    {
+        title: "Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear",
+        slug: "breathable-fabrics-kids-wear",
+        category: "Kids Styling",
+        tag: "Kids Styling",
+        author: "Family Wardrobe Stylists",
+        readTime: "5 min read",
+        excerpt: "When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...",
+        description: "When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Children want to play, run, and explore — even during formal wedding ceremonies and festive family reunions. Here is how to keep them stylish and comfortable.</p>
+        <h4>100% Cotton Inner Linings</h4>
+        <p>Ensure any festive dress, lehenga, or panjabi has a soft, unbleached cotton inner layer that prevents itching and skin rashes.</p>
+        <h4>Lightweight Festive Silks</h4>
+        <p>Opt for art silk or soft jacquard instead of heavy brocades so your child stays cool under warm indoor lighting.</p>
+        <h4>Elasticated & Adjustable Waistbands</h4>
+        <p>Look for elastic waists and easy zip closures that allow hassle-free dressing and unrestricted playtime movement.</p>`,
+        isPublished: true,
+        views: 76
+    },
+    {
+        title: "The Ultimate Saree Care & Draping Guide: Jamdani, Katan & Georgette",
+        slug: "saree-care-and-draping-guide",
+        category: "Ethnic Trends",
+        tag: "Ethnic Trends",
+        author: "Master Drapers",
+        readTime: "4 min read",
+        excerpt: "Master the art of effortless pleating and learn the secrets of storing delicate weaves safely away from humidity and sunlight...",
+        description: "Master the art of effortless pleating and learn the secrets of storing delicate weaves safely away from humidity and sunlight...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>A saree is not merely attire; it is six yards of timeless poetry. Caring for heritage Bangladeshi sarees ensures they become cherished family heirlooms.</p>
+        <h4>Never Hang Heavy Katan or Silk Sarees</h4>
+        <p>Heavy zari weaves can stretch and tear if kept on metal hangers. Always fold them neatly in pure cotton saree bags.</p>
+        <h4>Refold Every 3-4 Months</h4>
+        <p>Change the fold lines periodically to prevent permanent creasing along the metallic embroidery threads.</p>
+        <h4>Dry Cleaning Recommended</h4>
+        <p>Always opt for professional dry cleaning for authentic Jamdani, pure Katan, and tissue sarees.</p>`,
+        isPublished: true,
+        views: 152
+    },
+    {
+        title: "How to Accessorize Traditional Bengali Outfits for Wedding Receptions",
+        slug: "accessorize-traditional-bengali-outfits",
+        category: "Jewelry Care",
+        tag: "Jewelry Care",
+        author: "AVARONI Stylists",
+        readTime: "3 min read",
+        excerpt: "From statement jhumkas to layered choker necklaces, learn how to balance bold jewelry with subtle embroidered dresses gracefully...",
+        description: "From statement jhumkas to layered choker necklaces, learn how to balance bold jewelry with subtle embroidered dresses gracefully...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Finding the right balance when pairing jewelry with ethnic wear transforms a simple outfit into a show-stopping ensemble.</p>
+        <h4>Highlight One Focal Point</h4>
+        <p>If your necklace is heavy and ornate, opt for subtle stud earrings. If wearing dramatic chandelier jhumkas, skip the heavy necklace.</p>
+        <h4>Match Metal Tones with Embroidery</h4>
+        <p>Pair antique gold jewelry with warm golden zari work, and oxidized silver or platinum-toned jewelry with silver sequin embroidery.</p>`,
+        isPublished: true,
+        views: 89
+    }
+];
+
+// Seed Default Blogs Function
+async function seedDefaultBlogs(force = false) {
+    try {
+        const count = await Blog.countDocuments();
+        if (count === 0 || force) {
+            for (const blogData of DEFAULT_PRESET_BLOGS) {
+                await Blog.findOneAndUpdate(
+                    { title: blogData.title },
+                    { $setOnInsert: blogData },
+                    { upsert: true, new: true }
+                );
+            }
+            console.log('✅ Preset Default Blogs verified/seeded successfully');
+        }
+    } catch (err) {
+        console.error('Error seeding default blogs:', err);
+    }
+}
+
 async function migrateUserRoles() {
     try {
         const usersWithoutRole = await User.find({ role: { $exists: false } });
@@ -1511,13 +1634,49 @@ app.delete('/api/admin/vouchers/:id', verifyAdminToken, async (req, res) => {
 });
 
 // ==========================================
-// BLOGS ROUTES
+// BLOGS ROUTES (Full CRUD & Preset Sync)
 // ==========================================
 
-// Get all blogs (Public)
+// Get all blogs (Public - with optional ?category= and ?search=)
 app.get('/api/blogs', async (req, res) => {
     try {
-        const blogs = await Blog.find().sort({ createdAt: -1 });
+        let count = await Blog.countDocuments();
+        if (count === 0) {
+            await seedDefaultBlogs();
+        }
+
+        let query = { isPublished: { $ne: false } };
+
+        if (req.query.category && req.query.category.toLowerCase() !== 'all') {
+            const catClean = req.query.category.trim();
+            const catRegex = new RegExp(`^${catClean}$`, 'i');
+            query.$or = [
+                { category: { $regex: catRegex } },
+                { tag: { $regex: catRegex } }
+            ];
+        }
+
+        if (req.query.search && req.query.search.trim()) {
+            const searchClean = req.query.search.trim();
+            const searchRegex = new RegExp(searchClean, 'i');
+            const searchClause = [
+                { title: { $regex: searchRegex } },
+                { excerpt: { $regex: searchRegex } },
+                { description: { $regex: searchRegex } },
+                { content: { $regex: searchRegex } },
+                { tag: { $regex: searchRegex } },
+                { category: { $regex: searchRegex } },
+                { author: { $regex: searchRegex } }
+            ];
+            if (query.$or) {
+                query.$and = [{ $or: query.$or }, { $or: searchClause }];
+                delete query.$or;
+            } else {
+                query.$or = searchClause;
+            }
+        }
+
+        const blogs = await Blog.find(query).sort({ createdAt: -1 });
         res.json({ success: true, blogs });
     } catch (error) {
         console.error("Get Blogs Error:", error);
@@ -1525,29 +1684,125 @@ app.get('/api/blogs', async (req, res) => {
     }
 });
 
+// Get Single Blog by ID or Slug (Public)
+app.get('/api/blogs/:id', async (req, res) => {
+    try {
+        let blog = null;
+        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+            blog = await Blog.findById(req.params.id);
+        }
+        if (!blog) {
+            blog = await Blog.findOne({ slug: req.params.id });
+        }
+        if (!blog) {
+            return res.status(404).json({ success: false, message: "Blog not found" });
+        }
+
+        // Increment view count quietly
+        blog.views = (blog.views || 0) + 1;
+        await blog.save().catch(() => {});
+
+        res.json({ success: true, blog });
+    } catch (error) {
+        console.error("Get Single Blog Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch blog details" });
+    }
+});
+
+// Get all blogs for Admin (Admin)
+app.get('/api/admin/blogs', verifyAdminToken, async (req, res) => {
+    try {
+        let count = await Blog.countDocuments();
+        if (count === 0) {
+            await seedDefaultBlogs();
+        }
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        res.json({ success: true, blogs, count: blogs.length });
+    } catch (error) {
+        console.error("Admin Get Blogs Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch admin blogs" });
+    }
+});
+
 // Create a new blog (Admin)
 app.post('/api/admin/blogs', verifyAdminToken, upload.single('image'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'Image is required' });
+        const { title, category, tag, author, readTime, excerpt, description, content, isPublished, imageUrl: inputImageUrl } = req.body;
+        if (!title || (!content && !description && !excerpt)) {
+            return res.status(400).json({ success: false, message: 'Title and content are required' });
         }
 
-        const { title, description } = req.body;
-        if (!title || !description) {
-            return res.status(400).json({ success: false, message: 'Title and description are required' });
+        let finalImageUrl = inputImageUrl || './img/profile_image.jpg';
+        if (req.file) {
+            finalImageUrl = `/uploads/${req.file.filename}`;
+        } else if (req.body.image && req.body.image.startsWith('data:image/')) {
+            finalImageUrl = req.body.image;
         }
+
+        const cleanContent = content || description || excerpt || '';
+        const cleanExcerpt = excerpt || description || cleanContent.replace(/<[^>]*>?/gm, '').substring(0, 160) + '...';
+        const cleanCategory = category || tag || 'Ethnic Trends';
+        const cleanTag = tag || category || 'Ethnic Trends';
+        const cleanAuthor = author || 'AVARONI Styling Team';
+        const cleanReadTime = readTime || '4 min read';
+        const cleanSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString(36);
 
         const newBlog = new Blog({
-            title,
-            description,
-            imageUrl: `/uploads/${req.file.filename}`
+            title: title.trim(),
+            slug: cleanSlug,
+            category: cleanCategory.trim(),
+            tag: cleanTag.trim(),
+            author: cleanAuthor.trim(),
+            readTime: cleanReadTime.trim(),
+            excerpt: cleanExcerpt.trim(),
+            description: cleanExcerpt.trim(),
+            content: cleanContent,
+            imageUrl: finalImageUrl,
+            isPublished: isPublished !== false && isPublished !== 'false',
+            views: 0
         });
 
         await newBlog.save();
-        res.status(201).json({ success: true, blog: newBlog });
+        res.status(201).json({ success: true, blog: newBlog, message: "Blog created successfully!" });
     } catch (error) {
         console.error("Create Blog Error:", error);
-        res.status(500).json({ success: false, message: 'Failed to create blog' });
+        res.status(500).json({ success: false, message: 'Failed to create blog: ' + error.message });
+    }
+});
+
+// Update an existing blog (Admin)
+app.put('/api/admin/blogs/:id', verifyAdminToken, upload.single('image'), async (req, res) => {
+    try {
+        const blog = await Blog.findById(req.params.id);
+        if (!blog) {
+            return res.status(404).json({ success: false, message: "Blog not found" });
+        }
+
+        const { title, category, tag, author, readTime, excerpt, description, content, isPublished, imageUrl: inputImageUrl } = req.body;
+
+        if (title) blog.title = title.trim();
+        if (category) blog.category = category.trim();
+        if (tag) blog.tag = tag.trim();
+        if (author) blog.author = author.trim();
+        if (readTime) blog.readTime = readTime.trim();
+        if (excerpt) blog.excerpt = excerpt.trim();
+        if (description) blog.description = description.trim();
+        if (content) blog.content = content;
+        if (isPublished !== undefined) blog.isPublished = (isPublished === true || isPublished === 'true');
+
+        if (req.file) {
+            blog.imageUrl = `/uploads/${req.file.filename}`;
+        } else if (inputImageUrl) {
+            blog.imageUrl = inputImageUrl;
+        } else if (req.body.image && req.body.image.startsWith('data:image/')) {
+            blog.imageUrl = req.body.image;
+        }
+
+        await blog.save();
+        res.json({ success: true, blog, message: "Blog updated successfully!" });
+    } catch (error) {
+        console.error("Update Blog Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update blog" });
     }
 });
 
@@ -1559,11 +1814,11 @@ app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
             return res.status(404).json({ success: false, message: "Blog not found" });
         }
 
-        // Delete associated image file
-        if (blog.imageUrl) {
+        // Delete associated image file if local
+        if (blog.imageUrl && blog.imageUrl.startsWith('/uploads/')) {
             const imagePath = path.join(__dirname, 'public', blog.imageUrl);
             if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
+                try { fs.unlinkSync(imagePath); } catch (e) {}
             }
         }
 
@@ -1572,6 +1827,18 @@ app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Delete Blog Error:", error);
         res.status(500).json({ success: false, message: "Failed to delete blog" });
+    }
+});
+
+// Seed / Restore Preset Blogs (Admin)
+app.post('/api/admin/blogs/seed-preset', verifyAdminToken, async (req, res) => {
+    try {
+        await seedDefaultBlogs(true);
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        res.json({ success: true, message: "Preset blogs restored successfully!", blogs });
+    } catch (error) {
+        console.error("Restore Preset Blogs Error:", error);
+        res.status(500).json({ success: false, message: "Failed to restore preset blogs" });
     }
 });
 
@@ -3031,51 +3298,7 @@ app.delete('/api/banner-cards/:id/images/:imgIndex', verifyAdminToken, async (re
     }
 });
 
-// ==========================================
-// 📝 BLOG ROUTES
-// ==========================================
-app.get('/api/blogs', async (req, res) => {
-    try {
-        const blogs = await Blog.find().sort({ createdAt: -1 });
-        res.json({ success: true, blogs });
-    } catch (err) {
-        console.error("Get Blogs Error:", err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
 
-app.post('/api/admin/blogs', verifyAdminToken, upload.single('image'), async (req, res) => {
-    try {
-        const { title, description } = req.body;
-        if (!title || !description) return res.status(400).json({ success: false, message: 'Title and description are required' });
-        
-        let imageUrl = '';
-        if (req.file) {
-            imageUrl = `/uploads/${req.file.filename}`;
-        } else if (req.body.image) { // In case base64 was sent
-            imageUrl = req.body.image;
-        } else {
-            return res.status(400).json({ success: false, message: 'Image is required' });
-        }
-        
-        const newBlog = new Blog({ title, description, imageUrl });
-        await newBlog.save();
-        res.json({ success: true, blog: newBlog });
-    } catch (err) {
-        console.error("Create Blog Error:", err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
-    try {
-        await Blog.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Blog deleted' });
-    } catch (err) {
-        console.error("Delete Blog Error:", err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
 
 // ==========================================
 // 📈 ANALYTICS & TRACKING ROUTES

@@ -3943,3 +3943,347 @@ function renderLowStockCard(products) {
     html += '</ul>';
     container.innerHTML = html;
 }
+
+// ==========================================
+// 📰 BLOG MANAGEMENT LOGIC
+// ==========================================
+let adminBlogsList = [];
+
+async function fetchAdminBlogs() {
+    try {
+        const res = await fetchWithAuth('/api/admin/blogs');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+            adminBlogsList = data.blogs || [];
+            updateBlogStats();
+            renderAdminBlogs();
+        } else {
+            showToast(data.message || 'Failed to fetch blogs', 'error');
+        }
+    } catch (err) {
+        console.error("fetchAdminBlogs Error:", err);
+        try {
+            const fallbackRes = await fetch('/api/blogs');
+            const fallbackData = await fallbackRes.json();
+            if (fallbackData.success) {
+                adminBlogsList = fallbackData.blogs || [];
+                updateBlogStats();
+                renderAdminBlogs();
+            }
+        } catch(e) {}
+    }
+}
+
+function updateBlogStats() {
+    const countBadge = document.getElementById('admin-blogs-count');
+    const readsBadge = document.getElementById('admin-blogs-reads');
+    if (countBadge) countBadge.textContent = adminBlogsList.length;
+    if (readsBadge) {
+        const totalReads = adminBlogsList.reduce((sum, b) => sum + (b.views || 0), 0);
+        readsBadge.textContent = totalReads;
+    }
+}
+
+function renderAdminBlogs() {
+    const tbody = document.getElementById('admin-blogs-table-body');
+    if (!tbody) return;
+
+    const searchInput = document.getElementById('admin-blog-search');
+    const filterCat = document.getElementById('admin-blog-filter-cat');
+
+    const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const selectedCat = filterCat ? filterCat.value : 'all';
+
+    const filtered = adminBlogsList.filter(blog => {
+        const matchesCat = (selectedCat === 'all' || (blog.category || blog.tag || '').toLowerCase() === selectedCat.toLowerCase());
+        const textContent = `${blog.title || ''} ${blog.category || ''} ${blog.tag || ''} ${blog.author || ''} ${blog.excerpt || ''}`.toLowerCase();
+        const matchesSearch = !search || textContent.includes(search);
+        return matchesCat && matchesSearch;
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align:center; padding: 40px 20px; color:#64748b;">
+                    <i class="fas fa-newspaper" style="font-size:36px; margin-bottom:10px; display:block; opacity:0.4;"></i>
+                    <p style="margin:0 0 12px 0; font-size:15px; font-weight:600;">No blogs found matching your criteria.</p>
+                    <button class="btn" onclick="openAddBlogModal()" style="width:auto; padding:8px 18px; font-size:13px; margin:0;"><i class="fas fa-plus"></i> Create Blog Post</button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    filtered.forEach(blog => {
+        const imgUrl = blog.imageUrl || './img/profile_image.jpg';
+        const isPublished = blog.isPublished !== false;
+        const formattedDate = blog.createdAt ? new Date(blog.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <img src="${escapeHTML(imgUrl)}" alt="Thumbnail" style="width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+            </td>
+            <td>
+                <strong style="color: #0f172a; font-size: 14px; display: block; margin-bottom: 2px;">${escapeHTML(blog.title)}</strong>
+                <span style="font-size: 12px; color: #64748b; display: block; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(blog.excerpt || blog.description || '')}</span>
+                <span style="font-size: 11px; color: #94a3b8;"><i class="far fa-calendar-alt"></i> ${formattedDate}</span>
+            </td>
+            <td>
+                <span class="badge" style="background:#fdf2f6; color:#e60050; border:1px solid rgba(230,0,80,0.2); font-weight:700;">${escapeHTML(blog.category || blog.tag || 'Ethnic Trends')}</span>
+            </td>
+            <td>
+                <span style="font-size: 13px; font-weight: 500; color: #334155;">${escapeHTML(blog.author || 'Styling Team')}</span>
+            </td>
+            <td>
+                <span style="font-size: 12px; color: #64748b;"><i class="far fa-clock"></i> ${escapeHTML(blog.readTime || '4 min read')}</span>
+            </td>
+            <td>
+                <span class="badge" style="background:#f1f5f9; color:#0284c7; font-weight:700;"><i class="far fa-eye"></i> ${blog.views || 0}</span>
+            </td>
+            <td>
+                <span class="badge ${isPublished ? 'badge-success' : 'badge-warning'}">${isPublished ? 'Published' : 'Draft'}</span>
+            </td>
+            <td>
+                <div class="table-action-btns">
+                    <a href="blog.html" target="_blank" class="btn-icon btn-icon-secondary" title="View Storefront Blog"><i class="fas fa-eye"></i></a>
+                    <button class="btn-icon btn-icon-primary" onclick="openEditBlogModal('${blog._id}')" title="Edit Article"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon btn-icon-danger" onclick="deleteAdminBlog('${blog._id}')" title="Delete Article"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function openAddBlogModal() {
+    const form = document.getElementById('admin-blog-form');
+    if (form) form.reset();
+    document.getElementById('blog-form-id').value = '';
+    document.getElementById('blog-modal-title').innerHTML = '<i class="fas fa-blog" style="color:var(--primary); margin-right:8px;"></i> Add New Blog Post';
+    document.getElementById('blog-form-author').value = 'AVARONI Styling Team';
+    document.getElementById('blog-form-readtime').value = '4 min read';
+    document.getElementById('blog-form-category').value = 'Ethnic Trends';
+    document.getElementById('blog-form-status').value = 'true';
+    document.getElementById('blog-image-preview-wrap').style.display = 'none';
+    
+    const modal = document.getElementById('admin-blog-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function openEditBlogModal(blogId) {
+    const blog = adminBlogsList.find(b => b._id === blogId || b.slug === blogId);
+    if (!blog) return;
+
+    document.getElementById('blog-form-id').value = blog._id;
+    document.getElementById('blog-form-title').value = blog.title || '';
+    document.getElementById('blog-form-category').value = blog.category || blog.tag || 'Ethnic Trends';
+    document.getElementById('blog-form-author').value = blog.author || 'AVARONI Styling Team';
+    document.getElementById('blog-form-readtime').value = blog.readTime || '4 min read';
+    document.getElementById('blog-form-status').value = blog.isPublished !== false ? 'true' : 'false';
+    document.getElementById('blog-form-excerpt').value = blog.excerpt || blog.description || '';
+    document.getElementById('blog-form-content').value = blog.content || blog.description || '';
+    document.getElementById('blog-form-image-url').value = blog.imageUrl || '';
+
+    const previewWrap = document.getElementById('blog-image-preview-wrap');
+    const previewImg = document.getElementById('blog-image-preview');
+    if (blog.imageUrl) {
+        previewImg.src = blog.imageUrl;
+        previewWrap.style.display = 'block';
+    } else {
+        previewWrap.style.display = 'none';
+    }
+
+    document.getElementById('blog-modal-title').innerHTML = '<i class="fas fa-edit" style="color:var(--primary); margin-right:8px;"></i> Edit Blog Post';
+    const modal = document.getElementById('admin-blog-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeBlogModal() {
+    const modal = document.getElementById('admin-blog-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function deleteAdminBlog(blogId) {
+    if (!confirm("Are you sure you want to delete this blog post? This action cannot be undone.")) {
+        return;
+    }
+    try {
+        const res = await fetchWithAuth(`/api/admin/blogs/${blogId}`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+            showToast("Blog deleted successfully.", "success");
+            fetchAdminBlogs();
+        } else {
+            showToast(data.message || "Failed to delete blog", "error");
+        }
+    } catch (err) {
+        console.error("Delete blog error:", err);
+        showToast("An error occurred while deleting blog.", "error");
+    }
+}
+
+async function restorePresetBlogs() {
+    if (!confirm("This will restore the 5 default preset fashion & styling blogs into your database. Existing custom blogs will be preserved. Proceed?")) {
+        return;
+    }
+    try {
+        const res = await fetchWithAuth('/api/admin/blogs/seed-preset', { method: 'POST' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+            showToast("Preset blogs restored successfully!", "success");
+            fetchAdminBlogs();
+        } else {
+            showToast(data.message || "Failed to restore preset blogs", "error");
+        }
+    } catch (err) {
+        console.error("Restore preset blogs error:", err);
+        showToast("Error connecting to server.", "error");
+    }
+}
+
+// Attach Blog Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const openAddBtn = document.getElementById('open-add-blog-btn');
+    const closeBtn = document.getElementById('close-blog-modal-btn');
+    const cancelBtn = document.getElementById('cancel-blog-modal-btn');
+    const seedBtn = document.getElementById('admin-seed-blogs-btn');
+    const searchInput = document.getElementById('admin-blog-search');
+    const filterCat = document.getElementById('admin-blog-filter-cat');
+    const blogForm = document.getElementById('admin-blog-form');
+    const blogFile = document.getElementById('blog-form-file');
+    const blogUrlInput = document.getElementById('blog-form-image-url');
+
+    if (openAddBtn) openAddBtn.addEventListener('click', openAddBlogModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeBlogModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeBlogModal);
+    if (seedBtn) seedBtn.addEventListener('click', restorePresetBlogs);
+
+    if (searchInput) searchInput.addEventListener('input', renderAdminBlogs);
+    if (filterCat) filterCat.addEventListener('change', renderAdminBlogs);
+
+    if (blogFile) {
+        blogFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    const previewImg = document.getElementById('blog-image-preview');
+                    const previewWrap = document.getElementById('blog-image-preview-wrap');
+                    if (previewImg && previewWrap) {
+                        previewImg.src = re.target.result;
+                        previewWrap.style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (blogUrlInput) {
+        blogUrlInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            const previewImg = document.getElementById('blog-image-preview');
+            const previewWrap = document.getElementById('blog-image-preview-wrap');
+            if (val && previewImg && previewWrap) {
+                previewImg.src = val;
+                previewWrap.style.display = 'block';
+            }
+        });
+    }
+
+    if (blogForm) {
+        blogForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const blogId = document.getElementById('blog-form-id').value;
+            const title = document.getElementById('blog-form-title').value.trim();
+            const category = document.getElementById('blog-form-category').value.trim();
+            const author = document.getElementById('blog-form-author').value.trim();
+            const readTime = document.getElementById('blog-form-readtime').value.trim();
+            const isPublished = document.getElementById('blog-form-status').value === 'true';
+            const excerpt = document.getElementById('blog-form-excerpt').value.trim();
+            const content = document.getElementById('blog-form-content').value.trim();
+            const fileInput = document.getElementById('blog-form-file');
+            const imageUrlInput = document.getElementById('blog-form-image-url');
+
+            const submitBtn = document.getElementById('save-blog-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
+
+            try {
+                let res;
+                const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('title', title);
+                    formData.append('category', category);
+                    formData.append('tag', category);
+                    formData.append('author', author);
+                    formData.append('readTime', readTime);
+                    formData.append('isPublished', isPublished);
+                    formData.append('excerpt', excerpt);
+                    formData.append('description', excerpt);
+                    formData.append('content', content);
+                    formData.append('image', file);
+
+                    const url = blogId ? `/api/admin/blogs/${blogId}` : '/api/admin/blogs';
+                    const method = blogId ? 'PUT' : 'POST';
+
+                    res = await fetchWithAuth(url, {
+                        method: method,
+                        body: formData
+                    });
+                } else {
+                    const bodyData = {
+                        title,
+                        category,
+                        tag: category,
+                        author,
+                        readTime,
+                        isPublished,
+                        excerpt,
+                        description: excerpt,
+                        content,
+                        imageUrl: imageUrlInput ? imageUrlInput.value.trim() : './img/profile_image.jpg'
+                    };
+
+                    const url = blogId ? `/api/admin/blogs/${blogId}` : '/api/admin/blogs';
+                    const method = blogId ? 'PUT' : 'POST';
+
+                    res = await fetchWithAuth(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bodyData)
+                    });
+                }
+
+                if (!res) return;
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(data.message || (blogId ? "Blog updated successfully!" : "Blog published successfully!"), "success");
+                    closeBlogModal();
+                    fetchAdminBlogs();
+                } else {
+                    showToast(data.message || "Failed to save blog", "error");
+                }
+            } catch (err) {
+                console.error("Save blog error:", err);
+                showToast("An error occurred while saving blog.", "error");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Publish';
+                }
+            }
+        });
+    }
+});

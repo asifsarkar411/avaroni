@@ -590,103 +590,21 @@
     <div class="blog-container">
         <!-- Controls: Filters & Search -->
         <div class="blog-controls" data-aos="fade-up">
-            <div class="blog-filter-bar">
+            <div class="blog-filter-bar" id="blogFilterBar">
                 <button class="blog-cat-btn active" data-filter="all"><i class="fas fa-th-large"></i> All Articles</button>
-                <button class="blog-cat-btn" data-filter="fashion"><i class="fas fa-tshirt"></i> Ethnic Trends</button>
-                <button class="blog-cat-btn" data-filter="jewelry"><i class="fas fa-gem"></i> Jewelry Care</button>
-                <button class="blog-cat-btn" data-filter="kids"><i class="fas fa-child"></i> Kids Styling</button>
             </div>
             <div class="blog-search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="blogSearchInput" placeholder="Search blog articles...">
+                <input type="text" id="blogSearchInput" placeholder="Search blog articles, topics, styles...">
             </div>
         </div>
 
         <!-- Blog Grid -->
         <div class="blog-grid" id="blogGrid">
-            <!-- Article 1 -->
-            <div class="blog-card" data-category="fashion" data-aos="fade-up">
-                <div class="blog-card-img-wrap">
-                    <img src="./img/profile_image.jpg" alt="Salwar Kameez Trends">
-                    <span class="blog-tag">Ethnic Trends</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> Aug 2026</span>
-                        <span><i class="far fa-clock"></i> 4 min read</span>
-                    </div>
-                    <h3 class="blog-title">Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh</h3>
-                    <p class="blog-excerpt">Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bangladeshi festive celebrations by storm this season...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('salwar-kameez')">Read Full Guide <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-
-            <!-- Article 2 -->
-            <div class="blog-card" data-category="jewelry" data-aos="fade-up" data-aos-delay="100">
-                <div class="blog-card-img-wrap">
-                    <img src="./img/profile_image.jpg" alt="Handcrafted Jewelry Care">
-                    <span class="blog-tag">Jewelry Care</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> Aug 2026</span>
-                        <span><i class="far fa-clock"></i> 3 min read</span>
-                    </div>
-                    <h3 class="blog-title">How to Maintain & Preserve Your Hand-Crafted Ornaments & Gold-Plated Jewelry</h3>
-                    <p class="blog-excerpt">Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple, proven home care techniques...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('jewelry-care')">Read Full Guide <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-
-            <!-- Article 3 -->
-            <div class="blog-card" data-category="kids" data-aos="fade-up" data-aos-delay="200">
-                <div class="blog-card-img-wrap">
-                    <img src="./img/profile_image.jpg" alt="Kids Festive Fashion">
-                    <span class="blog-tag">Kids Styling</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> Jul 2026</span>
-                        <span><i class="far fa-clock"></i> 5 min read</span>
-                    </div>
-                    <h3 class="blog-title">Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear</h3>
-                    <p class="blog-excerpt">When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('kids-fashion')">Read Full Guide <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-
-            <!-- Article 4 -->
-            <div class="blog-card" data-category="fashion" data-aos="fade-up">
-                <div class="blog-card-img-wrap">
-                    <img src="./img/profile_image.jpg" alt="Saree Draping Guides">
-                    <span class="blog-tag">Ethnic Trends</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> Jul 2026</span>
-                        <span><i class="far fa-clock"></i> 4 min read</span>
-                    </div>
-                    <h3 class="blog-title">The Ultimate Saree Care & Draping Guide: Jamdani, Katan & Georgette</h3>
-                    <p class="blog-excerpt">Master the art of effortless pleating and learn the secrets of storing delicate weaves safely away from humidity and sunlight...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('saree-guide')">Read Full Guide <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-
-            <!-- Article 5 -->
-            <div class="blog-card" data-category="jewelry" data-aos="fade-up" data-aos-delay="100">
-                <div class="blog-card-img-wrap">
-                    <img src="./img/profile_image.jpg" alt="Accessorizing Traditional Outfits">
-                    <span class="blog-tag">Jewelry Care</span>
-                </div>
-                <div class="blog-content">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar-alt"></i> Jun 2026</span>
-                        <span><i class="far fa-clock"></i> 3 min read</span>
-                    </div>
-                    <h3 class="blog-title">How to Accessorize Traditional Bengali Outfits for Wedding Receptions</h3>
-                    <p class="blog-excerpt">From statement jhumkas to layered choker necklaces, learn how to balance bold jewelry with subtle embroidered dresses gracefully...</p>
-                    <span class="blog-read-more" onclick="openBlogModal('accessorizing')">Read Full Guide <i class="fas fa-arrow-right"></i></span>
-                </div>
+            <!-- Dynamically loaded from /api/blogs -->
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary); margin-bottom: 15px; display: block;"></i>
+                <p style="font-size: 16px; font-weight: 600;">Loading latest fashion & style journals...</p>
             </div>
         </div>
 
@@ -717,9 +635,12 @@
     <script>
         const articlesDB = {
             'salwar-kameez': {
-                tag: 'Ethnic Trends',
                 title: 'Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh',
-                meta: 'August 2026 • 4 min read • By AVARONI Styling Team',
+                category: 'Ethnic Trends',
+                tag: 'Ethnic Trends',
+                author: 'AVARONI Styling Team',
+                readTime: '4 min read',
+                imageUrl: './img/profile_image.jpg',
                 content: `
                     <p>Ethnic fashion in Bangladesh is undergoing an exciting renaissance where centuries-old regal silhouettes blend effortlessly with lightweight contemporary drapes.</p>
                     <h4>1. Flared Anarkali Suits with Heavy Gota Patti</h4>
@@ -733,9 +654,12 @@
                 `
             },
             'jewelry-care': {
-                tag: 'Jewelry Care',
                 title: 'How to Maintain & Preserve Your Hand-Crafted Ornaments & Gold-Plated Jewelry',
-                meta: 'August 2026 • 3 min read • By Jewelry Experts',
+                category: 'Jewelry Care',
+                tag: 'Jewelry Care',
+                author: 'Jewelry Experts',
+                readTime: '3 min read',
+                imageUrl: './img/profile_image.jpg',
                 content: `
                     <p>Hand-crafted ornaments and gold-plated jewelry are exquisite statement pieces. With basic precautions, their brilliant shine can last for generations.</p>
                     <h4>The Golden Rule: Last On, First Off</h4>
@@ -747,9 +671,12 @@
                 `
             },
             'kids-fashion': {
-                tag: 'Kids Styling',
                 title: 'Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear',
-                meta: 'July 2026 • 5 min read • By Family Wardrobe Stylists',
+                category: 'Kids Styling',
+                tag: 'Kids Styling',
+                author: 'Family Wardrobe Stylists',
+                readTime: '5 min read',
+                imageUrl: './img/profile_image.jpg',
                 content: `
                     <p>Children want to play, run, and explore — even during formal wedding ceremonies and festive family reunions. Here is how to keep them stylish and comfortable.</p>
                     <h4>100% Cotton Inner Linings</h4>
@@ -761,9 +688,12 @@
                 `
             },
             'saree-guide': {
-                tag: 'Ethnic Trends',
                 title: 'The Ultimate Saree Care & Draping Guide: Jamdani, Katan & Georgette',
-                meta: 'July 2026 • 4 min read • By Master Drapers',
+                category: 'Ethnic Trends',
+                tag: 'Ethnic Trends',
+                author: 'Master Drapers',
+                readTime: '4 min read',
+                imageUrl: './img/profile_image.jpg',
                 content: `
                     <p>A saree is not merely attire; it is six yards of timeless poetry. Caring for heritage Bangladeshi sarees ensures they become cherished family heirlooms.</p>
                     <h4>Never Hang Heavy Katan or Silk Sarees</h4>
@@ -775,9 +705,12 @@
                 `
             },
             'accessorizing': {
-                tag: 'Jewelry Care',
                 title: 'How to Accessorize Traditional Bengali Outfits for Wedding Receptions',
-                meta: 'June 2026 • 3 min read • By AVARONI Stylists',
+                category: 'Jewelry Care',
+                tag: 'Jewelry Care',
+                author: 'AVARONI Stylists',
+                readTime: '3 min read',
+                imageUrl: './img/profile_image.jpg',
                 content: `
                     <p>Finding the right balance when pairing jewelry with ethnic wear transforms a simple outfit into a show-stopping ensemble.</p>
                     <h4>Highlight One Focal Point</h4>
@@ -788,15 +721,136 @@
             }
         };
 
-        function openBlogModal(id) {
-            const article = articlesDB[id];
+        let liveBlogsList = [];
+
+        async function loadStorefrontBlogs() {
+            const grid = document.getElementById('blogGrid');
+            try {
+                const res = await fetch('/api/blogs');
+                const data = await res.json();
+                if (data.success && Array.isArray(data.blogs) && data.blogs.length > 0) {
+                    liveBlogsList = data.blogs;
+                } else if (Object.keys(articlesDB).length > 0) {
+                    liveBlogsList = Object.keys(articlesDB).map(k => ({ ...articlesDB[k], _id: k, slug: k }));
+                }
+            } catch (err) {
+                console.warn("Could not fetch blogs from API, using fallback:", err);
+                liveBlogsList = Object.keys(articlesDB).map(k => ({ ...articlesDB[k], _id: k, slug: k }));
+            }
+            buildCategoryFilters();
+            renderStorefrontBlogs();
+        }
+
+        function buildCategoryFilters() {
+            const filterBar = document.getElementById('blogFilterBar');
+            if (!filterBar) return;
+
+            const categories = new Set();
+            liveBlogsList.forEach(b => {
+                const cat = b.category || b.tag;
+                if (cat) categories.add(cat.trim());
+            });
+
+            let html = '<button class="blog-cat-btn active" data-filter="all"><i class="fas fa-th-large"></i> All Articles</button>';
+            categories.forEach(cat => {
+                let icon = 'fa-tag';
+                const lower = cat.toLowerCase();
+                if (lower.includes('ethnic') || lower.includes('dress') || lower.includes('saree') || lower.includes('fashion')) icon = 'fa-tshirt';
+                else if (lower.includes('jewel') || lower.includes('ornament')) icon = 'fa-gem';
+                else if (lower.includes('kid')) icon = 'fa-child';
+                
+                html += `<button class="blog-cat-btn" data-filter="${cat}"><i class="fas ${icon}"></i> ${cat}</button>`;
+            });
+
+            filterBar.innerHTML = html;
+
+            filterBar.querySelectorAll('.blog-cat-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBar.querySelectorAll('.blog-cat-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    renderStorefrontBlogs();
+                });
+            });
+        }
+
+        function renderStorefrontBlogs() {
+            const grid = document.getElementById('blogGrid');
+            if (!grid) return;
+
+            const activeBtn = document.querySelector('.blog-cat-btn.active');
+            const selectedCat = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+            const searchInput = document.getElementById('blogSearchInput');
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            const filtered = liveBlogsList.filter(blog => {
+                const cat = blog.category || blog.tag || '';
+                const matchCat = (selectedCat === 'all' || cat.toLowerCase() === selectedCat.toLowerCase());
+                const fullText = `${blog.title || ''} ${cat} ${blog.author || ''} ${blog.excerpt || ''} ${blog.description || ''} ${blog.content || ''}`.toLowerCase();
+                const matchSearch = (!search || fullText.includes(search));
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
+                        <i class="fas fa-newspaper" style="font-size: 40px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                        <h3 style="color: #1e293b; font-size: 18px; margin-bottom: 6px;">No articles found</h3>
+                        <p style="font-size: 14px; margin: 0;">Try searching for another topic or selecting a different category.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map((blog, idx) => {
+                const img = blog.imageUrl || './img/profile_image.jpg';
+                const tag = blog.category || blog.tag || 'Ethnic Trends';
+                const dateStr = blog.createdAt ? new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Aug 2026';
+                const readTime = blog.readTime || '4 min read';
+                const blogId = blog._id || blog.slug || idx;
+                const excerpt = blog.excerpt || blog.description || (blog.content ? blog.content.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : '');
+
+                return `
+                    <div class="blog-card" data-category="${tag}" data-aos="fade-up" data-aos-delay="${(idx % 3) * 100}">
+                        <div class="blog-card-img-wrap">
+                            <img src="${img}" alt="${blog.title}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                            <span class="blog-tag">${tag}</span>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-meta">
+                                <span><i class="far fa-calendar-alt"></i> ${dateStr}</span>
+                                <span><i class="far fa-clock"></i> ${readTime}</span>
+                            </div>
+                            <h3 class="blog-title">${blog.title}</h3>
+                            <p class="blog-excerpt">${excerpt}</p>
+                            <span class="blog-read-more" onclick="openBlogModal('${blogId}')">Read Full Guide <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function openBlogModal(id) {
+            let article = liveBlogsList.find(b => b._id === id || b.slug === id) || articlesDB[id];
             if (!article) return;
+
+            // Increment views via API quietly
+            if (article._id && article._id.length === 24) {
+                fetch(`/api/blogs/${article._id}`).catch(() => {});
+            }
+
+            const tag = article.category || article.tag || 'Style Guide';
+            const dateStr = article.createdAt ? new Date(article.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'August 2026';
+            const author = article.author || 'AVARONI Styling Team';
+            const readTime = article.readTime || '4 min read';
+            const meta = `${dateStr} • ${readTime} • By ${author}`;
+            const content = article.content || article.description || article.excerpt || '';
+
             const container = document.getElementById('modalArticleContent');
             container.innerHTML = `
-                <span class="modal-tag">${article.tag}</span>
+                <span class="modal-tag">${tag}</span>
                 <h2 class="modal-title">${article.title}</h2>
-                <div class="modal-meta">${article.meta}</div>
-                <div class="modal-body">${article.content}</div>
+                <div class="modal-meta">${meta}</div>
+                <div class="modal-body">${content}</div>
             `;
             document.getElementById('blogModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -816,36 +870,12 @@
                 });
             }
 
-            const filterBtns = document.querySelectorAll('.blog-cat-btn');
             const searchInput = document.getElementById('blogSearchInput');
-            const cards = document.querySelectorAll('.blog-card');
-
-            function filterArticles() {
-                const activeBtn = document.querySelector('.blog-cat-btn.active');
-                const cat = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
-                const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
-                cards.forEach(card => {
-                    const cardCat = card.getAttribute('data-category');
-                    const text = card.textContent.toLowerCase();
-                    const matchCat = (cat === 'all' || cardCat === cat);
-                    const matchSearch = (!search || text.includes(search));
-
-                    card.style.display = (matchCat && matchSearch) ? 'flex' : 'none';
-                });
-            }
-
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    filterArticles();
-                });
-            });
-
             if (searchInput) {
-                searchInput.addEventListener('input', filterArticles);
+                searchInput.addEventListener('input', renderStorefrontBlogs);
             }
+
+            loadStorefrontBlogs();
         });
     </script>
 </body>
