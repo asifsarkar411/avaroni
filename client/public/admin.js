@@ -653,6 +653,7 @@ function switchTab(tabName) {
         if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
         if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
         if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
+        if (tabName === 'manage-popup') cleanTitle = "Homepage Welcome Popup Banner";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
         if (tabName === 'manage-customers') cleanTitle = "Customer Accounts Management";
@@ -674,6 +675,7 @@ function switchTab(tabName) {
     if (tabName === 'manage-vouchers') fetchVouchers();
     if (tabName === 'manage-banners') loadAdminBanners();
     if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
+    if (tabName === 'manage-popup') fetchSettings();
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
     if (tabName === 'manage-customers') fetchCustomerUsers();
@@ -2585,6 +2587,7 @@ async function initSettingsTab() {
         console.error("Error loading user profile data:", err);
     }
     fetchAdminUsers();
+    fetchSettings();
 }
 
 async function handleChangeEmail(e) {
