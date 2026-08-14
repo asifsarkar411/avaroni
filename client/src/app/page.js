@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import NavPromoSlider from '@/components/NavPromoSlider';
 import HeroSlider from '@/components/HeroSlider';
 import FlashSaleBanner from '@/components/FlashSaleBanner';
 import ReviewsSlider from '@/components/ReviewsSlider';
@@ -65,8 +64,6 @@ export default function Home() {
 
   return (
     <div className="home-container">
-        <NavPromoSlider />
-
         <div className="welcome-section" style={{textAlign: 'center', padding: '20px'}}>
             <h2 data-aos="fade-down" style={{color: '#000000', fontWeight: '700', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', marginBottom: '12px', textAlign: 'center', lineHeight: '1.2'}}>
                 Elegance Redefined for Every Moment

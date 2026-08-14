@@ -121,13 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addPromoForm.addEventListener('submit', handleAddPromoCode);
     }
 
-    // 8. Add Navbar Promo Slider Form Submit
-    const addNavSliderForm = document.getElementById('add-nav-slider-form');
-    if (addNavSliderForm) {
-        addNavSliderForm.addEventListener('submit', handleAddNavSlider);
-    }
-
-    // 9. Edit Product Form Submit
+    // 8. Edit Product Form Submit
     const editProductForm = document.getElementById('edit-product-form');
     if (editProductForm) {
         editProductForm.addEventListener('submit', handleEditProductSubmit);
@@ -640,7 +634,6 @@ function switchTab(tabName) {
         if (tabName === 'manage-categories') cleanTitle = "Manage Categories";
         if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
         if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
-        if (tabName === 'manage-nav-sliders') cleanTitle = "Manage Navbar Slider";
         if (tabName === 'manage-popup') cleanTitle = "Homepage Welcome Popup Banner";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
         if (tabName === 'manage-messages') cleanTitle = "Customer Contact Messages";
@@ -662,7 +655,6 @@ function switchTab(tabName) {
     if (tabName === 'manage-promocodes') fetchPromoCodes();
     if (tabName === 'manage-vouchers') fetchVouchers();
     if (tabName === 'manage-banners') loadAdminBanners();
-    if (tabName === 'manage-nav-sliders') loadAdminNavSliders();
     if (tabName === 'manage-popup') fetchSettings();
     if (tabName === 'manage-returns') fetchReturnRequests();
     if (tabName === 'manage-messages') fetchContactMessages();
@@ -2005,115 +1997,6 @@ async function deleteVoucher(voucherId) {
 window.deleteVoucher = deleteVoucher;
 
 
-
-// ==========================================
-// NAVBAR PROMO SLIDER MANAGEMENT
-// ==========================================
-
-async function loadAdminNavSliders() {
-    const tbody = document.getElementById('nav-sliders-table-body');
-    if (!tbody) return;
-
-    try {
-        const response = await fetch('/api/nav-sliders');
-        const data = await response.json();
-
-        tbody.innerHTML = '';
-
-        if (!data.success || !data.sliders || data.sliders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No navbar slider images configured yet.</td></tr>';
-            return;
-        }
-
-        data.sliders.forEach(slider => {
-            tbody.innerHTML += `
-                <tr>
-                    <td><img src="${formatImageUrl(slider.imageUrl)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';" style="max-height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;"></td>
-                    <td>${slider.link || '<span style="color:#aaa; font-style:italic;">None</span>'}</td>
-                    <td><strong>${slider.order}</strong></td>
-                    <td>
-                        <button class="btn" style="background:#e60050; padding:6px 12px; font-size:12px; margin:0;" onclick="deleteNavSlider('${slider._id}')"><i class="fas fa-trash"></i> Delete</button>
-                    </td>
-                </tr>
-            `;
-        });
-    } catch (err) {
-        console.error("Error fetching navbar sliders:", err);
-    }
-}
-
-async function handleAddNavSlider(e) {
-    e.preventDefault();
-    const fileInput = document.getElementById('nav-slider-image-file');
-    const linkInput = document.getElementById('nav-slider-link');
-    const orderInput = document.getElementById('nav-slider-order');
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    if (!fileInput.files || fileInput.files.length === 0) {
-        showToast("Please select a promo image file.", 'error');
-        return;
-    }
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Uploading...";
-
-        const base64Image = await fileToBase64(fileInput.files[0]);
-        const payload = {
-            imageData: base64Image,
-            link: linkInput.value.trim(),
-            order: parseInt(orderInput.value) || 0
-        };
-
-        const response = await fetch('/api/nav-sliders', {
-            method: 'POST',
-            headers: {
-                ...getAuthHeaders(),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            showToast("Navbar promo image uploaded successfully!");
-            e.target.reset();
-            loadAdminNavSliders();
-        } else {
-            showToast("Failed to upload promo image: " + (data.message || 'Unknown error', 'error'));
-        }
-    } catch (err) {
-        console.error("Error uploading nav slider image:", err);
-        showToast("An error occurred during upload.", 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Upload & Add to Navbar";
-    }
-}
-
-async function deleteNavSlider(id) {
-    if (!confirm("Are you sure you want to delete this navbar promotional slider image?")) return;
-
-    try {
-        const response = await fetch(`/api/nav-sliders/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            loadAdminNavSliders();
-        } else {
-            showToast("Failed to delete nav slider: " + (data.message || 'Unknown error', 'error'));
-        }
-    } catch (err) {
-        console.error("Error deleting nav slider:", err);
-        showToast("An error occurred connecting to the server.", 'error');
-    }
-}
-
-// Expose actions to global context
-window.deleteNavSlider = deleteNavSlider;
 
 // ==========================================
 // CUSTOMER RETURN REQUESTS MANAGEMENT

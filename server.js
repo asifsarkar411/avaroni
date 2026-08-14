@@ -45,7 +45,6 @@ const Product = require('./models/Product');     // E-commerce Product Model
 const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
 const Category = require('./models/Category');   // Dynamic Categories Model
 const PromoCode = require('./models/PromoCode'); // Promo Codes Model
-const NavSlider = require('./models/NavSlider'); // Navbar Promo Slider Model
 const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
 const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
 const Review = require('./models/Review');               // Customer Reviews Model
@@ -273,21 +272,7 @@ async function migrateBase64ToFiles() {
             console.log(`Normalized image URLs for ${prodMigratedCount} products.`);
         }
 
-        // 2. NavSliders
-        const sliders = await NavSlider.find();
-        let sliderCount = 0;
-        for (const slider of sliders) {
-            if (slider.imageUrl && (slider.imageUrl.startsWith('/uploads/') || slider.imageUrl.startsWith('uploads/'))) {
-                slider.imageUrl = convertDiskFileToBase64(slider.imageUrl);
-                await slider.save();
-                sliderCount++;
-            }
-        }
-        if (sliderCount > 0) {
-            console.log(`Migrated ${sliderCount} nav slider images.`);
-        }
-
-        // 3. BannerCards
+        // 2. BannerCards
         const cards = await BannerCard.find();
         let migratedCardsCount = 0;
         for (const card of cards) {
@@ -2254,7 +2239,6 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
         const ordersCount = await Order.countDocuments();
         const productsCount = await Product.countDocuments();
         const bannersCount = await BannerCard.countDocuments();
-        const slidersCount = await NavSlider.countDocuments();
         const returnsCount = await ReturnRequest.countDocuments();
         const messagesCount = await ContactMessage.countDocuments({ status: 'unread' });
 
@@ -2664,51 +2648,6 @@ app.delete('/api/banner-cards/:cardId/images/:imageIndex', verifyAdminToken, asy
     }
 });
 // ==========================================
-// 🎯 NAVBAR PROMO SLIDER ROUTES
-// ==========================================
-
-// Get all nav slider images (Public)
-app.get('/api/nav-sliders', async (req, res) => {
-    try {
-        const sliders = await NavSlider.find().sort({ order: 1, createdAt: -1 });
-        res.json({ success: true, sliders });
-    } catch (error) {
-        console.error("Get Nav Sliders Error:", error);
-        res.status(500).json({ success: false });
-    }
-});
-
-// Add a nav slider image (Admin)
-app.post('/api/nav-sliders', verifyAdminToken, async (req, res) => {
-    try {
-        const { imageData, link, order } = req.body;
-        if (!imageData) return res.status(400).json({ success: false, message: "Image is required" });
-
-        const newSlider = new NavSlider({
-            imageUrl: saveBase64Image(imageData),
-            link: link || '',
-            order: order || 0
-        });
-        await newSlider.save();
-        res.json({ success: true, slider: newSlider });
-    } catch (error) {
-        console.error("Add Nav Slider Error:", error);
-        res.status(500).json({ success: false });
-    }
-});
-
-// Delete a nav slider image (Admin)
-app.delete('/api/nav-sliders/:id', verifyAdminToken, async (req, res) => {
-    try {
-        await NavSlider.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        console.error("Delete Nav Slider Error:", error);
-        res.status(500).json({ success: false });
-    }
-});
-
-// ==========================================
 // ↩️ PRODUCT RETURN REQUESTS ROUTES
 // ==========================================
 
@@ -2973,43 +2912,6 @@ app.delete('/api/banner-cards/:id/images/:imgIndex', verifyAdminToken, async (re
             await card.save();
         }
         res.json({ success: true, card });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// ==========================================
-// 🎨 NAVBAR SLIDERS ROUTES
-// ==========================================
-app.get('/api/navbar-sliders', async (req, res) => {
-    try {
-        const sliders = await NavSlider.find().sort({ order: 1, createdAt: -1 });
-        res.json({ success: true, sliders });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-app.post('/api/navbar-sliders', verifyAdminToken, async (req, res) => {
-    try {
-        const { image, link, order } = req.body;
-        if (!image) return res.status(400).json({ success: false, message: 'Image is required' });
-        
-        const newSlider = new NavSlider({ imageUrl: image, link, order: parseInt(order) || 0 });
-        await newSlider.save();
-        res.json({ success: true, slider: newSlider });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-app.delete('/api/navbar-sliders/:id', verifyAdminToken, async (req, res) => {
-    try {
-        await NavSlider.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Slider deleted' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Server error' });

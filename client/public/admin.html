@@ -808,7 +808,6 @@
                 <button class="tab-btn" data-target="manage-vouchers"><i class="fas fa-tags"></i> <span>Public Vouchers</span></button>
                 <button class="tab-btn" data-target="manage-flash-sale"><i class="fas fa-bolt"></i> <span>Flash Sale Timer</span></button>
                 <button class="tab-btn" data-target="manage-banners"><i class="fas fa-images"></i> <span>Homepage Slider</span></button>
-                <button class="tab-btn" data-target="manage-nav-sliders"><i class="fas fa-sliders-h"></i> <span>Navbar Slider</span></button>
                 <button class="tab-btn" data-target="manage-popup"><i class="fas fa-window-restore"></i> <span>Homepage Popup</span></button>
                 <button class="tab-btn" data-target="manage-blogs"><i class="fas fa-blog"></i> <span>Manage Blogs</span></button>
                 <button class="tab-btn" data-target="manage-returns"><i class="fas fa-undo"></i> <span>Return Requests</span></button>
@@ -1476,48 +1475,6 @@
                             <button id="add-card-btn" class="btn" style="background: #28a745; width: auto; padding: 10px 20px;">+ Add Carousel Card</button>
                         </div>
                         <div id="admin-cards-container" style="display: flex; flex-direction: column; gap: 30px;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 8. MANAGE NAVBAR SLIDER TAB -->
-                <div id="manage-nav-sliders-tab" class="tab-content">
-                    <div class="panel-box" data-aos="fade-up">
-                        <div class="panel-header">
-                            <h2>Manage Navbar Promotional Slider Images</h2>
-                        </div>
-                        <div style="background: var(--bg-main); padding: 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px;">
-                            <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;"><i class="fas fa-plus-circle"></i> Add New Promo Image</h3>
-                            <form id="add-nav-slider-form" style="display: flex; flex-direction: column; gap: 15px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">Promo Image:</label>
-                                    <input type="file" id="nav-slider-image-file" accept="image/*" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">Redirect Link (Optional):</label>
-                                    <input type="text" id="nav-slider-link" placeholder="e.g., women.html" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #333;">Display Order:</label>
-                                    <input type="number" id="nav-slider-order" value="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                                </div>
-                                <button type="submit" class="btn" style="background: #28a745; margin-top: 5px;">Upload & Add to Navbar</button>
-                            </form>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Image Preview</th>
-                                        <th>Redirect Link</th>
-                                        <th>Display Order</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="nav-sliders-table-body">
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 </div>
