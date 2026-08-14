@@ -92,10 +92,16 @@ export default function CategoryPage() {
             </h2>
             
             {loading ? (
-                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <div className="skeleton-loader skeleton-card" style={{ width: '250px', height: '350px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ width: '250px', height: '350px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ width: '250px', height: '350px' }}></div>
+                <div className="product-grid" style={{ marginTop: '30px' }}>
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="skeleton-card">
+                            <div className="skeleton-shimmer skeleton-image" style={{ height: '240px' }}></div>
+                            <div className="skeleton-shimmer skeleton-tag" style={{ width: '40%', height: '12px' }}></div>
+                            <div className="skeleton-shimmer skeleton-title" style={{ width: '85%', height: '16px' }}></div>
+                            <div className="skeleton-shimmer skeleton-price" style={{ width: '50%', height: '18px' }}></div>
+                            <div className="skeleton-shimmer skeleton-btn" style={{ width: '100%', height: '38px', marginTop: '10px' }}></div>
+                        </div>
+                    ))}
                 </div>
             ) : products.length > 0 ? (
                 <div className="product-grid" id="product-list" style={{ marginTop: '30px' }}>
@@ -104,12 +110,20 @@ export default function CategoryPage() {
                         const discountTag = formatDiscountTag(prod.discountType, prod.discountValue);
                         return (
                         <div key={prod._id} className="product-card" data-aos="fade-up">
-                            <div className="product-image-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
+                            <div className="product-image-wrap img-skeleton-wrap" onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>
                                 {discountTag && <div style={{position: 'absolute', top: '10px', left: '10px', background: '#e60050', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2}}>{discountTag}</div>}
                                 <button className="wishlist-card-btn" title="Save to Wishlist" onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} style={{ color: isInWishlist(prod._id) ? '#e60050' : '#888' }}>
                                     <i className={isInWishlist(prod._id) ? "fas fa-heart" : "far fa-heart"}></i>
                                 </button>
-                                <img src={getImageUrl(prod.imageUrl)} alt={prod.name} className="product-image" loading="lazy" />
+                                <img 
+                                    src={getImageUrl(prod.imageUrl)} 
+                                    alt={prod.name} 
+                                    className="product-image fast-img" 
+                                    loading="lazy" 
+                                    decoding="async" 
+                                    onLoad={(e) => { e.target.classList.add('loaded'); e.target.parentElement?.classList.add('loaded'); }}
+                                    onError={(e) => { e.target.classList.add('loaded'); e.target.parentElement?.classList.add('loaded'); }}
+                                />
                             </div>
                             <h3 onClick={() => openProduct(prod._id)} style={{ cursor: 'pointer' }}>{prod.name}</h3>
                             <p className="price">

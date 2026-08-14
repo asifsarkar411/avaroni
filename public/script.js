@@ -88,30 +88,72 @@ function bindAllProductZoomEffects() {
     document.querySelectorAll('.product-image-wrap .product-image, .product-modal-image img')
         .forEach(img => initInteractiveZoom(img));
 }
+// =============================================
+// ⚡ ULTRA FAST SWR IN-MEMORY & STORAGE CACHE
+// =============================================
+const apiMemoryCache = new Map();
+
+async function fetchWithSWR(url, options = {}, ttlMs = 180000) {
+    const cacheKey = url;
+    const now = Date.now();
+    const cached = apiMemoryCache.get(cacheKey);
+
+    if (cached && (now - cached.timestamp < ttlMs)) {
+        // Silently revalidate in background after 30s
+        if (now - cached.timestamp > 30000) {
+            fetch(url, options)
+                .then(r => r.json())
+                .then(fresh => {
+                    if (fresh && fresh.success !== false) {
+                        apiMemoryCache.set(cacheKey, { data: fresh, timestamp: Date.now() });
+                    }
+                })
+                .catch(() => {});
+        }
+        return cached.data;
+    }
+
+    const response = await fetch(url, options);
+    const data = await response.json();
+    if (data && data.success !== false) {
+        apiMemoryCache.set(cacheKey, { data, timestamp: Date.now() });
+    }
+    return data;
+}
+
+function renderProductsSkeleton(container, count = 8) {
+    if (!container) return;
+    let skeletonHTML = '';
+    for (let i = 0; i < count; i++) {
+        skeletonHTML += `
+            <div class="skeleton-card">
+                <div class="skeleton-shimmer skeleton-image"></div>
+                <div class="skeleton-shimmer skeleton-tag"></div>
+                <div class="skeleton-shimmer skeleton-title"></div>
+                <div class="skeleton-shimmer skeleton-price"></div>
+                <div class="skeleton-shimmer skeleton-btn"></div>
+            </div>
+        `;
+    }
+    container.innerHTML = skeletonHTML;
+}
+
 // Function to load products dynamically from the database
 async function loadProducts(category) {
     const productContainer = document.getElementById('product-list') || document.getElementById('products-container');
     if (!productContainer) return; 
 
-    // Render skeleton placeholders while fetching products
-    productContainer.innerHTML = `
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-    `;
+    // Render smooth shimmer skeleton placeholders while fetching products
+    renderProductsSkeleton(productContainer, 8);
 
     try {
-        const response = await fetch(`/api/products?category=${category}`);
-        const data = await response.json();
+        const data = await fetchWithSWR(`/api/products?category=${category}`);
 
         if (data.success) {
             const allProducts = data.products;
             
             if(allProducts.length === 0) {
-                productContainer.innerHTML = `<p style="text-align:center; width:100%;">No products found in this category yet. Check back soon!</p>`;
+                productContainer.innerHTML = `<p style="text-align:center; width:100%; color: #888; padding: 40px 0;">No products found in this category yet. Check back soon!</p>`;
                 return;
             }
 
@@ -228,11 +270,18 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
 
         container.innerHTML += `
             <div class="product-card" data-product-id="${product._id}" data-aos="fade-up">
-                <div class="product-image-wrap">
+                <div class="product-image-wrap img-skeleton-wrap">
                     <button class="wishlist-card-btn ${activeClass}" data-id="${product._id}" title="${inWishlist ? 'Remove from Wishlist' : 'Save to Wishlist'}">
                         <i class="${heartClass}"></i>
                     </button>
-                    <img src="${fullImageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                    <img 
+                        src="${fullImageUrl}" 
+                        alt="${product.name}" 
+                        class="product-image fast-img" 
+                        loading="lazy" 
+                        decoding="async" 
+                        onload="this.classList.add('loaded'); this.parentElement.classList.add('loaded');"
+                        onerror="this.onerror=null; this.src='./img/profile_image.jpg'; this.classList.add('loaded'); this.parentElement.classList.add('loaded');">
                 </div>
                 <h3>${escapeHTML(product.name)}</h3>
                 <p class="price">৳${product.price}</p>
@@ -883,14 +932,18 @@ async function loadHomepageSliders() {
     const container = document.getElementById('slider-container');
     if (!container) return;
 
+    // Immediately render aspect-ratio locked skeleton banner to prevent CLS layout shift
+    container.innerHTML = `
+        <div class="skeleton-slider skeleton-shimmer" style="min-height: 380px; width: 100%; border-radius: 16px;"></div>
+    `;
+
     try {
-        const response = await fetch('/api/banner-cards');
-        const data = await response.json();
+        const data = await fetchWithSWR('/api/banner-cards', {}, 300000);
 
         container.innerHTML = '';
 
         if (!data.cards || data.cards.length === 0) {
-            container.innerHTML = '<p>No sliders available at the moment.</p>';
+            container.innerHTML = '<p style="text-align:center; color:#888; padding:30px 0;">No sliders available at the moment.</p>';
             return;
         }
 
@@ -900,7 +953,7 @@ async function loadHomepageSliders() {
             card.images.forEach(imgUrl => {
                 slidesHtml += `
                     <div class="slide">
-                        <img src="${imgUrl}" alt="Card Image">
+                        <img src="${imgUrl}" alt="Featured Banner" class="fast-img" loading="eager" decoding="async" fetchpriority="high" onload="this.classList.add('loaded');">
                     </div>
                 `;
             });
@@ -1240,20 +1293,14 @@ async function loadNewArrivals() {
     const grid = document.getElementById('new-arrivals-grid');
     if (!grid) return;
 
-    // Render skeleton placeholders while fetching new arrivals
-    grid.innerHTML = `
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-        <div class="skeleton-card"><div class="skeleton-loader skeleton-image"></div><div class="skeleton-loader skeleton-title"></div><div class="skeleton-loader skeleton-price"></div><div class="skeleton-loader skeleton-btn"></div></div>
-    `;
+    // Render modern shimmer skeleton placeholders while fetching new arrivals
+    renderProductsSkeleton(grid, 8);
 
     try {
-        const response = await fetch('/api/products');
-        const data = await response.json();
+        const data = await fetchWithSWR('/api/products');
 
         if (!data.success || !data.products || data.products.length === 0) {
-            grid.innerHTML = '<p style="text-align:center; width:100%; color:#888;">No products available yet.</p>';
+            grid.innerHTML = '<p style="text-align:center; width:100%; color:#888; padding: 30px 0;">No products available yet.</p>';
             return;
         }
 
@@ -1470,7 +1517,29 @@ async function performSearch(query) {
         return;
     }
 
-    dropdown.innerHTML = `<div style="padding: 15px; text-align: center; color: #666;"><i class="fas fa-spinner fa-spin" style="margin-right:8px; color:#e60050;"></i> Loading products...</div>`;
+    dropdown.innerHTML = `
+        <div class="skeleton-search-item">
+            <div class="skeleton-shimmer skeleton-search-thumb"></div>
+            <div class="skeleton-search-info">
+                <div class="skeleton-shimmer" style="height: 14px; width: 70%;"></div>
+                <div class="skeleton-shimmer" style="height: 11px; width: 40%;"></div>
+            </div>
+        </div>
+        <div class="skeleton-search-item">
+            <div class="skeleton-shimmer skeleton-search-thumb"></div>
+            <div class="skeleton-search-info">
+                <div class="skeleton-shimmer" style="height: 14px; width: 85%;"></div>
+                <div class="skeleton-shimmer" style="height: 11px; width: 50%;"></div>
+            </div>
+        </div>
+        <div class="skeleton-search-item">
+            <div class="skeleton-shimmer skeleton-search-thumb"></div>
+            <div class="skeleton-search-info">
+                <div class="skeleton-shimmer" style="height: 14px; width: 60%;"></div>
+                <div class="skeleton-shimmer" style="height: 11px; width: 35%;"></div>
+            </div>
+        </div>
+    `;
     dropdown.classList.add('active');
 
     try {
@@ -2073,9 +2142,34 @@ async function loadPublishedReviewsSlider() {
     const container = document.getElementById('reviews-slides-container');
     if (!container) return;
 
+    // Render 3 skeleton review cards
+    container.innerHTML = `
+        <div class="skeleton-review-card" style="width: 320px; flex-shrink: 0;">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <div class="skeleton-shimmer skeleton-avatar"></div>
+                <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+                    <div class="skeleton-shimmer" style="height:14px; width:60%;"></div>
+                    <div class="skeleton-shimmer skeleton-rating"></div>
+                </div>
+            </div>
+            <div class="skeleton-shimmer" style="height:14px; width:90%;"></div>
+            <div class="skeleton-shimmer" style="height:14px; width:75%;"></div>
+        </div>
+        <div class="skeleton-review-card" style="width: 320px; flex-shrink: 0;">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <div class="skeleton-shimmer skeleton-avatar"></div>
+                <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+                    <div class="skeleton-shimmer" style="height:14px; width:60%;"></div>
+                    <div class="skeleton-shimmer skeleton-rating"></div>
+                </div>
+            </div>
+            <div class="skeleton-shimmer" style="height:14px; width:90%;"></div>
+            <div class="skeleton-shimmer" style="height:14px; width:75%;"></div>
+        </div>
+    `;
+
     try {
-        const response = await fetch('/api/reviews/published');
-        const data = await response.json();
+        const data = await fetchWithSWR('/api/reviews/published', {}, 180000);
 
         if (!data.success || !data.reviews || data.reviews.length === 0) {
             section.style.display = 'none';
@@ -2166,8 +2260,7 @@ async function loadPublishedReviewsSlider() {
         if (excludedPages.some(page => path.includes(page))) return;
 
         try {
-            const res = await fetch('/api/flash-sale');
-            const data = await res.json();
+            const data = await fetchWithSWR('/api/flash-sale', {}, 60000);
             if (!data.success || !data.flashSale) return;
 
             const fs = data.flashSale;
@@ -2255,17 +2348,10 @@ async function loadPublishedReviewsSlider() {
     }
 })();
 /* =============================================
-   new addition
+   Category Grid Rendering
    ============================================= */
-   // Array of Category Data (Replace icon paths with your own image URLs/paths)
-// Array linked to your exact backend categories and subcategories
-// Array matching your categories (Kurtis and Gowns removed)
-// Array matching your exact category configuration
-// Array matching your store categories
-// Fallback image if local icon fails to load
 const FALLBACK_ICON = "./img/profile_image.jpg";
 
-// Default category data if database is empty
 const defaultCategoryData = [
     { name: "Sarees", icon: "./img/categories/saree.png", redirectUrl: "category.html?cat=sarees" },
     { name: "Salwar Kameez", icon: "./img/categories/three-piece.png", redirectUrl: "category.html?cat=salwar-kameez" },
@@ -2275,16 +2361,29 @@ const defaultCategoryData = [
     { name: "Footwear", icon: "./img/categories/footwear.png", redirectUrl: "category.html?cat=footwear" }
 ];
 
-// Dynamically Render Category Grid from DB (with custom uploaded icons & redirect links)
+// Dynamically Render Category Grid from DB with Shimmer Skeleton
 async function renderCategoryGrid() {
     const gridContainer = document.getElementById("category-grid");
     if (!gridContainer) return;
 
+    // Immediately render skeleton category circles
+    if (!gridContainer.children.length) {
+        let catSkeletons = '';
+        for (let i = 0; i < 6; i++) {
+            catSkeletons += `
+                <div class="skeleton-category-item">
+                    <div class="skeleton-shimmer skeleton-category-circle"></div>
+                    <div class="skeleton-shimmer skeleton-category-text"></div>
+                </div>
+            `;
+        }
+        gridContainer.innerHTML = catSkeletons;
+    }
+
     let categoriesToRender = defaultCategoryData;
 
     try {
-        const response = await fetch('/api/categories', { cache: 'no-store' });
-        const data = await response.json();
+        const data = await fetchWithSWR('/api/categories', {}, 300000);
         if (data.success && data.categories && data.categories.length > 0) {
             categoriesToRender = data.categories.map(cat => {
                 const targetUrl = cat.redirectUrl && cat.redirectUrl.trim() 
@@ -2304,7 +2403,14 @@ async function renderCategoryGrid() {
     gridContainer.innerHTML = categoriesToRender.map(cat => `
         <div class="category-card" data-url="${escapeHTML(cat.redirectUrl)}" style="cursor: pointer;" data-aos="zoom-in">
             <div class="category-icon-wrap">
-                <img src="${escapeHTML(cat.icon)}" alt="${escapeHTML(cat.name)}" loading="lazy" class="category-icon-img" onerror="this.onerror=null; this.src='${FALLBACK_ICON}';">
+                <img 
+                    src="${escapeHTML(cat.icon)}" 
+                    alt="${escapeHTML(cat.name)}" 
+                    loading="lazy" 
+                    decoding="async" 
+                    class="category-icon-img fast-img" 
+                    onload="this.classList.add('loaded')" 
+                    onerror="this.onerror=null; this.src='${FALLBACK_ICON}'; this.classList.add('loaded');">
             </div>
             <p class="category-title">${escapeHTML(cat.name)}</p>
         </div>

@@ -31,8 +31,8 @@ export default function HeroSlider() {
 
     if (banners.length === 0) {
         return (
-            <div id="slider-container" data-aos="zoom-in" data-aos-delay="400" style={{textAlign: 'center', margin: '20px'}}>
-                <div className="skeleton-loader skeleton-slider"></div>
+            <div id="slider-container" data-aos="zoom-in" data-aos-delay="400" style={{textAlign: 'center', margin: '20px auto', maxWidth: '1200px'}}>
+                <div className="skeleton-slider skeleton-shimmer" style={{ width: '100%', aspectRatio: '21/9', height: 'auto', minHeight: '320px', borderRadius: '16px' }}></div>
             </div>
         );
     }
@@ -58,18 +58,20 @@ export default function HeroSlider() {
                     opacity: index === currentIndex ? 1 : 0,
                     transition: 'opacity 0.8s ease-in-out',
                     zIndex: index === currentIndex ? 1 : 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer'
-                }} onClick={() => {
-                    if(banner.redirectUrl) window.location.href = banner.redirectUrl;
-                }}>
-                    <img src={getImageUrl(banner.images?.[0])} alt={banner.heading || 'Promo Banner'} style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                    }} />
+                    cursor: banner.link ? 'pointer' : 'default'
+                }} onClick={() => banner.link && (window.location.href = banner.link)}>
+                    <img 
+                        src={getImageUrl(banner.images && banner.images[0] ? banner.images[0] : banner.imageUrl)} 
+                        alt="Hero Banner" 
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        decoding="async"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                    />
                     {banner.heading && (
                         <div style={{
                             position: 'absolute',

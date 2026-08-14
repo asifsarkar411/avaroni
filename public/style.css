@@ -1794,54 +1794,242 @@ body.no-scroll {
 }
 
 /* =========================================
-   Skeleton Loading Placeholders
+   SUPER FAST SHIMMER SKELETON DESIGN SYSTEM
 ========================================= */
-@keyframes skeleton-pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
+@keyframes shimmerSweep {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
-.skeleton-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+
+.skeleton-loader,
+.skeleton-shimmer {
+    background: linear-gradient(90deg, #f0f2f5 0%, #e4e7eb 40%, #f7f8fa 60%, #f0f2f5 100%) !important;
+    background-size: 250% 100% !important;
+    animation: shimmerSweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+    border-radius: 6px;
+    position: relative;
     overflow: hidden;
 }
-.skeleton-loader {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-    border-radius: 6px;
+
+/* Skeleton Product Card */
+.skeleton-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
+
 .skeleton-image {
     width: 100%;
-    height: 250px;
+    height: 240px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    flex-shrink: 0;
 }
+
+.skeleton-tag {
+    width: 35%;
+    height: 12px;
+    border-radius: 4px;
+}
+
 .skeleton-title {
-    width: 75%;
-    height: 18px;
-    margin: 10px auto;
-}
-.skeleton-price {
-    width: 40%;
+    width: 85%;
     height: 16px;
-    margin: 8px auto;
+    border-radius: 4px;
 }
-.skeleton-btn {
+
+.skeleton-title.short {
     width: 60%;
-    height: 36px;
-    margin: 12px auto 0;
-    border-radius: 5px;
+    height: 16px;
 }
+
+.skeleton-price {
+    width: 45%;
+    height: 18px;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.skeleton-btn {
+    width: 100%;
+    height: 38px;
+    border-radius: 8px;
+    margin-top: auto;
+}
+
+/* Skeleton Slider & Banners */
 .skeleton-slider {
     width: 100%;
-    height: 300px;
+    height: 380px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.skeleton-promo-banner {
+    width: 100%;
+    height: 42px;
+    border-radius: 6px;
+    margin: 8px 0;
+}
+
+/* Skeleton Category Circle/Pill */
+.skeleton-category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+}
+
+.skeleton-category-circle {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+}
+
+.skeleton-category-text {
+    width: 65px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+/* Skeleton Review Card */
+.skeleton-review-card {
+    background: #fff;
     border-radius: 12px;
-    margin-bottom: 10px;
+    padding: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+
+.skeleton-rating {
+    width: 80px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+/* Skeleton Flash Sale */
+.skeleton-flash-sale-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    margin-bottom: 25px;
+}
+
+.skeleton-countdown {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.skeleton-time-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+}
+
+/* Skeleton Blog Card */
+.skeleton-blog-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+}
+
+.skeleton-blog-img {
+    width: 100%;
+    height: 200px;
+}
+
+.skeleton-blog-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Skeleton Search Dropdown Items */
+.skeleton-search-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.skeleton-search-thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.skeleton-search-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Ultra Smooth Progressive Image Fade-in */
+.fast-img {
+    opacity: 0;
+    transition: opacity 0.35s ease-in-out;
+}
+
+.fast-img.loaded {
+    opacity: 1;
+}
+
+.img-skeleton-wrap {
+    position: relative;
+    background: #f0f2f5;
+    overflow: hidden;
+}
+
+.img-skeleton-wrap::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f0f2f5 0%, #e4e7eb 40%, #f7f8fa 60%, #f0f2f5 100%);
+    background-size: 250% 100%;
+    animation: shimmerSweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.img-skeleton-wrap.loaded::before {
+    opacity: 0;
+    animation: none;
 }
 
 /* =========================================

@@ -87,17 +87,27 @@ export default function Home() {
                 </div>
             </div>
             {loading ? (
-                <div style={{display:'flex', gap:'20px', justifyContent:'center'}}>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '400px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '400px' }}></div>
-                    <div className="skeleton-loader skeleton-card" style={{ height: '400px' }}></div>
+                <div style={{display:'flex', gap:'20px', justifyContent:'center', flexWrap:'wrap', padding: '20px 0'}}>
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="skeleton-category-item">
+                            <div className="skeleton-shimmer skeleton-category-circle"></div>
+                            <div className="skeleton-shimmer skeleton-category-text"></div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <div className="category-grid" id="category-grid">
                     {categories.map(cat => (
                         <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`}>
-                            <div className="category-image-wrap">
-                                <img src={getImageUrl(cat.imageUrl || cat.image || cat.iconUrl || cat.icon)} alt={cat.name} loading="lazy" />
+                            <div className="category-image-wrap img-skeleton-wrap">
+                                <img 
+                                    src={getImageUrl(cat.imageUrl || cat.image || cat.iconUrl || cat.icon)} 
+                                    alt={cat.name} 
+                                    className="fast-img" 
+                                    loading="lazy" 
+                                    decoding="async" 
+                                    onLoad={(e) => { e.target.classList.add('loaded'); e.target.parentElement?.classList.add('loaded'); }}
+                                />
                             </div>
                             <p className="category-title">{cat.name}</p>
                         </div>
