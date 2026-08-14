@@ -3317,3 +3317,126 @@ body.no-scroll #flash-sale-banner,
         padding: 0 30px;
     }
 }
+
+/* =============================================
+   HOMEPAGE WELCOME PROMO POPUP MODAL
+   ============================================= */
+.home-welcome-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.home-welcome-popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.home-welcome-popup-box {
+    position: relative;
+    max-width: 520px;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 18px;
+    background: #000;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    transform: scale(0.85) translateY(20px);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-welcome-popup-overlay.active .home-welcome-popup-box {
+    transform: scale(1) translateY(0);
+}
+
+.home-welcome-popup-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 0;
+}
+
+.home-welcome-popup-img {
+    width: 100%;
+    height: auto;
+    max-height: 82vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 18px;
+    transition: transform 0.25s ease;
+}
+
+.home-welcome-popup-link:hover .home-welcome-popup-img {
+    transform: scale(1.01);
+}
+
+.home-welcome-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(17, 17, 17, 0.85);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: background 0.2s, transform 0.2s, color 0.2s;
+    line-height: 1;
+    padding: 0;
+}
+
+.home-welcome-popup-close:hover {
+    background: #ff0055;
+    border-color: #ff0055;
+    transform: scale(1.12) rotate(90deg);
+    color: #ffffff;
+}
+
+@media (max-width: 600px) {
+    .home-welcome-popup-overlay {
+        padding: 14px;
+    }
+    .home-welcome-popup-box {
+        max-width: 92vw;
+        max-height: 80vh;
+        border-radius: 14px;
+    }
+    .home-welcome-popup-img {
+        max-height: 75vh;
+        border-radius: 14px;
+    }
+    .home-welcome-popup-close {
+        top: 8px;
+        right: 8px;
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+}

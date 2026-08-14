@@ -1901,6 +1901,53 @@ app.put('/api/admin/settings/marquee', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Update homepage welcome popup settings
+app.put('/api/admin/settings/popup', verifyAdminToken, async (req, res) => {
+    try {
+        const { popupImage, popupEnabled, popupLink } = req.body;
+        
+        if (popupImage !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'popupImage' },
+                { value: popupImage },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (popupEnabled !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'popupEnabled' },
+                { value: String(popupEnabled) },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (popupLink !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'popupLink' },
+                { value: String(popupLink || '').trim() },
+                { upsert: true, new: true }
+            );
+        }
+        
+        res.json({ success: true, message: "Homepage popup settings updated successfully." });
+    } catch (err) {
+        console.error("Update Popup Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Delete/Remove homepage popup
+app.delete('/api/admin/settings/popup', verifyAdminToken, async (req, res) => {
+    try {
+        await Settings.deleteMany({ key: { $in: ['popupImage', 'popupEnabled', 'popupLink'] } });
+        res.json({ success: true, message: "Homepage popup removed successfully." });
+    } catch (err) {
+        console.error("Delete Popup Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
 // Get global settings (public)
 app.get('/api/settings', async (req, res) => {
     try {

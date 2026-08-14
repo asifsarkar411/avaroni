@@ -2526,6 +2526,102 @@ async function initTopMarqueeBanner() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', initHomeWelcomePopup);
+
+// =============================================
+// 🖼️ HOMEPAGE WELCOME PROMO POPUP MODAL
+// =============================================
+async function initHomeWelcomePopup() {
+    const path = window.location.pathname.toLowerCase();
+    
+    // STRICTLY homepage only (e.g. index.html or root /)
+    const isHomePage = path === '/' || path.endsWith('/index.html') || path === '' || (path.split('/').filter(Boolean).length === 0);
+    if (!isHomePage) return;
+
+    // Check if already seen once in this session
+    try {
+        if (sessionStorage.getItem('avaroni_home_popup_seen')) return;
+    } catch(e) {}
+
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (!data.success || !data.settings) return;
+
+        const { popupImage, popupEnabled, popupLink } = data.settings;
+        const isEnabled = popupEnabled === undefined || popupEnabled === 'true' || popupEnabled === true;
+
+        if (!isEnabled || !popupImage || !popupImage.trim()) return;
+
+        // Create popup overlay element
+        const overlay = document.createElement('div');
+        overlay.className = 'home-welcome-popup-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+
+        const box = document.createElement('div');
+        box.className = 'home-welcome-popup-box';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'home-welcome-popup-close';
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.title = 'Close';
+        closeBtn.setAttribute('aria-label', 'Close Popup');
+
+        let contentHTML = '';
+        const targetLink = popupLink && popupLink.trim() ? popupLink.trim() : '';
+        if (targetLink) {
+            contentHTML = `
+                <a href="${escapeHTML(targetLink)}" class="home-welcome-popup-link">
+                    <img src="${escapeHTML(popupImage)}" alt="Special Announcement" class="home-welcome-popup-img" />
+                </a>
+            `;
+        } else {
+            contentHTML = `<img src="${escapeHTML(popupImage)}" alt="Special Announcement" class="home-welcome-popup-img" />`;
+        }
+
+        box.appendChild(closeBtn);
+        box.insertAdjacentHTML('beforeend', contentHTML);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        const closePopup = () => {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+            }, 350);
+        };
+
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closePopup();
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closePopup();
+        });
+
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                closePopup();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+
+        // Trigger smooth entrance after brief 800ms delay
+        setTimeout(() => {
+            overlay.classList.add('active');
+            try {
+                sessionStorage.setItem('avaroni_home_popup_seen', 'true');
+            } catch(e) {}
+        }, 800);
+
+    } catch (err) {
+        console.error('Error loading homepage popup:', err);
+    }
+}
+
 // Dynamically load analytics tracking for static pages
 (function() {
     var script = document.createElement('script');

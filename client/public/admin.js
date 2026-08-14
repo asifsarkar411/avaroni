@@ -167,6 +167,42 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const popupForm = document.getElementById('popup-settings-form');
+    if (popupForm) popupForm.addEventListener('submit', handleChangePopupSettings);
+
+    const popupFileInput = document.getElementById('popup-image-input');
+    if (popupFileInput) {
+        popupFileInput.addEventListener('change', async (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const base64 = await fileToBase64(e.target.files[0]);
+                const previewImg = document.getElementById('popup-preview-img');
+                const previewContainer = document.getElementById('popup-preview-container');
+                const noImgText = document.getElementById('popup-no-img-text');
+                if (previewImg) previewImg.src = base64;
+                if (previewContainer) previewContainer.style.display = 'block';
+                if (noImgText) noImgText.style.display = 'none';
+            }
+        });
+    }
+
+    const popupUrlInput = document.getElementById('popup-image-url-input');
+    if (popupUrlInput) {
+        popupUrlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            if (url) {
+                const previewImg = document.getElementById('popup-preview-img');
+                const previewContainer = document.getElementById('popup-preview-container');
+                const noImgText = document.getElementById('popup-no-img-text');
+                if (previewImg) previewImg.src = url;
+                if (previewContainer) previewContainer.style.display = 'block';
+                if (noImgText) noImgText.style.display = 'none';
+            }
+        });
+    }
+
+    const removePopupBtn = document.getElementById('remove-popup-btn');
+    if (removePopupBtn) removePopupBtn.addEventListener('click', handleRemovePopupImage);
+
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
 
@@ -304,6 +340,31 @@ async function fetchSettings() {
             if (data.settings.marqueeSpeed) {
                 const marqueeSpeed = document.getElementById('marquee-speed-select');
                 if (marqueeSpeed) marqueeSpeed.value = data.settings.marqueeSpeed;
+            }
+            if (data.settings.popupImage) {
+                const previewImg = document.getElementById('popup-preview-img');
+                const previewContainer = document.getElementById('popup-preview-container');
+                const noImgText = document.getElementById('popup-no-img-text');
+                const urlInput = document.getElementById('popup-image-url-input');
+                if (previewImg) previewImg.src = data.settings.popupImage;
+                if (previewContainer) previewContainer.style.display = 'block';
+                if (noImgText) noImgText.style.display = 'none';
+                if (urlInput && !data.settings.popupImage.startsWith('data:')) {
+                    urlInput.value = data.settings.popupImage;
+                }
+            } else {
+                const previewContainer = document.getElementById('popup-preview-container');
+                const noImgText = document.getElementById('popup-no-img-text');
+                if (previewContainer) previewContainer.style.display = 'none';
+                if (noImgText) noImgText.style.display = 'block';
+            }
+            if (data.settings.popupEnabled !== undefined) {
+                const popupEnabled = document.getElementById('popup-enabled-input');
+                if (popupEnabled) popupEnabled.checked = (data.settings.popupEnabled === 'true' || data.settings.popupEnabled === true);
+            }
+            if (data.settings.popupLink !== undefined) {
+                const popupLink = document.getElementById('popup-link-input');
+                if (popupLink) popupLink.value = data.settings.popupLink;
             }
         }
     } catch (err) {
@@ -2660,6 +2721,86 @@ async function handleChangeMarqueeSettings(e) {
     } catch (err) {
         console.error("Change Marquee Error:", err);
         showToast("Error updating marquee settings.", "error");
+    }
+}
+
+async function handleChangePopupSettings(e) {
+    e.preventDefault();
+    const enabledInput = document.getElementById('popup-enabled-input');
+    const fileInput = document.getElementById('popup-image-input');
+    const urlInput = document.getElementById('popup-image-url-input');
+    const linkInput = document.getElementById('popup-link-input');
+    const previewImg = document.getElementById('popup-preview-img');
+
+    const popupEnabled = enabledInput ? enabledInput.checked : true;
+    const popupLink = linkInput ? linkInput.value.trim() : '';
+    let popupImage = '';
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        popupImage = await fileToBase64(fileInput.files[0]);
+    } else if (urlInput && urlInput.value.trim()) {
+        popupImage = urlInput.value.trim();
+    } else if (previewImg && previewImg.src && !previewImg.src.includes('window.location') && previewImg.src.length > 50) {
+        popupImage = previewImg.src;
+    }
+
+    if (popupEnabled && !popupImage) {
+        showToast("Please upload an image or provide an image URL for the popup.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/popup', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ popupImage, popupEnabled, popupLink })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Homepage welcome popup settings saved successfully!");
+            fetchSettings();
+        } else {
+            showToast(data.message || "Failed to update popup settings.", "error");
+        }
+    } catch (err) {
+        console.error("Popup Settings Error:", err);
+        showToast("Error updating popup settings.", "error");
+    }
+}
+
+async function handleRemovePopupImage() {
+    if (!confirm("Are you sure you want to remove the homepage popup image?")) return;
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/popup', {
+            method: 'DELETE'
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Homepage popup removed successfully!");
+            const previewImg = document.getElementById('popup-preview-img');
+            const previewContainer = document.getElementById('popup-preview-container');
+            const noImgText = document.getElementById('popup-no-img-text');
+            const fileInput = document.getElementById('popup-image-input');
+            const urlInput = document.getElementById('popup-image-url-input');
+            const linkInput = document.getElementById('popup-link-input');
+
+            if (previewImg) previewImg.src = '';
+            if (previewContainer) previewContainer.style.display = 'none';
+            if (noImgText) noImgText.style.display = 'block';
+            if (fileInput) fileInput.value = '';
+            if (urlInput) urlInput.value = '';
+            if (linkInput) linkInput.value = '';
+        } else {
+            showToast(data.message || "Failed to remove popup.", "error");
+        }
+    } catch (err) {
+        console.error("Remove Popup Error:", err);
+        showToast("Error removing popup.", "error");
     }
 }
 
