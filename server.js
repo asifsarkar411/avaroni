@@ -1017,19 +1017,9 @@ function verifyAdminToken(req, res, next) {
 // ==========================================
 
 // ==========================================
-// 🏷️ CATEGORY ROUTES
 // ==========================================
-
-// Get Categories (Public)
-app.get('/api/categories', async (req, res) => {
-    try {
-        const categories = await Category.find();
-        res.json({ success: true, categories });
-    } catch (error) {
-        console.error("Get Categories Error:", error);
-        res.status(500).json({ success: false, message: "Failed to load categories" });
-    }
-});
+// 🏷️ CATEGORY ROUTES & SYNC
+// ==========================================
 
 // Helper function to generate clean URL slug
 function generateCategorySlug(str) {
@@ -1041,16 +1031,106 @@ function generateCategorySlug(str) {
     return slug || ('cat-' + Date.now());
 }
 
+// Auto-sync function to restore default & previously saved product categories
+async function syncCategoriesFromDatabase() {
+    try {
+        const catCount = await Category.countDocuments();
+        if (catCount === 0) {
+            const defaultCats = [
+                { name: "sarees", displayName: "Sarees", slug: "sarees", iconUrl: "./img/categories/saree.png", redirectUrl: "category.html?cat=sarees", subcategories: ["Silk", "Cotton", "Georgette", "Jamdani", "Party Wear"] },
+                { name: "salwar-kameez", displayName: "Salwar Kameez", slug: "salwar-kameez", iconUrl: "./img/categories/three-piece.png", redirectUrl: "category.html?cat=salwar-kameez", subcategories: ["Three Piece", "Kurti", "Unstitched", "Ready Made"] },
+                { name: "women", displayName: "Women Dress", slug: "women", iconUrl: "./img/categories/three-piece.png", redirectUrl: "category.html?cat=women", subcategories: ["Saree", "Three Piece", "Kurti"] },
+                { name: "kids", displayName: "Kids Zone", slug: "kids", iconUrl: "./img/categories/kids.jpg", redirectUrl: "kids.html", subcategories: ["Boys", "Girls", "Toys", "Clothing", "Shoes"] },
+                { name: "ornament", displayName: "Ornament", slug: "ornament", iconUrl: "./img/categories/jewellery.png", redirectUrl: "ornament.html", subcategories: ["Necklace", "Earrings", "Bangles", "Rings", "Bridal Set"] },
+                { name: "handbags", displayName: "Handbags", slug: "handbags", iconUrl: "./img/categories/handbag.jpg", redirectUrl: "category.html?cat=handbags", subcategories: ["Tote Bags", "Clutches", "Crossbody", "Party Purses"] },
+                { name: "footwear", displayName: "Footwear", slug: "footwear", iconUrl: "./img/categories/footwear.png", redirectUrl: "category.html?cat=footwear", subcategories: ["Heels", "Flats", "Sandals", "Sneakers"] }
+            ];
+            for (const c of defaultCats) {
+                await Category.findOneAndUpdate({ slug: c.slug }, { $setOnInsert: c }, { upsert: true, new: true });
+            }
+        }
+
+        // Also check if existing products have categories not yet in Category collection
+        const products = await Product.find({}, 'category subcategory').lean();
+        for (const p of products) {
+            if (!p.category || !p.category.trim()) continue;
+            const rawCat = p.category.trim();
+            const slug = generateCategorySlug(rawCat);
+            const sub = p.subcategory && p.subcategory.trim() ? p.subcategory.trim() : null;
+
+            let existingCat = await Category.findOne({
+                $or: [
+                    { slug: slug },
+                    { name: slug },
+                    { displayName: new RegExp(`^${rawCat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+                ]
+            });
+
+            if (!existingCat) {
+                existingCat = new Category({
+                    name: slug,
+                    displayName: rawCat,
+                    slug: slug,
+                    iconUrl: "",
+                    redirectUrl: `category.html?cat=${slug}`,
+                    subcategories: sub ? [sub] : []
+                });
+                await existingCat.save();
+            } else if (sub) {
+                existingCat.subcategories = existingCat.subcategories || [];
+                const subExists = existingCat.subcategories.some(s => s && s.toLowerCase() === sub.toLowerCase());
+                if (!subExists) {
+                    existingCat.subcategories.push(sub);
+                    existingCat.markModified('subcategories');
+                    await existingCat.save();
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Error syncing categories from database:", err);
+    }
+}
+
+// Get Categories (Public & Admin)
+app.get('/api/categories', async (req, res) => {
+    try {
+        let categories = await Category.find().sort({ createdAt: 1 });
+        if (!categories || categories.length === 0) {
+            await syncCategoriesFromDatabase();
+            categories = await Category.find().sort({ createdAt: 1 });
+        }
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error("Get Categories Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load categories" });
+    }
+});
+
+// Admin Get Categories Alias
+app.get('/api/admin/categories', async (req, res) => {
+    try {
+        let categories = await Category.find().sort({ createdAt: 1 });
+        if (!categories || categories.length === 0) {
+            await syncCategoriesFromDatabase();
+            categories = await Category.find().sort({ createdAt: 1 });
+        }
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error("Admin Get Categories Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load categories" });
+    }
+});
+
 // Add Category (Admin)
 app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
     try {
-        const { displayName, subcategories, iconUrl, redirectUrl } = req.body;
-        if (!displayName || !displayName.trim()) {
+        const { displayName, name: altName, subcategories, iconUrl, redirectUrl } = req.body;
+        const targetName = (displayName || altName || '').trim();
+        if (!targetName) {
             return res.status(400).json({ success: false, message: "Category name is required" });
         }
 
-        const cleanDisplayName = displayName.trim();
-        const slug = generateCategorySlug(cleanDisplayName);
+        const slug = generateCategorySlug(targetName);
         const name = slug;
 
         // Check if category already exists by slug or name
@@ -1061,11 +1141,11 @@ app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
 
         category = new Category({
             name,
-            displayName: cleanDisplayName,
+            displayName: targetName,
             slug,
             iconUrl: iconUrl || "",
             redirectUrl: redirectUrl || "",
-            subcategories: subcategories || []
+            subcategories: Array.isArray(subcategories) ? subcategories : []
         });
 
         await category.save();
@@ -1079,14 +1159,24 @@ app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
 // Update Category (Admin)
 app.put('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
     try {
-        const { displayName, iconUrl, redirectUrl } = req.body;
-        const category = await Category.findById(req.params.id);
+        const { displayName, name: altName, iconUrl, redirectUrl } = req.body;
+        const targetId = req.params.id;
+        
+        let category = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            category = await Category.findById(targetId);
+        }
+        if (!category) {
+            category = await Category.findOne({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+
         if (!category) {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
-        if (displayName && displayName.trim()) {
-            category.displayName = displayName.trim();
+        const newName = (displayName || altName || '').trim();
+        if (newName) {
+            category.displayName = newName;
         }
         if (iconUrl !== undefined) category.iconUrl = iconUrl;
         if (redirectUrl !== undefined) category.redirectUrl = redirectUrl.trim();
@@ -1108,11 +1198,19 @@ app.post('/api/admin/categories/:id/subcategories', verifyAdminToken, async (req
         }
 
         const cleanSub = subcategory.trim();
-        const category = await Category.findById(req.params.id);
+        const targetId = req.params.id;
+        let category = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            category = await Category.findById(targetId);
+        }
+        if (!category) {
+            category = await Category.findOne({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+
         if (!category) return res.status(404).json({ success: false, message: "Category not found" });
 
-        // Add subcategory if it doesn't already exist (case-insensitive check)
-        const exists = category.subcategories.some(s => s.toLowerCase() === cleanSub.toLowerCase());
+        category.subcategories = category.subcategories || [];
+        const exists = category.subcategories.some(s => s && s.toLowerCase() === cleanSub.toLowerCase());
         if (!exists) {
             category.subcategories.push(cleanSub);
             category.markModified('subcategories');
@@ -1129,11 +1227,19 @@ app.post('/api/admin/categories/:id/subcategories', verifyAdminToken, async (req
 // Delete Subcategory (Admin)
 app.delete('/api/admin/categories/:id/subcategories/:subName', verifyAdminToken, async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        const targetId = req.params.id;
+        let category = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            category = await Category.findById(targetId);
+        }
+        if (!category) {
+            category = await Category.findOne({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+
         if (!category) return res.status(404).json({ success: false, message: "Category not found" });
 
         const subToDelete = decodeURIComponent(req.params.subName).trim().toLowerCase();
-        category.subcategories = category.subcategories.filter(sub => sub.toLowerCase() !== subToDelete);
+        category.subcategories = (category.subcategories || []).filter(sub => sub && sub.toLowerCase() !== subToDelete);
         category.markModified('subcategories');
         await category.save();
 
@@ -1147,7 +1253,12 @@ app.delete('/api/admin/categories/:id/subcategories/:subName', verifyAdminToken,
 // Delete Category (Admin)
 app.delete('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
     try {
-        await Category.findByIdAndDelete(req.params.id);
+        const targetId = req.params.id;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            await Category.findByIdAndDelete(targetId);
+        } else {
+            await Category.findOneAndDelete({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
         res.json({ success: true });
     } catch (error) {
         console.error("Delete Category Error:", error);

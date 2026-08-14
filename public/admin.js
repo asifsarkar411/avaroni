@@ -1637,12 +1637,23 @@ let localCategories = [];
 
 async function loadCategories() {
     try {
-        const response = await fetch('/api/categories');
-        const data = await response.json();
-        if (data.success) {
-            localCategories = data.categories || [];
-            populateAddProductCategories();
+        let response = await fetch('/api/categories');
+        if (!response.ok) {
+            response = await fetchWithAuth('/api/admin/categories');
         }
+        if (response && response.ok) {
+            const data = await response.json();
+            if (data.success && Array.isArray(data.categories)) {
+                localCategories = data.categories;
+            } else if (Array.isArray(data.categories)) {
+                localCategories = data.categories;
+            } else if (Array.isArray(data)) {
+                localCategories = data;
+            } else {
+                localCategories = [];
+            }
+        }
+        populateAddProductCategories();
     } catch (err) {
         console.error("Error loading categories:", err);
     }
@@ -1657,11 +1668,22 @@ function filterCategories(query) {
         return;
     }
 
+    const q = query.toLowerCase();
     const filtered = localCategories.filter(cat => {
-        const nameMatch = (cat.displayName || '').toLowerCase().includes(query);
-        const slugMatch = (cat.slug || '').toLowerCase().includes(query);
-        const subMatch = (cat.subcategories || []).some(s => s.toLowerCase().includes(query));
-        return nameMatch || slugMatch || subMatch;
+        const dName = (cat.displayName || cat.name || '').toLowerCase();
+        const slug = (cat.slug || cat.name || '').toLowerCase();
+        
+        let subList = [];
+        if (Array.isArray(cat.subcategories)) subList = cat.subcategories;
+        else if (typeof cat.subcategories === 'string') subList = cat.subcategories.split(',');
+        else if (Array.isArray(cat.subCategories)) subList = cat.subCategories;
+
+        const subMatch = subList.some(s => {
+            const str = typeof s === 'string' ? s : (s.name || s.title || '');
+            return str.toLowerCase().includes(q);
+        });
+
+        return dName.includes(q) || slug.includes(q) || subMatch;
     });
 
     renderCategoriesList(filtered);
@@ -1679,7 +1701,11 @@ async function renderCategoriesTab() {
     
     let totalSubcategories = 0;
     localCategories.forEach(c => {
-        if (c.subcategories && Array.isArray(c.subcategories)) totalSubcategories += c.subcategories.length;
+        let subs = [];
+        if (Array.isArray(c.subcategories)) subs = c.subcategories;
+        else if (typeof c.subcategories === 'string' && c.subcategories.trim()) subs = c.subcategories.split(',');
+        else if (Array.isArray(c.subCategories)) subs = c.subCategories;
+        totalSubcategories += subs.length;
     });
 
     if (totalCatEl) totalCatEl.textContent = localCategories.length;
@@ -1706,15 +1732,30 @@ function renderCategoriesList(categories) {
     }
 
     categories.forEach(cat => {
-        const subcategories = cat.subcategories || [];
-        let subListHtml = '';
+        const catId = cat._id || cat.id || cat.slug || cat.name;
+        const displayName = cat.displayName || cat.name || cat.title || 'Category';
+        const slug = cat.slug || cat.name || displayName.toLowerCase().replace(/\s+/g, '-');
+        const iconSrc = cat.iconUrl || cat.icon || cat.imageUrl || './img/profile_image.jpg';
+        const redirectText = cat.redirectUrl || `category.html?cat=${encodeURIComponent(slug)}`;
 
-        if (subcategories.length > 0) {
-            subcategories.forEach(sub => {
+        let subList = [];
+        if (Array.isArray(cat.subcategories)) {
+            subList = cat.subcategories;
+        } else if (typeof cat.subcategories === 'string' && cat.subcategories.trim()) {
+            subList = cat.subcategories.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (Array.isArray(cat.subCategories)) {
+            subList = cat.subCategories;
+        }
+
+        let subListHtml = '';
+        if (subList.length > 0) {
+            subList.forEach(subItem => {
+                const subName = typeof subItem === 'string' ? subItem : (subItem.name || subItem.title || String(subItem));
+                if (!subName || !subName.trim()) return;
                 subListHtml += `
                     <span class="subcat-chip">
-                        <span>${escapeHTML(sub)}</span>
-                        <span class="subcat-delete-btn" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" title="Remove ${escapeHTML(sub)}">
+                        <span>${escapeHTML(subName)}</span>
+                        <span class="subcat-delete-btn" onclick="deleteSubcategory('${escapeHTML(catId)}', '${escapeHTML(subName)}')" title="Remove ${escapeHTML(subName)}">
                             <i class="fas fa-times"></i>
                         </span>
                     </span>
@@ -1724,33 +1765,30 @@ function renderCategoriesList(categories) {
             subListHtml = `<p style="margin: 4px 0 0; color: #94a3b8; font-size: 12px; font-style: italic;">No subcategories added yet.</p>`;
         }
 
-        const iconSrc = cat.iconUrl || './img/profile_image.jpg';
-        const redirectText = cat.redirectUrl || `category.html?cat=${cat.slug}`;
-
         container.innerHTML += `
             <div class="cat-card-modern" data-aos="fade-up">
                 <div>
                     <div class="cat-card-top">
                         <div class="cat-card-info-wrap">
                             <div class="cat-icon-container">
-                                <img src="${iconSrc}" alt="${escapeHTML(cat.displayName)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                                <img src="${iconSrc}" alt="${escapeHTML(displayName)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                             </div>
                             <div class="cat-card-details">
-                                <h3 class="cat-card-name">${escapeHTML(cat.displayName)}</h3>
+                                <h3 class="cat-card-name">${escapeHTML(displayName)}</h3>
                                 <div class="cat-meta-tags">
-                                    <span class="cat-slug-pill">#${escapeHTML(cat.slug)}</span>
+                                    <span class="cat-slug-pill">#${escapeHTML(slug)}</span>
                                     <span class="cat-route-pill" title="${escapeHTML(redirectText)}"><i class="fas fa-link" style="margin-right: 3px;"></i>${escapeHTML(redirectText)}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="cat-card-actions">
-                            <button class="btn-action-icon btn-action-edit" onclick="openEditCategoryModal('${cat._id}')" title="Edit Category">
+                            <button class="btn-action-icon btn-action-edit" onclick="openEditCategoryModal('${catId}')" title="Edit Category">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-action-icon btn-action-view" onclick="window.open('${escapeHTML(redirectText)}', '_blank')" title="View in Store">
                                 <i class="fas fa-external-link-alt"></i>
                             </button>
-                            <button class="btn-action-icon btn-action-delete" onclick="deleteCategory('${cat._id}')" title="Delete Category">
+                            <button class="btn-action-icon btn-action-delete" onclick="deleteCategory('${catId}')" title="Delete Category">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -1759,14 +1797,14 @@ function renderCategoriesList(categories) {
                     <!-- Subcategories Box -->
                     <div class="cat-subcategories-section">
                         <div class="cat-subcategories-header">
-                            <span><i class="fas fa-tags" style="color: var(--primary); margin-right: 4px;"></i> Subcategories (${subcategories.length})</span>
+                            <span><i class="fas fa-tags" style="color: var(--primary); margin-right: 4px;"></i> Subcategories (${subList.length})</span>
                         </div>
                         <div class="subcat-chips-wrap">
                             ${subListHtml}
                         </div>
                         <div class="subcat-add-bar">
-                            <input type="text" id="new-sub-${cat._id}" placeholder="Type subcategory name & press Enter..." class="subcat-add-input" onkeydown="if(event.key==='Enter'){event.preventDefault(); handleAddSubcategory('${cat._id}');}">
-                            <button type="button" class="subcat-add-btn" onclick="handleAddSubcategory('${cat._id}')">
+                            <input type="text" id="new-sub-${catId}" placeholder="Type subcategory name & press Enter..." class="subcat-add-input" onkeydown="if(event.key==='Enter'){event.preventDefault(); handleAddSubcategory('${catId}');}">
+                            <button type="button" class="subcat-add-btn" onclick="handleAddSubcategory('${catId}')">
                                 <i class="fas fa-plus"></i> Add
                             </button>
                         </div>
@@ -1787,7 +1825,9 @@ async function populateAddProductCategories() {
 
     catSelect.innerHTML = `<option value="" disabled selected>Select Category</option>`;
     localCategories.forEach(cat => {
-        catSelect.innerHTML += `<option value="${cat.slug}">${cat.displayName}</option>`;
+        const slug = cat.slug || cat.name;
+        const name = cat.displayName || cat.name;
+        catSelect.innerHTML += `<option value="${escapeHTML(slug)}">${escapeHTML(name)}</option>`;
     });
 
     const subSelect = document.getElementById('prod-subcategory');
@@ -1800,15 +1840,25 @@ function populateSubcategories(categorySlug) {
     const subSelect = document.getElementById('prod-subcategory');
     if (!subSelect) return;
 
-    const category = localCategories.find(c => c.slug === categorySlug);
-    if (!category || !category.subcategories || category.subcategories.length === 0) {
+    const category = localCategories.find(c => (c.slug === categorySlug || c.name === categorySlug));
+    let subs = [];
+    if (category) {
+        if (Array.isArray(category.subcategories)) subs = category.subcategories;
+        else if (typeof category.subcategories === 'string') subs = category.subcategories.split(',');
+        else if (Array.isArray(category.subCategories)) subs = category.subCategories;
+    }
+
+    if (!category || subs.length === 0) {
         subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
         return;
     }
 
     subSelect.innerHTML = `<option value="" selected>None (Optional)</option>`;
-    category.subcategories.forEach(sub => {
-        subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    subs.forEach(sub => {
+        const subName = typeof sub === 'string' ? sub : (sub.name || sub.title || String(sub));
+        if (subName && subName.trim()) {
+            subSelect.innerHTML += `<option value="${escapeHTML(subName.trim())}">${escapeHTML(subName.trim())}</option>`;
+        }
     });
 }
 
@@ -1896,7 +1946,7 @@ async function handleAddSubcategory(catId) {
     }
 
     try {
-        const response = await fetchWithAuth(`/api/admin/categories/${catId}/subcategories`, {
+        const response = await fetchWithAuth(`/api/admin/categories/${encodeURIComponent(catId)}/subcategories`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1921,7 +1971,7 @@ async function handleAddSubcategory(catId) {
 async function deleteSubcategory(catId, subName) {
     if (!confirm(`Remove subcategory "${subName}"?`)) return;
     try {
-        const response = await fetchWithAuth(`/api/admin/categories/${catId}/subcategories/${encodeURIComponent(subName)}`, {
+        const response = await fetchWithAuth(`/api/admin/categories/${encodeURIComponent(catId)}/subcategories/${encodeURIComponent(subName)}`, {
             method: 'DELETE'
         });
         if (!response) return;
@@ -1941,7 +1991,7 @@ async function deleteSubcategory(catId, subName) {
 async function deleteCategory(catId) {
     if (!confirm("Are you sure you want to delete this Category? All its subcategories will also be removed.")) return;
     try {
-        const response = await fetchWithAuth(`/api/admin/categories/${catId}`, {
+        const response = await fetchWithAuth(`/api/admin/categories/${encodeURIComponent(catId)}`, {
             method: 'DELETE'
         });
         if (!response) return;
@@ -1959,17 +2009,17 @@ async function deleteCategory(catId) {
 }
 
 function openEditCategoryModal(catId) {
-    const cat = localCategories.find(c => c._id === catId);
+    const cat = localCategories.find(c => String(c._id || c.id || c.slug) === String(catId));
     if (!cat) return;
 
-    document.getElementById('edit-cat-id').value = cat._id;
-    document.getElementById('edit-cat-name').value = cat.displayName || '';
-    document.getElementById('edit-cat-icon-url').value = cat.iconUrl || '';
+    document.getElementById('edit-cat-id').value = cat._id || cat.id || cat.slug || '';
+    document.getElementById('edit-cat-name').value = cat.displayName || cat.name || '';
+    document.getElementById('edit-cat-icon-url').value = cat.iconUrl || cat.icon || '';
     document.getElementById('edit-cat-redirect').value = cat.redirectUrl || '';
     
     const preview = document.getElementById('edit-cat-icon-preview');
     if (preview) {
-        preview.src = cat.iconUrl || './img/profile_image.jpg';
+        preview.src = cat.iconUrl || cat.icon || './img/profile_image.jpg';
     }
 
     const modal = document.getElementById('edit-category-modal');
