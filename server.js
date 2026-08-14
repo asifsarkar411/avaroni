@@ -64,6 +64,18 @@ if (missingVars.length > 0) {
 
 const app = express();
 
+// Normalize URL path if invoked via Vercel serverless functions
+app.use((req, res, next) => {
+    if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/uploads') && !req.url.includes('.')) {
+        if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+            req.url = req.originalUrl;
+        } else {
+            req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+        }
+    }
+    next();
+});
+
 // ==========================================
 // MIDDLEWARE & SECURITY & OPTIMIZATION
 // ==========================================
