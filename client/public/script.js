@@ -1671,6 +1671,13 @@ async function loadNavbarSliders() {
     const container = document.getElementById('nav-promo-slider');
     if (!container) return;
 
+    const path = window.location.pathname.toLowerCase();
+    const excludedPages = ['about', 'contact', 'faq', 'blog', 'sitemap', 'track-order', 'return-policy', 'return-product'];
+    if (excludedPages.some(page => path.includes(page))) {
+        container.style.display = 'none';
+        return;
+    }
+
     try {
         const response = await fetch('/api/nav-sliders');
         const data = await response.json();
@@ -2152,7 +2159,9 @@ async function loadPublishedReviewsSlider() {
     }
 
     async function loadFlashSaleBanner() {
-        if (window.location.pathname.includes('admin')) return;
+        const path = window.location.pathname.toLowerCase();
+        const excludedPages = ['admin', 'about', 'contact', 'faq', 'blog', 'sitemap', 'track-order', 'return-policy', 'return-product'];
+        if (excludedPages.some(page => path.includes(page))) return;
 
         try {
             const res = await fetch('/api/flash-sale');
