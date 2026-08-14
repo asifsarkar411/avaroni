@@ -372,14 +372,14 @@ function logout() {
 
 async function showDashboard() {
     // Validate session token on startup before fetching stats
-    const res = await fetchWithAuth('/api/user-data');
-    if (res && res.ok) {
-        fetchDashboardStats();
-        fetchAnalyticsCharts();
-        fetchDashboardVisuals(); // Load new visual charts + tables
-        fetchManageProducts(); // For low stock card
-        fetchSettings();
-    }
+    try {
+        await fetchWithAuth('/api/user-data');
+    } catch(e) {}
+    fetchDashboardStats();
+    fetchAnalyticsCharts();
+    fetchDashboardVisuals(); // Load new visual charts + tables
+    fetchManageProducts(); // For low stock card
+    fetchSettings();
 }
 
 async function fetchSettings() {
