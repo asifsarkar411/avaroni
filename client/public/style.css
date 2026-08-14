@@ -3236,3 +3236,84 @@ body.no-scroll #flash-sale-banner,
     filter: none !important;
     outline: none !important;
 }
+
+/* =============================================
+   TOP MARQUEE ANNOUNCEMENT BANNER
+   ============================================= */
+.top-marquee-banner {
+    background: #000000;
+    color: #ffffff;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    z-index: 999;
+    padding: 10px 0;
+    min-height: 38px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    user-select: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.top-marquee-banner:hover {
+    background: #0d0d0d;
+}
+
+.top-marquee-inner {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+}
+
+.top-marquee-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: topMarqueeScroll 25s linear infinite;
+}
+
+.top-marquee-banner.is-paused .top-marquee-track,
+.top-marquee-banner:hover .top-marquee-track {
+    animation-play-state: paused !important;
+}
+
+.top-marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 45px;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    text-transform: none;
+}
+
+.top-marquee-item i {
+    color: #ff80aa;
+    font-size: 11px;
+}
+
+@keyframes topMarqueeScroll {
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 768px) {
+    .top-marquee-banner {
+        padding: 8px 0;
+        min-height: 34px;
+    }
+    .top-marquee-item {
+        font-size: 12.5px;
+        padding: 0 30px;
+    }
+}

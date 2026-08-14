@@ -2412,6 +2412,117 @@ async function applyGlobalBrandSettings() {
 }
 
 document.addEventListener('DOMContentLoaded', applyGlobalBrandSettings);
+document.addEventListener('DOMContentLoaded', initTopMarqueeBanner);
+
+// =============================================
+// 📢 TOP NAV MARQUEE ANNOUNCEMENT BANNER
+// =============================================
+async function initTopMarqueeBanner() {
+    const path = window.location.pathname.toLowerCase();
+    
+    // Only show on homepage, category pages, and subcategory pages
+    // Exclude: about, contact, faq, blog, sitemap, track-order, admin, cart, checkout, wishlist, profile, etc.
+    const isExcluded = [
+        'admin', 
+        'about', 
+        'contact', 
+        'faq', 
+        'blog', 
+        'sitemap', 
+        'track-order',
+        'return-policy',
+        'return-product',
+        'cart',
+        'checkout',
+        'wishlist',
+        'profile',
+        'privacy',
+        'terms',
+        'login',
+        'register'
+    ].some(ex => path.includes(ex));
+
+    if (isExcluded) return;
+
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (!data.success || !data.settings) return;
+
+        const settings = data.settings;
+        const isEnabled = settings.marqueeEnabled === undefined || settings.marqueeEnabled === 'true' || settings.marqueeEnabled === true;
+        if (!isEnabled) return;
+
+        const marqueeText = settings.marqueeText || '✨ Welcome to AVARONI • Premium Traditional & Modern Wear • Free Delivery on Orders Above ৳2000! ✨';
+        const speed = settings.marqueeSpeed || '25s';
+
+        let banner = document.getElementById('top-nav-marquee');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'top-nav-marquee';
+            banner.className = 'top-marquee-banner';
+            banner.title = 'Click or hold to pause marquee';
+        }
+
+        const messages = marqueeText.split('•').map(m => m.trim()).filter(Boolean);
+        const renderItems = messages.length > 0 ? messages : [marqueeText];
+
+        const itemsHTML = renderItems.map(msg => `
+            <div class="top-marquee-item">
+                <span>${escapeHTML(msg)}</span>
+                <i class="fas fa-sparkle"></i>
+            </div>
+        `).join('') + renderItems.map(msg => `
+            <div class="top-marquee-item">
+                <span>${escapeHTML(msg)}</span>
+                <i class="fas fa-sparkle"></i>
+            </div>
+        `).join('');
+
+        banner.innerHTML = `
+            <div class="top-marquee-inner">
+                <div class="top-marquee-track" style="animation-duration: ${speed};">
+                    ${itemsHTML}
+                </div>
+                <div class="top-marquee-track" style="animation-duration: ${speed};">
+                    ${itemsHTML}
+                </div>
+            </div>
+        `;
+
+        // Prepend before navbar or at top of body
+        const navbar = document.querySelector('.navbar');
+        if (navbar && navbar.parentNode) {
+            navbar.parentNode.insertBefore(banner, navbar);
+        } else {
+            document.body.prepend(banner);
+        }
+
+        // Pause on mouse click / hold / tap, resume on release
+        let isHolding = false;
+        const pauseMarquee = () => {
+            isHolding = true;
+            banner.classList.add('is-paused');
+        };
+        const resumeMarquee = () => {
+            isHolding = false;
+            banner.classList.remove('is-paused');
+        };
+
+        banner.addEventListener('mousedown', pauseMarquee);
+        banner.addEventListener('mouseup', resumeMarquee);
+        banner.addEventListener('mouseleave', () => {
+            if (isHolding) resumeMarquee();
+        });
+
+        banner.addEventListener('touchstart', pauseMarquee, { passive: true });
+        banner.addEventListener('touchend', resumeMarquee);
+        banner.addEventListener('touchcancel', resumeMarquee);
+
+    } catch (err) {
+        console.error('Error loading top marquee banner:', err);
+    }
+}
 
 // Dynamically load analytics tracking for static pages
 (function() {

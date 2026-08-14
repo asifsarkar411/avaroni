@@ -156,6 +156,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const brandNameForm = document.getElementById('brand-name-form');
     if (brandNameForm) brandNameForm.addEventListener('submit', handleChangeBrandName);
 
+    const marqueeForm = document.getElementById('marquee-settings-form');
+    if (marqueeForm) marqueeForm.addEventListener('submit', handleChangeMarqueeSettings);
+
+    const marqueeTextInput = document.getElementById('marquee-text-input');
+    if (marqueeTextInput) {
+        marqueeTextInput.addEventListener('input', (e) => {
+            const previewText = document.getElementById('preview-marquee-text');
+            if (previewText) previewText.textContent = e.target.value || '✨ Marquee Announcement Preview ✨';
+        });
+    }
 
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) changePassForm.addEventListener('submit', handleChangePassword);
@@ -280,6 +290,20 @@ async function fetchSettings() {
             if (data.settings.brandName) {
                 const nameInput = document.getElementById('brand-name-input');
                 if (nameInput) nameInput.value = data.settings.brandName;
+            }
+            if (data.settings.marqueeText !== undefined) {
+                const marqueeInput = document.getElementById('marquee-text-input');
+                const previewText = document.getElementById('preview-marquee-text');
+                if (marqueeInput) marqueeInput.value = data.settings.marqueeText;
+                if (previewText) previewText.textContent = data.settings.marqueeText;
+            }
+            if (data.settings.marqueeEnabled !== undefined) {
+                const marqueeEnabled = document.getElementById('marquee-enabled-input');
+                if (marqueeEnabled) marqueeEnabled.checked = (data.settings.marqueeEnabled === 'true' || data.settings.marqueeEnabled === true);
+            }
+            if (data.settings.marqueeSpeed) {
+                const marqueeSpeed = document.getElementById('marquee-speed-select');
+                if (marqueeSpeed) marqueeSpeed.value = data.settings.marqueeSpeed;
             }
         }
     } catch (err) {
@@ -2589,6 +2613,41 @@ async function handleChangeBrandName(e) {
     } catch (err) {
         console.error("Change Brand Name Error:", err);
         showToast("Error updating brand name.", "error");
+    }
+}
+
+async function handleChangeMarqueeSettings(e) {
+    e.preventDefault();
+    const textInput = document.getElementById('marquee-text-input');
+    const enabledInput = document.getElementById('marquee-enabled-input');
+    const speedSelect = document.getElementById('marquee-speed-select');
+
+    const marqueeText = textInput ? textInput.value.trim() : '';
+    const marqueeEnabled = enabledInput ? enabledInput.checked : true;
+    const marqueeSpeed = speedSelect ? speedSelect.value : '25s';
+
+    if (!marqueeText) {
+        showToast("Please enter marquee announcement text.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/admin/settings/marquee', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ marqueeText, marqueeEnabled, marqueeSpeed })
+        });
+        if (!response) return;
+
+        const data = await response.json();
+        if (data.success) {
+            showToast("Marquee announcement banner settings updated successfully!");
+        } else {
+            showToast(data.message || "Failed to update marquee settings.", "error");
+        }
+    } catch (err) {
+        console.error("Change Marquee Error:", err);
+        showToast("Error updating marquee settings.", "error");
     }
 }
 

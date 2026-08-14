@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import ProductModal from './ProductModal';
+import MarqueeBanner from './MarqueeBanner';
 import AOS from 'aos';
 
 export default function ClientLayout({ children }) {
@@ -30,6 +31,7 @@ export default function ClientLayout({ children }) {
 
   return (
     <>
+      <MarqueeBanner />
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <ProductModal />

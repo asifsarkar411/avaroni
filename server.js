@@ -1865,6 +1865,42 @@ app.put('/api/admin/settings/brandName', verifyAdminToken, async (req, res) => {
     }
 });
 
+// Update top marquee announcement settings
+app.put('/api/admin/settings/marquee', verifyAdminToken, async (req, res) => {
+    try {
+        const { marqueeText, marqueeEnabled, marqueeSpeed } = req.body;
+        
+        if (marqueeText !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'marqueeText' },
+                { value: marqueeText.trim() },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (marqueeEnabled !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'marqueeEnabled' },
+                { value: String(marqueeEnabled) },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (marqueeSpeed !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'marqueeSpeed' },
+                { value: String(marqueeSpeed) },
+                { upsert: true, new: true }
+            );
+        }
+        
+        res.json({ success: true, message: "Marquee announcement settings updated successfully." });
+    } catch (err) {
+        console.error("Update Marquee Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
 // Get global settings (public)
 app.get('/api/settings', async (req, res) => {
     try {

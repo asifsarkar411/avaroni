@@ -1729,6 +1729,48 @@
                         </div>
                     </div>
 
+                    <!-- Card: Top Marquee Announcement Bar -->
+                    <div class="panel-box" data-aos="fade-up" style="margin-bottom: 25px;">
+                        <div class="panel-header">
+                            <h2><i class="fas fa-bullhorn" style="color: var(--primary);"></i> Top Nav Marquee Announcement Bar</h2>
+                        </div>
+                        <div style="background: #fafafa; padding: 22px; border-radius: 10px; border: 1px solid #eaeaea;">
+                            <form id="marquee-settings-form">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; font-size: 15px;">
+                                        <input type="checkbox" id="marquee-enabled-input" checked style="width: 20px; height: 20px; accent-color: #111111;">
+                                        <span>Show Marquee on Homepage & Category Pages</span>
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <label for="marquee-speed-select" style="font-size: 13px; font-weight: 600; color: #555;">Scroll Speed:</label>
+                                        <select id="marquee-speed-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600;">
+                                            <option value="35s">Slow</option>
+                                            <option value="25s" selected>Normal</option>
+                                            <option value="15s">Fast</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label for="marquee-text-input" style="font-weight: 600; display: block; margin-bottom: 6px;">Announcement Text / Messages (Use • or emoji to separate):</label>
+                                    <textarea id="marquee-text-input" rows="3" placeholder="✨ Welcome to AVARONI • Premium Traditional & Modern Outfits • Free Delivery on Orders Over ৳2000 • New Collections Just Added! ✨" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; font-family: inherit; resize: vertical; box-sizing: border-box;" required></textarea>
+                                </div>
+
+                                <!-- Live Interactive Preview -->
+                                <div style="margin-bottom: 18px;">
+                                    <span style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Live Interactive Preview (Click or hover to pause):</span>
+                                    <div id="admin-marquee-preview" style="background: #000000; color: #ffffff; padding: 10px 0; border-radius: 6px; overflow: hidden; white-space: nowrap; user-select: none; cursor: pointer; min-height: 40px; display: flex; align-items: center; border: 1px solid #333;">
+                                        <div class="admin-marquee-track" style="display: inline-block; padding-left: 20px; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; color: #fff;">
+                                            <span id="preview-marquee-text">✨ Welcome to AVARONI • Premium Traditional & Modern Outfits • Free Delivery on Orders Over ৳2000! ✨</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn" style="background: #111111; height: 44px; font-size: 15px; font-weight: 700;"><i class="fas fa-save"></i> Save Marquee Settings</button>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="panel-box" data-aos="fade-up" style="margin-bottom: 25px;">
                         <div class="panel-header">
                             <h2><i class="fas fa-user-cog" style="color: var(--primary);"></i> Admin Profile & Account Settings</h2>
