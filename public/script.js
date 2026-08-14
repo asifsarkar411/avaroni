@@ -1384,85 +1384,27 @@ async function applyGlobalFilterAndSort() {
     const filterSelect = document.getElementById('global-filter-select');
     if (!filterSelect) return;
     const val = filterSelect.value;
+    const searchInput = document.getElementById('global-search-input');
+    const query = searchInput ? searchInput.value.trim() : '';
+    const dropdown = document.getElementById('search-results-dropdown');
 
     // 1. If user selected a specific product from dropdown
     if (val.startsWith('prod:')) {
         const prodId = val.replace('prod:', '');
         openProductModal(prodId);
         filterSelect.value = 'all';
+        if (dropdown) dropdown.classList.remove('active');
         return;
     }
 
-    const searchInput = document.getElementById('global-search-input');
-    const query = searchInput ? searchInput.value.trim() : '';
-
-    // 2. If search input has text, run search with filter
-    if (query.length >= 1) {
-        performSearch(query);
+    // 2. If 'all' selected and query is empty, close the dropdown
+    if (val === 'all' && query.length === 0) {
+        if (dropdown) dropdown.classList.remove('active');
         return;
     }
 
-    // 3. Find any product grid on the current page
-    const productContainer = document.getElementById('product-list') || 
-                             document.getElementById('products-container') || 
-                             document.getElementById('new-arrivals-grid');
-
-    if (!productContainer) {
-        if (val.startsWith('cat:')) {
-            const catSlug = val.replace('cat:', '');
-            window.location.href = getCategoryPageUrl(catSlug, catSlug);
-        } else if (val.startsWith('sub:')) {
-            const subName = val.replace('sub:', '');
-            window.location.href = `category.html?sub=${encodeURIComponent(subName)}`;
-        }
-        return;
-    }
-
-    // 4. Ensure master products are loaded
-    if (!window.currentMasterProducts || window.currentMasterProducts.length === 0) {
-        if (window.allGlobalProducts && window.allGlobalProducts.length > 0) {
-            window.currentMasterProducts = window.allGlobalProducts;
-        } else {
-            try {
-                const res = await fetch('/api/products');
-                const data = await res.json();
-                if (data.success && Array.isArray(data.products)) {
-                    window.currentMasterProducts = data.products;
-                    window.allGlobalProducts = data.products;
-                }
-            } catch (e) {
-                console.error("Failed to load products for filter", e);
-            }
-        }
-    }
-
-    // 5. If category selected and current products don't match, fetch all products
-    if (val.startsWith('cat:')) {
-        const catTarget = val.replace('cat:', '').toLowerCase();
-        if (window.allGlobalProducts && window.allGlobalProducts.length > 0) {
-            window.currentMasterProducts = window.allGlobalProducts;
-        } else {
-            try {
-                const res = await fetch(`/api/products?category=${encodeURIComponent(catTarget)}`);
-                const data = await res.json();
-                if (data.success && Array.isArray(data.products)) {
-                    window.currentMasterProducts = data.products;
-                }
-            } catch (e) {}
-        }
-    }
-
-    // 6. If subcategory selected and current products don't match, fetch all products
-    if (val.startsWith('sub:')) {
-        const subTarget = val.replace('sub:', '').toLowerCase();
-        if (window.allGlobalProducts && window.allGlobalProducts.length > 0) {
-            window.currentMasterProducts = window.allGlobalProducts;
-        }
-    }
-
-    if (window.currentMasterProducts && Array.isArray(window.currentMasterProducts)) {
-        renderFilteredProducts(window.currentMasterProducts, val, productContainer);
-    }
+    // 3. Show filtered products right in the search bar dropdown
+    performSearch(query);
 }
 
 function initSearch() {
@@ -1481,21 +1423,29 @@ function initSearch() {
         // Debounce search
         if (searchTimeout) clearTimeout(searchTimeout);
 
-        if (query.length < 2) {
-            if (dropdown) dropdown.classList.remove('active');
-            return;
+        if (query.length < 1) {
+            const filterSelect = document.getElementById('global-filter-select');
+            if (!filterSelect || filterSelect.value === 'all') {
+                if (dropdown) dropdown.classList.remove('active');
+                return;
+            }
         }
 
         searchTimeout = setTimeout(() => {
             performSearch(query);
-        }, 300);
+        }, 250);
     });
 
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             clearBtn.style.display = 'none';
-            if (dropdown) dropdown.classList.remove('active');
+            const filterSelect = document.getElementById('global-filter-select');
+            if (!filterSelect || filterSelect.value === 'all') {
+                if (dropdown) dropdown.classList.remove('active');
+            } else {
+                performSearch('');
+            }
             searchInput.focus();
         });
     }
@@ -1515,23 +1465,29 @@ async function performSearch(query) {
 
     if (!dropdown) return;
 
+    if (!query && filterVal === 'all') {
+        dropdown.classList.remove('active');
+        return;
+    }
+
+    dropdown.innerHTML = `<div style="padding: 15px; text-align: center; color: #666;"><i class="fas fa-spinner fa-spin" style="margin-right:8px; color:#e60050;"></i> Loading products...</div>`;
+    dropdown.classList.add('active');
+
     try {
-        const response = await fetch(`/api/products?search=${encodeURIComponent(query)}`);
+        let url = `/api/products?search=${encodeURIComponent(query || '')}`;
+        if (filterVal.startsWith('cat:')) {
+            url += `&category=${encodeURIComponent(filterVal.replace('cat:', ''))}`;
+        }
+        const response = await fetch(url);
         const data = await response.json();
 
         if (!data.success || !data.products || data.products.length === 0) {
-            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-search" style="margin-right:8px;"></i>No products found for "${query}"</div>`;
+            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-search" style="margin-right:8px;"></i>No products found matching selection</div>`;
             dropdown.classList.add('active');
             return;
         }
 
         let products = [...data.products];
-
-        // Apply category filter
-        if (filterVal.startsWith('cat:')) {
-            const targetCat = filterVal.replace('cat:', '').toLowerCase();
-            products = products.filter(p => p.category && p.category.trim().toLowerCase() === targetCat);
-        }
 
         // Apply subcategory filter
         if (filterVal.startsWith('sub:')) {
@@ -1549,13 +1505,13 @@ async function performSearch(query) {
         }
 
         if (products.length === 0) {
-            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-filter" style="margin-right:8px;"></i>No products match filter for "${escapeHTML(query)}"</div>`;
+            dropdown.innerHTML = `<div class="search-no-results"><i class="fas fa-filter" style="margin-right:8px;"></i>No products match selected filter</div>`;
             dropdown.classList.add('active');
             return;
         }
 
         dropdown.innerHTML = '';
-        products.slice(0, 8).forEach(product => {
+        products.slice(0, 10).forEach(product => {
             const item = document.createElement('div');
             item.className = 'search-result-item';
             item.setAttribute('data-product-id', product._id);
@@ -1563,15 +1519,13 @@ async function performSearch(query) {
                 <img src="${formatImageUrl(product.imageUrl)}" alt="${escapeHTML(product.name)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
                 <div class="search-result-info">
                     <h4>${escapeHTML(product.name)}</h4>
-                    <span>${escapeHTML(product.category)}${product.subcategory ? ' • ' + escapeHTML(product.subcategory) : ''}</span>
+                    <span>${escapeHTML(product.category || '')}${product.subcategory ? ' • ' + escapeHTML(product.subcategory) : ''}</span>
                 </div>
                 <span class="search-result-price">৳${escapeHTML(product.price)}</span>
             `;
             item.addEventListener('click', () => {
                 openProductModal(product._id);
                 dropdown.classList.remove('active');
-                document.getElementById('global-search-input').value = '';
-                document.getElementById('search-clear-btn').style.display = 'none';
             });
             dropdown.appendChild(item);
         });
