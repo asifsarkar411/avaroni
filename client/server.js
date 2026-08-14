@@ -1,7 +1,10 @@
 require('dotenv').config();
 
+const DEFAULT_MONGO_URI = 'mongodb+srv://asifsarkar411_db_user:KUmsodhwLdXviQ4i@cluster0.zxnslsi.mongodb.net/glamour_store?retryWrites=true&w=majority';
+const DEFAULT_JWT_SECRET = '2733547db5b29d89ee674108bacedb11e116fada0a0741c48a547af8220aa154';
+
 // Fallback to public DNS to resolve MongoDB SRV records (only needed on local networks with buggy DNS)
-if (!process.env.VERCEL && process.env.MONGO_URI && process.env.MONGO_URI.startsWith('mongodb+srv://')) {
+if (!process.env.VERCEL) {
   try {
     const dns = require('dns');
     dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -51,16 +54,6 @@ const Review = require('./models/Review');               // Customer Reviews Mod
 const FlashSale = require('./models/FlashSale');           // Flash Sale Sticky Countdown Model
 const Voucher = require('./models/Voucher');             // Public Vouchers Model
 const Blog = require('./models/Blog');                   // Blogs Model
-// ==========================================
-// STARTUP ENVIRONMENT VARIABLE GUARD
-// ==========================================
-const REQUIRED_ENV_VARS = ['MONGO_URI', 'JWT_SECRET'];
-const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
-if (missingVars.length > 0) {
-    console.error(`CRITICAL: Missing required environment variables: ${missingVars.join(', ')}`);
-    console.error('Set them in your .env file (local) or Vercel Environment Variables (production).');
-    console.error('See .env.example for a template.');
-}
 
 const app = express();
 
@@ -115,7 +108,6 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Security: Allow CORS for production Vercel and local dev environments
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow all origins (standard for API) while supporting credentials
         callback(null, true);
     },
     credentials: true
@@ -162,7 +154,6 @@ app.get('/uploads/:imageFile', (req, res) => {
     if (fs.existsSync(requestedPath)) {
         return res.sendFile(requestedPath);
     }
-    // Return default profile/brand image instead of 404
     return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
 });
 
@@ -181,7 +172,6 @@ app.get('/:imageFile([^/]+\\.(?:png|jpg|jpeg|webp|gif|avif|svg|ico))$', (req, re
     if (fs.existsSync(imgPath)) {
         return res.sendFile(imgPath);
     }
-    // Return default brand placeholder image instead of 404
     return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
 });
 
@@ -200,10 +190,10 @@ async function connectDB() {
 
     if (!cachedDb.promise) {
         const dbOptions = {
-            serverSelectionTimeoutMS: 8000,
+            serverSelectionTimeoutMS: 5000,
             maxPoolSize: 10
         };
-        const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_store';
+        const mongoUri = process.env.MONGO_URI || DEFAULT_MONGO_URI;
         cachedDb.promise = mongoose.connect(mongoUri, dbOptions).then(async (mongooseInstance) => {
             console.log('MongoDB Connected successfully');
             
