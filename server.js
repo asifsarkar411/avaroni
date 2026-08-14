@@ -197,11 +197,11 @@ async function connectDB() {
         isConnected = true;
         console.log('MongoDB Connected successfully');
 
-        // Only run seeding/migrations on local dev server startup (never block serverless requests)
+        // Safe initializations
         if (!process.env.VERCEL) {
-            await seedCategories();
-            await migrateBase64ToFiles();
-            await migrateUserRoles();
+            try { await seedCategories(); } catch (e) { console.error('Seed categories error:', e); }
+            try { await seedDefaultBlogs(); } catch (e) { console.error('Seed default blogs error:', e); }
+            try { await migrateUserRoles(); } catch (e) { console.error('Migrate user roles error:', e); }
         }
     } catch (err) {
         console.error('MongoDB Connection Error:', err);

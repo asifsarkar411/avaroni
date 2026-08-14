@@ -3957,26 +3957,28 @@ let adminBlogsList = [];
 async function fetchAdminBlogs() {
     try {
         const res = await fetchWithAuth('/api/admin/blogs');
-        if (!res) return;
-        const data = await res.json();
-        if (data.success) {
-            adminBlogsList = data.blogs || [];
-            updateBlogStats();
-            renderAdminBlogs();
-        } else {
-            showToast(data.message || 'Failed to fetch blogs', 'error');
+        if (res && res.ok) {
+            const data = await res.json();
+            if (data && data.success) {
+                adminBlogsList = data.blogs || [];
+                updateBlogStats();
+                renderAdminBlogs();
+                return;
+            }
         }
-    } catch (err) {
-        console.error("fetchAdminBlogs Error:", err);
-        try {
-            const fallbackRes = await fetch('/api/blogs');
+        
+        // Safe fallback to public api
+        const fallbackRes = await fetch('/api/blogs');
+        if (fallbackRes && fallbackRes.ok) {
             const fallbackData = await fallbackRes.json();
-            if (fallbackData.success) {
+            if (fallbackData && fallbackData.success) {
                 adminBlogsList = fallbackData.blogs || [];
                 updateBlogStats();
                 renderAdminBlogs();
             }
-        } catch(e) {}
+        }
+    } catch (err) {
+        console.error("fetchAdminBlogs Error:", err);
     }
 }
 
