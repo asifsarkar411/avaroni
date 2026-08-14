@@ -182,17 +182,22 @@ async function loadProducts(category) {
 
 // Helper function to render a list of products
 function renderFilteredProducts(products, subcategoryFilter, container) {
+    if (!container) return;
     container.innerHTML = '';
     
-    let filtered = subcategoryFilter === 'all' 
+    let filtered = (!subcategoryFilter || subcategoryFilter === 'all')
         ? [...products] 
-        : products.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === subcategoryFilter);
+        : products.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === subcategoryFilter.toLowerCase());
 
     // Apply global filter & sort selection if active
     const filterSelect = document.getElementById('global-filter-select');
     if (filterSelect) {
         const val = filterSelect.value;
-        if (val.startsWith('sub:') && subcategoryFilter === 'all') {
+        if (val.startsWith('cat:')) {
+            const targetCat = val.replace('cat:', '').toLowerCase();
+            filtered = filtered.filter(p => p.category && p.category.trim().toLowerCase() === targetCat);
+        }
+        if (val.startsWith('sub:')) {
             const targetSub = val.replace('sub:', '').toLowerCase();
             filtered = filtered.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
         }
@@ -200,11 +205,13 @@ function renderFilteredProducts(products, subcategoryFilter, container) {
             filtered.sort((a, b) => Number(a.price) - Number(b.price));
         } else if (val === 'price-desc') {
             filtered.sort((a, b) => Number(b.price) - Number(a.price));
+        } else if (val === 'newest') {
+            filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         }
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = `<p style="text-align:center; width:100%; color: #666; margin-top: 20px;">No products found in this category.</p>`;
+        container.innerHTML = `<p style="text-align:center; width:100%; color: #666; margin-top: 20px;">No products found matching the selected filter.</p>`;
         return;
     }
 
@@ -1280,6 +1287,14 @@ async function populateGlobalFilterOptions() {
         const categories = (catData.success && Array.isArray(catData.categories)) ? catData.categories : [];
         const products = (prodData.success && Array.isArray(prodData.products)) ? prodData.products : [];
 
+        // Cache products globally
+        if (products.length > 0) {
+            window.allGlobalProducts = products;
+            if (!window.currentMasterProducts || window.currentMasterProducts.length === 0) {
+                window.currentMasterProducts = products;
+            }
+        }
+
         // Build unique subcategories set
         const subcategoriesSet = new Set();
         categories.forEach(cat => {
@@ -1297,51 +1312,51 @@ async function populateGlobalFilterOptions() {
 
         filterSelect.innerHTML = '';
 
-        // Quick Filters & Sort
+        // 1. Sort & Filter Group
         const sortGroup = document.createElement('optgroup');
-        sortGroup.label = "⚡ Quick Filters & Sort";
+        sortGroup.label = "Sort & Filter";
         sortGroup.innerHTML = `
-            <option value="all">All Products & Categories</option>
+            <option value="all">All Products</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
             <option value="newest">Newest Arrivals</option>
         `;
         filterSelect.appendChild(sortGroup);
 
-        // Categories Group
+        // 2. Categories Group (Only category name)
         if (categories.length > 0) {
             const catGroup = document.createElement('optgroup');
-            catGroup.label = "📁 Categories";
+            catGroup.label = "Categories";
             categories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = `cat:${(cat.slug || cat.name).toLowerCase()}`;
-                opt.textContent = `Category: ${cat.displayName || cat.name}`;
+                opt.textContent = cat.displayName || cat.name;
                 catGroup.appendChild(opt);
             });
             filterSelect.appendChild(catGroup);
         }
 
-        // Subcategories Group
+        // 3. Subcategories Group (Only subcategory name)
         if (subcategoriesSet.size > 0) {
             const subGroup = document.createElement('optgroup');
-            subGroup.label = "🏷️ Subcategories";
+            subGroup.label = "Subcategories";
             Array.from(subcategoriesSet).sort().forEach(sub => {
                 const opt = document.createElement('option');
                 opt.value = `sub:${sub.toLowerCase()}`;
-                opt.textContent = `Subcategory: ${sub}`;
+                opt.textContent = sub;
                 subGroup.appendChild(opt);
             });
             filterSelect.appendChild(subGroup);
         }
 
-        // Featured Products Group
+        // 4. Products Group (Only product name, no price)
         if (products.length > 0) {
             const prodGroup = document.createElement('optgroup');
-            prodGroup.label = "⭐ Popular & Featured Products";
-            products.slice(0, 12).forEach(p => {
+            prodGroup.label = "Products";
+            products.slice(0, 15).forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = `prod:${p._id}`;
-                opt.textContent = `Product: ${p.name.length > 28 ? p.name.substring(0, 28) + '...' : p.name} (৳${p.price})`;
+                opt.textContent = p.name;
                 prodGroup.appendChild(opt);
             });
             filterSelect.appendChild(prodGroup);
@@ -1363,12 +1378,12 @@ function initGlobalFilter() {
     });
 }
 
-function applyGlobalFilterAndSort() {
+async function applyGlobalFilterAndSort() {
     const filterSelect = document.getElementById('global-filter-select');
     if (!filterSelect) return;
     const val = filterSelect.value;
 
-    // If user clicked a specific featured product
+    // 1. If user selected a specific product from dropdown
     if (val.startsWith('prod:')) {
         const prodId = val.replace('prod:', '');
         openProductModal(prodId);
@@ -1379,31 +1394,72 @@ function applyGlobalFilterAndSort() {
     const searchInput = document.getElementById('global-search-input');
     const query = searchInput ? searchInput.value.trim() : '';
 
-    if (query.length >= 2) {
+    // 2. If search input has text, run search with filter
+    if (query.length >= 1) {
         performSearch(query);
         return;
     }
 
-    // Direct category selection redirect or filter
-    if (val.startsWith('cat:') && query.length === 0) {
-        const catSlug = val.replace('cat:', '');
-        const targetUrl = getCategoryPageUrl(catSlug, catSlug);
-        if (!window.location.pathname.endsWith(targetUrl)) {
-            window.location.href = targetUrl;
-            return;
-        }
-    }
-
+    // 3. Find any product grid on the current page
     const productContainer = document.getElementById('product-list') || 
                              document.getElementById('products-container') || 
                              document.getElementById('new-arrivals-grid');
 
-    if (window.currentMasterProducts && Array.isArray(window.currentMasterProducts) && productContainer) {
-        let currentSub = 'all';
-        if (val.startsWith('sub:')) {
-            currentSub = val.replace('sub:', '');
+    if (!productContainer) {
+        if (val.startsWith('cat:')) {
+            const catSlug = val.replace('cat:', '');
+            window.location.href = getCategoryPageUrl(catSlug, catSlug);
+        } else if (val.startsWith('sub:')) {
+            const subName = val.replace('sub:', '');
+            window.location.href = `category.html?sub=${encodeURIComponent(subName)}`;
         }
-        renderFilteredProducts(window.currentMasterProducts, currentSub, productContainer);
+        return;
+    }
+
+    // 4. Ensure master products are loaded
+    if (!window.currentMasterProducts || window.currentMasterProducts.length === 0) {
+        if (window.allGlobalProducts && window.allGlobalProducts.length > 0) {
+            window.currentMasterProducts = window.allGlobalProducts;
+        } else {
+            try {
+                const res = await fetch('/api/products');
+                const data = await res.json();
+                if (data.success && Array.isArray(data.products)) {
+                    window.currentMasterProducts = data.products;
+                    window.allGlobalProducts = data.products;
+                }
+            } catch (e) {
+                console.error("Failed to load products for filter", e);
+            }
+        }
+    }
+
+    // 5. If category selected and current products don't match, fetch all products
+    if (val.startsWith('cat:')) {
+        const catTarget = val.replace('cat:', '').toLowerCase();
+        if (window.allGlobalProducts && window.allGlobalProducts.length > 0) {
+            window.currentMasterProducts = window.allGlobalProducts;
+        } else {
+            try {
+                const res = await fetch(`/api/products?category=${encodeURIComponent(catTarget)}`);
+                const data = await res.json();
+                if (data.success && Array.isArray(data.products)) {
+                    window.currentMasterProducts = data.products;
+                }
+            } catch (e) {}
+        }
+    }
+
+    // 6. If subcategory selected and current products don't match, fetch all products
+    if (val.startsWith('sub:')) {
+        const subTarget = val.replace('sub:', '').toLowerCase();
+        if (window.allGlobalProducts && window.allGlobalProducts.length > 0) {
+            window.currentMasterProducts = window.allGlobalProducts;
+        }
+    }
+
+    if (window.currentMasterProducts && Array.isArray(window.currentMasterProducts)) {
+        renderFilteredProducts(window.currentMasterProducts, val, productContainer);
     }
 }
 

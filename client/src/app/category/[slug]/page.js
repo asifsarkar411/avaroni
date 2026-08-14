@@ -10,6 +10,7 @@ export default function CategoryPage() {
     const params = useParams();
     const slug = params.slug; // e.g., 'women'
 
+    const [masterProducts, setMasterProducts] = useState([]);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [categoryName, setCategoryName] = useState('Category');
@@ -40,10 +41,11 @@ export default function CategoryPage() {
                     }
                 }
 
-                // Fetch products for this category using the category name (because the backend queries on category name, not slug usually)
+                // Fetch products for this category
                 const res = await fetch(`/api/products?category=${encodeURIComponent(actualCategoryQuery)}`);
                 const data = await res.json();
-                if (data.success) {
+                if (data.success && Array.isArray(data.products)) {
+                    setMasterProducts(data.products);
                     setProducts(data.products);
                 }
             } catch (err) {
@@ -54,6 +56,34 @@ export default function CategoryPage() {
         
         fetchCategoryData();
     }, [slug]);
+
+    // Listen for filter and sort events from Navbar
+    useEffect(() => {
+        const handleFilterSort = (e) => {
+            const filter = e.detail?.filter;
+            if (!filter || masterProducts.length === 0) return;
+
+            let result = [...masterProducts];
+
+            if (filter.startsWith('sub:')) {
+                const targetSub = filter.replace('sub:', '').toLowerCase();
+                result = result.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
+            }
+
+            if (filter === 'price-asc') {
+                result.sort((a, b) => Number(a.price) - Number(b.price));
+            } else if (filter === 'price-desc') {
+                result.sort((a, b) => Number(b.price) - Number(a.price));
+            } else if (filter === 'newest') {
+                result.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            }
+
+            setProducts(result);
+        };
+
+        window.addEventListener('filterSortChange', handleFilterSort);
+        return () => window.removeEventListener('filterSortChange', handleFilterSort);
+    }, [masterProducts]);
 
     return (
         <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>

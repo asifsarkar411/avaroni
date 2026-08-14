@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 
 export default function Navbar({ onMenuClick }) {
+    const router = useRouter();
     const { cartCount } = useCart();
     const { wishlist } = useWishlist();
     const [searchQuery, setSearchQuery] = useState('');
@@ -52,7 +54,7 @@ export default function Navbar({ onMenuClick }) {
 
                 const prodData = await prodRes.json();
                 if (prodData.success && Array.isArray(prodData.products)) {
-                    setFeaturedProducts(prodData.products.slice(0, 12));
+                    setFeaturedProducts(prodData.products.slice(0, 15));
                     
                     // Also check products for any additional subcategories
                     setSubcategories(prev => {
@@ -84,34 +86,38 @@ export default function Navbar({ onMenuClick }) {
     useEffect(() => {
         let active = true;
         const delayDebounceFn = setTimeout(async () => {
-            if (searchQuery.trim().length >= 2 || (selectedFilter !== 'all' && searchQuery.trim().length >= 1)) {
+            // Trigger search if user typed search query OR selected a non-default filter
+            const hasQuery = searchQuery.trim().length >= 1;
+            const hasFilter = selectedFilter !== 'all';
+
+            if (hasQuery || hasFilter) {
                 setIsSearching(true);
                 try {
-                    let filterParam = '';
+                    let url = `/api/products?search=${encodeURIComponent(searchQuery.trim())}`;
                     if (selectedFilter.startsWith('cat:')) {
-                        filterParam = `&category=${encodeURIComponent(selectedFilter.replace('cat:', ''))}`;
+                        url += `&category=${encodeURIComponent(selectedFilter.replace('cat:', ''))}`;
                     }
-                    const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}${filterParam}`);
+                    const res = await fetch(url);
                     const data = await res.json();
-                    if (active) {
-                        if (data.success && Array.isArray(data.products)) {
-                            let prods = [...data.products];
-                            
-                            // Subcategory filter
-                            if (selectedFilter.startsWith('sub:')) {
-                                const targetSub = selectedFilter.replace('sub:', '').toLowerCase();
-                                prods = prods.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
-                            }
-
-                            // Price sorting
-                            if (selectedFilter === 'price-asc') {
-                                prods.sort((a, b) => Number(a.price) - Number(b.price));
-                            } else if (selectedFilter === 'price-desc') {
-                                prods.sort((a, b) => Number(b.price) - Number(a.price));
-                            }
-
-                            setSearchResults(prods.slice(0, 8));
+                    if (active && data.success && Array.isArray(data.products)) {
+                        let prods = [...data.products];
+                        
+                        // Subcategory filter
+                        if (selectedFilter.startsWith('sub:')) {
+                            const targetSub = selectedFilter.replace('sub:', '').toLowerCase();
+                            prods = prods.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
                         }
+
+                        // Price sorting
+                        if (selectedFilter === 'price-asc') {
+                            prods.sort((a, b) => Number(a.price) - Number(b.price));
+                        } else if (selectedFilter === 'price-desc') {
+                            prods.sort((a, b) => Number(b.price) - Number(a.price));
+                        } else if (selectedFilter === 'newest') {
+                            prods.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                        }
+
+                        setSearchResults(prods.slice(0, 10));
                     }
                 } catch (e) {
                     if (active) console.error("Search failed", e);
@@ -123,7 +129,7 @@ export default function Navbar({ onMenuClick }) {
                     setSearchResults([]);
                 }
             }
-        }, 300);
+        }, 250);
 
         return () => {
             active = false;
@@ -135,12 +141,23 @@ export default function Navbar({ onMenuClick }) {
         const val = e.target.value;
         setSelectedFilter(val);
 
-        // If user selects a specific product from the filter dropdown
+        // 1. If user selects a specific product
         if (val.startsWith('prod:')) {
             const prodId = val.replace('prod:', '');
             window.dispatchEvent(new CustomEvent('openProductModal', { detail: prodId }));
             setSelectedFilter('all');
+            return;
         }
+
+        // 2. If user selects a category and is not currently typing a search query
+        if (val.startsWith('cat:') && searchQuery.trim().length === 0) {
+            const catSlug = val.replace('cat:', '');
+            router.push(`/category/${catSlug}`);
+            return;
+        }
+
+        // 3. Dispatch global filter change event for page components
+        window.dispatchEvent(new CustomEvent('filterSortChange', { detail: { filter: val } }));
     };
 
     return (
@@ -157,39 +174,40 @@ export default function Navbar({ onMenuClick }) {
                             value={selectedFilter}
                             onChange={handleFilterChange}
                             className="search-category-select"
-                            title="Filter by Categories, Subcategories, or Products"
+                            title="Filter & Sort"
                         >
-                            <optgroup label="⚡ Quick Filters & Sort">
-                                <option value="all">All Products & Categories</option>
+                            <optgroup label="Sort & Filter">
+                                <option value="all">All Products</option>
                                 <option value="price-asc">Price: Low to High</option>
                                 <option value="price-desc">Price: High to Low</option>
+                                <option value="newest">Newest Arrivals</option>
                             </optgroup>
 
                             {categories.length > 0 && (
-                                <optgroup label="📁 Categories">
+                                <optgroup label="Categories">
                                     {categories.map(cat => (
-                                        <option key={cat._id} value={`cat:${cat.slug || cat.name.toLowerCase()}`}>
-                                            Category: {cat.displayName || cat.name}
+                                        <option key={cat._id} value={`cat:${(cat.slug || cat.name).toLowerCase()}`}>
+                                            {cat.displayName || cat.name}
                                         </option>
                                     ))}
                                 </optgroup>
                             )}
 
                             {subcategories.length > 0 && (
-                                <optgroup label="🏷️ Subcategories">
+                                <optgroup label="Subcategories">
                                     {subcategories.map((sub, idx) => (
                                         <option key={idx} value={`sub:${sub.toLowerCase()}`}>
-                                            Subcategory: {sub}
+                                            {sub}
                                         </option>
                                     ))}
                                 </optgroup>
                             )}
 
                             {featuredProducts.length > 0 && (
-                                <optgroup label="⭐ Top / Featured Products">
+                                <optgroup label="Products">
                                     {featuredProducts.map(p => (
                                         <option key={p._id} value={`prod:${p._id}`}>
-                                            Product: {p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name} (৳{p.price})
+                                            {p.name}
                                         </option>
                                     ))}
                                 </optgroup>
@@ -239,8 +257,8 @@ export default function Navbar({ onMenuClick }) {
                                 </div>
                             ))
                         )}
-                        {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
-                            <div style={{padding: '15px', textAlign: 'center', color: '#666'}}>No products found matching &quot;{searchQuery}&quot;</div>
+                        {!isSearching && searchResults.length === 0 && (searchQuery.length >= 1 || selectedFilter !== 'all') && (
+                            <div style={{padding: '15px', textAlign: 'center', color: '#666'}}>No products found matching selection</div>
                         )}
                     </div>
                 )}
