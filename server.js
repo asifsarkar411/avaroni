@@ -2239,6 +2239,7 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
         const ordersCount = await Order.countDocuments();
         const productsCount = await Product.countDocuments();
         const bannersCount = await BannerCard.countDocuments();
+        const categoriesCount = await Category.countDocuments();
         const returnsCount = await ReturnRequest.countDocuments();
         const messagesCount = await ContactMessage.countDocuments({ status: 'unread' });
 
@@ -2272,7 +2273,8 @@ app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
                 ordersCount,
                 productsCount,
                 bannersCount,
-                slidersCount,
+                categoriesCount,
+                slidersCount: 0,
                 returnsCount,
                 messagesCount,
                 totalRevenue,
