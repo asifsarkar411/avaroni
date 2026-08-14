@@ -782,7 +782,640 @@
         .tag-item { background: #e2e8f0; color: #334155; padding: 4px 8px; border-radius: 4px; font-size: 13px; display: flex; align-items: center; gap: 5px; }
         .tag-item i { cursor: pointer; color: #64748b; }
         .tag-item i:hover { color: #ef4444; }
-        .tag-input-field { border: none !important; outline: none !important; padding: 5px !important; flex: 1; min-width: 120px; background: transparent; font-size: 14px; }
+        .tags-input-field { border: none !important; outline: none !important; padding: 5px !important; flex: 1; min-width: 120px; background: transparent; font-size: 14px; }
+
+        /* =========================================================
+           ✨ DYNAMIC & PROFESSIONAL CATEGORIES & SLIDER MANAGEMENT ✨
+           ========================================================= */
+        
+        /* Modern Header Toolbar */
+        .mgmt-header-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        .mgmt-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .mgmt-header-left h2 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mgmt-header-left p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .mgmt-stats-pills {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .mgmt-stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .mgmt-stat-badge i {
+            color: var(--primary);
+        }
+        .mgmt-stat-badge .count-chip {
+            background: var(--primary);
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        /* Search & Filter Bar */
+        .mgmt-search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 14px;
+            min-width: 260px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        .mgmt-search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .mgmt-search-bar i {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .mgmt-search-bar input {
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 13px !important;
+            color: #0f172a !important;
+            width: 100% !important;
+        }
+
+        /* Premium Form Card */
+        .form-glass-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .form-glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--primary), #818cf8, #06b6d4);
+        }
+        .form-glass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .form-glass-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Modern Drag/Drop Uploader Zone */
+        .modern-dropzone {
+            position: relative;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 16px 14px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .modern-dropzone:hover {
+            border-color: var(--primary);
+            background: #f5f3ff;
+        }
+        .modern-dropzone i {
+            font-size: 22px;
+            color: var(--primary);
+            transition: transform 0.2s;
+        }
+        .modern-dropzone:hover i {
+            transform: translateY(-2px);
+        }
+        .modern-dropzone span {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .modern-dropzone input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .dropzone-preview-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+        }
+        .dropzone-preview-img {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+
+        /* Category Cards Modern Grid */
+        .categories-modern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 480px) {
+            .categories-modern-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .cat-card-modern {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .cat-card-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: #cbd5e1;
+        }
+        .cat-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .cat-card-info-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+        .cat-icon-container {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 1.5px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .cat-icon-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .cat-card-modern:hover .cat-icon-container img {
+            transform: scale(1.08);
+        }
+        .cat-card-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .cat-card-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cat-meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        .cat-slug-pill {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .cat-route-pill {
+            font-size: 11px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+        .cat-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .btn-action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+        .btn-action-icon:hover {
+            transform: scale(1.08);
+        }
+        .btn-action-edit:hover {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #93c5fd;
+        }
+        .btn-action-view:hover {
+            background: #f0fdf4;
+            color: #16a34a;
+            border-color: #86efac;
+        }
+        .btn-action-delete:hover {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fca5a5;
+        }
+
+        /* Subcategories Container */
+        .cat-subcategories-section {
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+        .cat-subcategories-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .subcat-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+            min-height: 28px;
+        }
+        .subcat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 4px 10px 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            transition: all 0.2s;
+        }
+        .subcat-chip:hover {
+            border-color: #cbd5e1;
+            background: #fafafa;
+        }
+        .subcat-delete-btn {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        .subcat-delete-btn:hover {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+        .subcat-add-bar {
+            display: flex;
+            gap: 6px;
+        }
+        .subcat-add-input {
+            flex: 1;
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+        }
+        .subcat-add-input:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 2px var(--primary-light) !important;
+        }
+        .subcat-add-btn {
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .subcat-add-btn:hover {
+            background: var(--primary);
+        }
+
+        /* Homepage Slider Management Cards */
+        .slider-mgmt-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 25px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .slider-mgmt-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: var(--shadow-md);
+        }
+        .slider-card-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 20px;
+        }
+        .slider-slot-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .slider-slot-badge i {
+            color: #38bdf8;
+        }
+        .slider-heading-form-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+        .slider-heading-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 10px 14px !important;
+            font-size: 14px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+        }
+        .slider-heading-input:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--primary-light) !important;
+        }
+        .slider-save-heading-btn {
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .slider-save-heading-btn:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        /* Slide Gallery Grid */
+        .slider-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 15px;
+        }
+        @media (max-width: 480px) {
+            .slider-gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+        .slide-item-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            aspect-ratio: 16 / 9;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .slide-item-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .slide-item-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .slide-item-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .slide-item-card:hover .slide-item-overlay {
+            opacity: 1;
+        }
+        .slide-num-badge {
+            position: absolute;
+            top: 8px; left: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 2;
+        }
+        .slide-delete-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+            transition: all 0.2s;
+        }
+        .slide-delete-btn:hover {
+            transform: scale(1.15);
+            background: #dc2626;
+        }
+        .slide-view-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #0f172a;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .slide-view-btn:hover {
+            transform: scale(1.15);
+            color: var(--primary);
+        }
+
+        .slider-empty-box {
+            padding: 35px 20px;
+            text-align: center;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            color: #64748b;
+        }
+        .slider-empty-box i {
+            font-size: 36px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            display: block;
+        }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
@@ -1267,35 +1900,69 @@
 
                 <!-- 5. MANAGE CATEGORIES TAB -->
                 <div id="manage-categories-tab" class="tab-content">
-                    <div class="panel-box" data-aos="fade-up">
-                        <div class="panel-header">
-                            <h2>Manage Categories & Subcategories</h2>
+                    <!-- Dynamic Header Toolbar -->
+                    <div class="mgmt-header-toolbar" data-aos="fade-up">
+                        <div class="mgmt-header-left">
+                            <h2><i class="fas fa-tags" style="color: var(--primary);"></i> Category & Subcategory Management</h2>
+                            <p>Organize storefront catalog categories, icons, SEO redirects, and subcategory tags.</p>
                         </div>
-                        <div style="background: var(--bg-main); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color);">
-                            <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 12px;"><i class="fas fa-folder-plus"></i> Add New Category</h3>
-                            <form id="add-category-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; align-items: end;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px;">Category Name *</label>
-                                    <input type="text" id="new-cat-name" placeholder="e.g. Sarees, Jewellery" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px;">Category Icon (File or Image URL)</label>
-                                    <input type="file" id="new-cat-icon-file" accept="image/*" style="width: 100%; padding: 7px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
-                                    <input type="text" id="new-cat-icon-url" placeholder="Or enter Icon Image URL" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; font-size: 12px; box-sizing: border-box;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px;">Redirect Link (Optional)</label>
-                                    <input type="text" id="new-cat-redirect" placeholder="e.g. women.html or custom link" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
-                                </div>
-                                <div>
-                                    <button type="submit" id="add-cat-submit-btn" class="btn" style="margin-top: 0; width: 100%; padding: 12px; height: 42px;"><i class="fas fa-plus-circle"></i> Add Category Card</button>
-                                </div>
-                            </form>
+                        <div class="mgmt-stats-pills">
+                            <div class="mgmt-stat-badge">
+                                <i class="fas fa-layer-group"></i> Total Categories: <span class="count-chip" id="cat-total-count">0</span>
+                            </div>
+                            <div class="mgmt-stat-badge">
+                                <i class="fas fa-sitemap"></i> Subcategories: <span class="count-chip" id="subcat-total-count" style="background:#0284c7;">0</span>
+                            </div>
+                            <div class="mgmt-search-bar">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="cat-search-input" placeholder="Quick search category or tag...">
+                            </div>
                         </div>
-                        
-                        <div id="categories-list-container" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
-                            <!-- Dynamically loaded categories and subcategories list -->
+                    </div>
+
+                    <!-- Create Category Card Form -->
+                    <div class="form-glass-card" data-aos="fade-up">
+                        <div class="form-glass-header">
+                            <h3><i class="fas fa-plus-circle" style="color: var(--primary);"></i> Create New Category</h3>
+                            <span style="font-size: 12px; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Changes reflect immediately across storefront</span>
                         </div>
+                        <form id="add-category-form">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; align-items: start;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="new-cat-name"><i class="fas fa-font" style="color: var(--primary); margin-right: 4px;"></i> Category Name <span style="color:#ef4444;">*</span></label>
+                                    <input type="text" id="new-cat-name" placeholder="e.g. Sarees, Women, Jewellery" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="new-cat-redirect"><i class="fas fa-link" style="color: var(--primary); margin-right: 4px;"></i> Custom Link (Optional)</label>
+                                    <input type="text" id="new-cat-redirect" placeholder="e.g. women.html or custom-url">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label><i class="fas fa-image" style="color: var(--primary); margin-right: 4px;"></i> Category Icon</label>
+                                    <div class="modern-dropzone" id="cat-icon-dropzone">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span id="cat-dropzone-label">Click or drop icon image</span>
+                                        <input type="file" id="new-cat-icon-file" accept="image/*">
+                                    </div>
+                                    <input type="text" id="new-cat-icon-url" placeholder="Or paste icon image URL" style="margin-top: 8px; font-size: 13px;">
+                                </div>
+                            </div>
+                            <div id="cat-icon-preview-wrapper" style="display: none; align-items: center; gap: 12px; margin-top: 15px; padding: 10px 14px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <img id="cat-icon-preview-img" src="" alt="Icon Preview" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                <div style="flex: 1;">
+                                    <span style="font-size: 13px; font-weight: 700; color: #0f172a; display: block;">Icon Selected</span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Ready to be assigned to new category</span>
+                                </div>
+                                <button type="button" id="cat-clear-icon-btn" style="background: #fee2e2; color: #dc2626; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Remove</button>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                <button type="submit" id="add-cat-submit-btn" class="btn" style="width: auto; padding: 12px 28px; font-size: 14px; font-weight: 700;"><i class="fas fa-plus"></i> Save & Publish Category</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Categories List Container -->
+                    <div id="categories-list-container" class="categories-modern-grid" data-aos="fade-up">
+                        <!-- Dynamically loaded categories and subcategories -->
                     </div>
                 </div>
 
@@ -1469,13 +2136,28 @@
 
                 <!-- 7. MANAGE HOMEPAGE SLIDER CARDS TAB -->
                 <div id="manage-banners-tab" class="tab-content">
-                    <div class="panel-box" data-aos="fade-up">
-                        <div class="panel-header">
-                            <h2>Manage Homepage Slider Cards</h2>
-                            <button id="add-card-btn" class="btn" style="background: #28a745; width: auto; padding: 10px 20px;">+ Add Carousel Card</button>
+                    <!-- Dynamic Header Toolbar -->
+                    <div class="mgmt-header-toolbar" data-aos="fade-up">
+                        <div class="mgmt-header-left">
+                            <h2><i class="fas fa-images" style="color: var(--primary);"></i> Homepage Hero Slider Management</h2>
+                            <p>Configure dynamic banner cards, upload promotional slides, and customize titles for your storefront homepage.</p>
                         </div>
-                        <div id="admin-cards-container" style="display: flex; flex-direction: column; gap: 30px;">
+                        <div class="mgmt-stats-pills">
+                            <div class="mgmt-stat-badge">
+                                <i class="fas fa-layer-group"></i> Slider Slots: <span class="count-chip" id="slider-cards-count">0</span>
+                            </div>
+                            <div class="mgmt-stat-badge">
+                                <i class="fas fa-photo-video"></i> Total Slides: <span class="count-chip" id="slider-images-count" style="background:#0284c7;">0</span>
+                            </div>
+                            <button id="add-card-btn" class="btn" style="width: auto; padding: 10px 20px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); margin: 0; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+                                <i class="fas fa-plus"></i> Add Carousel Slot
+                            </button>
                         </div>
+                    </div>
+
+                    <!-- Slider Cards Container -->
+                    <div id="admin-cards-container" style="display: flex; flex-direction: column; gap: 24px;" data-aos="fade-up">
+                        <!-- Dynamically loaded slider slot cards -->
                     </div>
                 </div>
 
@@ -2023,37 +2705,44 @@
 
     <!-- EDIT CATEGORY MODAL -->
     <div id="edit-category-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow-y: auto;">
-        <div style="background-color: var(--white); margin: 50px auto; padding: 30px; border-radius: var(--radius-lg); max-width: 500px; width: 90%; box-shadow: var(--shadow-hover); position: relative; border: 1px solid rgba(255,255,255,0.2);">
+        <div style="background-color: var(--white); margin: 50px auto; padding: 30px; border-radius: var(--radius-lg); max-width: 520px; width: 90%; box-shadow: var(--shadow-hover); position: relative; border: 1px solid rgba(255,255,255,0.2);">
             <span onclick="closeEditCategoryModal()" style="position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #a1a1aa; transition: color 0.2s;">&times;</span>
-            <h2 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit Category Card</h2>
+            <h2 style="margin-top: 0; color: #0f172a; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 20px;"><i class="fas fa-edit" style="color: var(--primary);"></i> Edit Category Details</h2>
             
-            <form id="edit-category-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <form id="edit-category-form" style="display: flex; flex-direction: column; gap: 18px;">
                 <input type="hidden" id="edit-cat-id">
                 
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category Name:</label>
-                    <input type="text" id="edit-cat-name" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="edit-cat-name" style="font-weight: 700; font-size: 13px;">Category Display Name <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="edit-cat-name" required placeholder="e.g. Sarees, Jewellery">
                 </div>
 
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category Icon Image:</label>
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                        <img id="edit-cat-icon-preview" src="./img/profile_image.jpg" alt="Icon Preview" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
-                        <span style="font-size: 12px; color: #666;">Current Category Icon</span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Category Icon Image</label>
+                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 10px; padding: 10px 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                        <img id="edit-cat-icon-preview" src="./img/profile_image.jpg" alt="Icon Preview" style="width: 48px; height: 48px; object-fit: cover; border-radius: 10px; border: 1px solid #cbd5e1;">
+                        <div style="flex: 1;">
+                            <span style="font-size: 12px; font-weight: 700; color: #1e293b; display: block;">Current Icon Preview</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">Select a new image below if you'd like to update it.</span>
+                        </div>
                     </div>
-                    <input type="file" id="edit-cat-icon-file" accept="image/*" style="width: 100%; padding: 7px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
-                    <input type="text" id="edit-cat-icon-url" placeholder="Or enter Icon Image URL" style="width: 100%; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    <div class="modern-dropzone" style="padding: 12px;">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Upload new icon file</span>
+                        <input type="file" id="edit-cat-icon-file" accept="image/*">
+                    </div>
+                    <input type="text" id="edit-cat-icon-url" placeholder="Or paste new Icon Image URL" style="margin-top: 8px; font-size: 13px;">
                 </div>
 
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Redirect Link (Optional):</label>
-                    <input type="text" id="edit-cat-redirect" placeholder="e.g. women.html or category.html?cat=slug" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
-                    <span style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Leave blank to use default category page link.</span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="edit-cat-redirect" style="font-weight: 700; font-size: 13px;">Custom Redirect Link (Optional)</label>
+                    <input type="text" id="edit-cat-redirect" placeholder="e.g. women.html or category.html?cat=slug">
+                    <small style="font-size: 11px; color: #64748b; display: block; margin-top: 4px;">Leave blank to use default category filter URL.</small>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                    <button type="button" onclick="closeEditCategoryModal()" class="btn" style="background: #6c757d; width: auto; padding: 10px 20px;">Cancel</button>
-                    <button type="submit" id="update-category-btn" class="btn" style="background: #111111; width: auto; padding: 10px 20px;">Save Category</button>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button type="button" onclick="closeEditCategoryModal()" class="btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; width: auto; padding: 10px 20px; box-shadow: none;">Cancel</button>
+                    <button type="submit" id="update-category-btn" class="btn" style="width: auto; padding: 10px 24px; font-weight: 700;"><i class="fas fa-save"></i> Save Changes</button>
                 </div>
             </form>
         </div>

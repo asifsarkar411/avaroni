@@ -140,6 +140,76 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Category Creation Live Icon Preview
+    const newCatFile = document.getElementById('new-cat-icon-file');
+    const newCatUrl = document.getElementById('new-cat-icon-url');
+    const newCatPreviewWrapper = document.getElementById('cat-icon-preview-wrapper');
+    const newCatPreviewImg = document.getElementById('cat-icon-preview-img');
+    const newCatClearBtn = document.getElementById('cat-clear-icon-btn');
+
+    if (newCatFile) {
+        newCatFile.addEventListener('change', async (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const base64 = await fileToBase64(e.target.files[0]);
+                if (newCatPreviewImg) newCatPreviewImg.src = base64;
+                if (newCatPreviewWrapper) newCatPreviewWrapper.style.display = 'flex';
+                if (newCatUrl) newCatUrl.value = '';
+            }
+        });
+    }
+
+    if (newCatUrl) {
+        newCatUrl.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val) {
+                if (newCatPreviewImg) newCatPreviewImg.src = val;
+                if (newCatPreviewWrapper) newCatPreviewWrapper.style.display = 'flex';
+            } else if (!newCatFile || !newCatFile.files || !newCatFile.files[0]) {
+                if (newCatPreviewWrapper) newCatPreviewWrapper.style.display = 'none';
+            }
+        });
+    }
+
+    if (newCatClearBtn) {
+        newCatClearBtn.addEventListener('click', () => {
+            if (newCatFile) newCatFile.value = '';
+            if (newCatUrl) newCatUrl.value = '';
+            if (newCatPreviewImg) newCatPreviewImg.src = '';
+            if (newCatPreviewWrapper) newCatPreviewWrapper.style.display = 'none';
+        });
+    }
+
+    // Category Live Search Filter
+    const catSearchInput = document.getElementById('cat-search-input');
+    if (catSearchInput) {
+        catSearchInput.addEventListener('input', (e) => {
+            filterCategories(e.target.value.trim().toLowerCase());
+        });
+    }
+
+    // Edit Category Modal live icon preview
+    const editCatFile = document.getElementById('edit-cat-icon-file');
+    const editCatUrl = document.getElementById('edit-cat-icon-url');
+    const editCatPreview = document.getElementById('edit-cat-icon-preview');
+
+    if (editCatFile) {
+        editCatFile.addEventListener('change', async (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const base64 = await fileToBase64(e.target.files[0]);
+                if (editCatPreview) editCatPreview.src = base64;
+            }
+        });
+    }
+
+    if (editCatUrl) {
+        editCatUrl.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val && editCatPreview) {
+                editCatPreview.src = val;
+            }
+        });
+    }
+
     // 10. Settings & User Forms Submit
     const changeEmailForm = document.getElementById('change-email-form');
     if (changeEmailForm) changeEmailForm.addEventListener('submit', handleChangeEmail);
@@ -707,19 +777,37 @@ if (manageTableBody) {
 const adminCardsContainer = document.getElementById('admin-cards-container');
 if (adminCardsContainer) {
     adminCardsContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-card-btn')) {
-            deleteCard(e.target.getAttribute('data-id'));
-        } else if (e.target.classList.contains('save-heading-btn')) {
-            updateCardHeading(e.target.getAttribute('data-id'));
-        } else if (e.target.classList.contains('delete-img-btn')) {
-            deleteImageFromCard(e.target.getAttribute('data-card-id'), e.target.getAttribute('data-img-index'));
+        const delCard = e.target.closest('.delete-card-btn');
+        const saveHeading = e.target.closest('.save-heading-btn');
+        const delImg = e.target.closest('.delete-img-btn');
+
+        if (delCard) {
+            deleteCard(delCard.getAttribute('data-id'));
+        } else if (saveHeading) {
+            updateCardHeading(saveHeading.getAttribute('data-id'));
+        } else if (delImg) {
+            deleteImageFromCard(delImg.getAttribute('data-card-id'), delImg.getAttribute('data-img-index'));
+        }
+    });
+
+    adminCardsContainer.addEventListener('change', async (e) => {
+        if (e.target.classList.contains('slider-file-input')) {
+            const cardId = e.target.getAttribute('data-card-id');
+            const previewBox = document.getElementById(`preview-box-${cardId}`);
+            const previewImg = document.getElementById(`preview-img-${cardId}`);
+            if (e.target.files && e.target.files[0]) {
+                const base64 = await fileToBase64(e.target.files[0]);
+                if (previewImg) previewImg.src = base64;
+                if (previewBox) previewBox.style.display = 'flex';
+            }
         }
     });
 
     adminCardsContainer.addEventListener('submit', (e) => {
-        if (e.target.classList.contains('upload-image-form')) {
+        const form = e.target.closest('.upload-image-form');
+        if (form) {
             e.preventDefault();
-            uploadImageToCard(e.target.getAttribute('data-id'));
+            uploadImageToCard(form.getAttribute('data-id'));
         }
     });
 }
@@ -1289,9 +1377,11 @@ async function deleteOrder(orderId) {
 // 🌟 MULTIPLE BANNER CARDS LOGIC 🌟
 // ==========================================
 
+let localBannerCards = [];
+
 async function loadAdminBanners() {
     const container = document.getElementById('admin-cards-container');
-    if(!container) return; 
+    if (!container) return; 
 
     try {
         const response = await fetch('/api/banner-cards', {
@@ -1300,52 +1390,128 @@ async function loadAdminBanners() {
         const data = await response.json();
         
         container.innerHTML = ''; 
+        localBannerCards = data.cards || [];
+
+        // Update stats pills
+        const slotsCountEl = document.getElementById('slider-cards-count');
+        const imagesCountEl = document.getElementById('slider-images-count');
         
-        if(!data.cards || data.cards.length === 0) {
-            container.innerHTML = '<p style="text-align:center;">No slider cards yet. Click "+ Add New Carousel Card" above!</p>';
+        let totalImages = 0;
+        localBannerCards.forEach(c => {
+            if (c.images && Array.isArray(c.images)) totalImages += c.images.length;
+        });
+
+        if (slotsCountEl) slotsCountEl.textContent = localBannerCards.length;
+        if (imagesCountEl) imagesCountEl.textContent = totalImages;
+
+        if (localBannerCards.length === 0) {
+            container.innerHTML = `
+                <div class="slider-empty-box">
+                    <i class="fas fa-layer-group"></i>
+                    <h3 style="margin: 0 0 6px 0; color: #1e293b; font-size: 17px; font-weight: 700;">No Slider Carousel Slots Yet</h3>
+                    <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">Create your first slot to showcase promotional slides on your homepage.</p>
+                    <button onclick="createNewCard()" class="btn" style="width: auto; padding: 10px 22px; font-size: 13px; font-weight: 700; margin: 0 auto; background: var(--primary);">
+                        <i class="fas fa-plus"></i> Create Carousel Slot
+                    </button>
+                </div>
+            `;
             return;
         }
 
-        data.cards.forEach((card, index) => {
+        localBannerCards.forEach((card, index) => {
+            const imageList = card.images || [];
             let imagesHtml = '';
-            card.images.forEach((imgUrl, imgIndex) => {
-                imagesHtml += `
-                    <div style="position: relative; width: 150px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
-                        <img src="${imgUrl}" style="width: 100%; height: 100px; object-fit: cover; display: block;">
-                        <button data-card-id="${card._id}" data-img-index="${imgIndex}" class="delete-img-btn" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px;">X</button>
+
+            if (imageList.length > 0) {
+                imageList.forEach((imgUrl, imgIndex) => {
+                    imagesHtml += `
+                        <div class="slide-item-card" data-aos="zoom-in">
+                            <span class="slide-num-badge"><i class="fas fa-image"></i> Slide ${imgIndex + 1}</span>
+                            <img src="${imgUrl}" alt="Slide ${imgIndex + 1}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                            <div class="slide-item-overlay">
+                                <a href="${imgUrl}" target="_blank" class="slide-view-btn" title="View Full Resolution">
+                                    <i class="fas fa-expand-alt"></i>
+                                </a>
+                                <button data-card-id="${card._id}" data-img-index="${imgIndex}" class="slide-delete-btn delete-img-btn" title="Delete Slide">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                imagesHtml = `
+                    <div style="grid-column: 1 / -1;" class="slider-empty-box">
+                        <i class="fas fa-images"></i>
+                        <h4 style="margin: 0 0 4px 0; color: #334155; font-size: 14px; font-weight: 700;">No slides in this slot</h4>
+                        <p style="margin: 0; font-size: 12px; color: #94a3b8;">Use the uploader above to add promotional slide banners to this slot.</p>
                     </div>
                 `;
-            });
+            }
 
             container.innerHTML += `
-                <div style="background: #fdfdfd; border: 2px dashed #ccc; padding: 20px; border-radius: 8px; position: relative; margin-bottom: 20px;">
-                    <h3 style="margin-top:0;">Slider Card #${index + 1}</h3>
-                    <button data-id="${card._id}" class="delete-card-btn" style="position: absolute; top: 20px; right: 20px; background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Delete Entire Card</button>
-                    
-                    <div style="margin: 15px 0; background: #f1f1f1; padding: 10px; border-radius: 5px;">
-                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Card Heading Title:</label>
-                        <input type="text" id="heading-${card._id}" value="${card.heading || ''}" placeholder="e.g. Winter Collection" style="padding: 5px; width: 60%; border: 1px solid #ccc;">
-                        <button data-id="${card._id}" class="btn save-heading-btn" style="padding: 5px 15px; margin-top: 0; width: auto; background: #17a2b8;">Save Title</button>
+                <div class="slider-mgmt-card" data-aos="fade-up">
+                    <div class="slider-card-topbar">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="slider-slot-badge"><i class="fas fa-film"></i> Slot #${index + 1}</span>
+                            <span style="font-size: 13px; font-weight: 700; color: #0f172a;">${escapeHTML(card.heading || 'Untitled Carousel Slot')}</span>
+                            <span style="font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">${imageList.length} ${imageList.length === 1 ? 'Slide' : 'Slides'}</span>
+                        </div>
+                        <button data-id="${card._id}" class="btn-action-icon btn-action-delete delete-card-btn" title="Delete Entire Slot" style="width: auto; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; gap: 6px;">
+                            <i class="fas fa-trash-alt"></i> Delete Slot
+                        </button>
                     </div>
 
-                    <form data-id="${card._id}" class="upload-image-form" style="margin: 15px 0; display: flex; gap: 10px;">
-                        <input type="file" id="file-${card._id}" accept="image/*" required style="padding: 5px; border: 1px solid #ccc;">
-                        <button type="submit" class="btn" style="margin-top: 0; width: auto; padding: 5px 15px;">Add Image to this Slider</button>
+                    <!-- Slot Heading Editor -->
+                    <div class="slider-heading-form-box">
+                        <label style="font-size: 13px; font-weight: 700; color: #334155; white-space: nowrap;"><i class="fas fa-heading" style="color: #0284c7; margin-right: 4px;"></i> Slot Title:</label>
+                        <input type="text" id="heading-${card._id}" value="${escapeHTML(card.heading || '')}" placeholder="e.g. Featured Collection, Hot Summer Deals" class="slider-heading-input">
+                        <button data-id="${card._id}" class="slider-save-heading-btn save-heading-btn">
+                            <i class="fas fa-save"></i> Save Title
+                        </button>
+                    </div>
+
+                    <!-- Slide Uploader Zone -->
+                    <form data-id="${card._id}" class="upload-image-form" style="margin-bottom: 18px;">
+                        <div style="display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap;">
+                            <div class="modern-dropzone" style="flex: 1; min-width: 220px; padding: 12px 16px;">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span id="file-label-${card._id}">Select slide image (JPG, PNG, WebP)</span>
+                                <input type="file" id="file-${card._id}" data-card-id="${card._id}" class="slider-file-input" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn" style="width: auto; padding: 12px 24px; font-size: 13px; font-weight: 700; background: #0f172a; margin: 0; white-space: nowrap;">
+                                <i class="fas fa-plus-circle"></i> Upload Slide to Slot
+                            </button>
+                        </div>
+                        <div id="preview-box-${card._id}" class="dropzone-preview-box" style="display: none; margin-top: 10px;">
+                            <img id="preview-img-${card._id}" src="" alt="Slide Preview" class="dropzone-preview-img">
+                            <span style="font-size: 12px; font-weight: 600; color: #0f172a;">Ready to upload</span>
+                        </div>
                     </form>
 
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        ${imagesHtml || '<p style="color:#777; font-size:14px;">No images in this slider yet.</p>'}
+                    <!-- Slides Gallery Grid -->
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fas fa-images"></i> Slides in this Carousel:</h4>
+                        </div>
+                        <div class="slider-gallery-grid">
+                            ${imagesHtml}
+                        </div>
                     </div>
                 </div>
             `;
         });
     } catch (err) {
         console.error("Error loading banners:", err);
+        showToast('Error loading banner cards', 'error');
     }
 }
 
 async function updateCardHeading(cardId) {
-    const headingValue = document.getElementById(`heading-${cardId}`).value;
+    const headingInput = document.getElementById(`heading-${cardId}`);
+    if (!headingInput) return;
+    const headingValue = headingInput.value.trim();
+
     try {
         const response = await fetch(`/api/banner-cards/${cardId}/heading`, {
             method: 'PATCH',
@@ -1356,25 +1522,34 @@ async function updateCardHeading(cardId) {
             body: JSON.stringify({ heading: headingValue })
         });
         const data = await response.json();
-        if(data.success) {
-            showToast('Heading saved successfully!');
+        if (data.success) {
+            showToast('Slot title saved successfully!');
+            loadAdminBanners();
+        } else {
+            showToast(data.message || 'Error saving slot title', 'error');
         }
     } catch (err) {
         console.error("Error saving heading:", err);
-        showToast('Error saving heading', 'error');
+        showToast('Error saving slot title', 'error');
     }
 }
 
 async function createNewCard() {
     try {
-        await fetch('/api/banner-cards', { 
+        const response = await fetch('/api/banner-cards', { 
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 ...getAuthHeaders() 
             }
         });
-        loadAdminBanners();
+        const data = await response.json();
+        if (data.success) {
+            showToast('New carousel slot added!');
+            loadAdminBanners();
+        } else {
+            showToast('Failed to create slot', 'error');
+        }
     } catch (err) { 
         console.error("Error creating card:", err);
         showToast('Error creating card', 'error'); 
@@ -1382,13 +1557,19 @@ async function createNewCard() {
 }
 
 async function deleteCard(cardId) {
-    if(!confirm("Delete this ENTIRE slider card and all its images?")) return;
+    if (!confirm("Are you sure you want to delete this entire carousel slot and all its slide images?")) return;
     try {
-        await fetch(`/api/banner-cards/${cardId}`, { 
+        const response = await fetch(`/api/banner-cards/${cardId}`, { 
             method: 'DELETE',
             headers: getAuthHeaders() 
         });
-        loadAdminBanners();
+        const data = await response.json();
+        if (data.success) {
+            showToast('Carousel slot deleted');
+            loadAdminBanners();
+        } else {
+            showToast('Failed to delete slot', 'error');
+        }
     } catch (err) { 
         console.error("Error deleting card:", err);
         showToast('Error deleting card', 'error'); 
@@ -1397,10 +1578,14 @@ async function deleteCard(cardId) {
 
 async function uploadImageToCard(cardId) {
     const fileInput = document.getElementById(`file-${cardId}`);
-    const file = fileInput.files[0];
-    if (!file) return;
+    const file = fileInput ? fileInput.files[0] : null;
+    if (!file) {
+        showToast('Please choose an image file first', 'error');
+        return;
+    }
 
     try {
+        showToast('Uploading slide image...');
         const base64 = await fileToBase64(file);
         const response = await fetch(`/api/banner-cards/${cardId}/images`, {
             method: 'POST',
@@ -1412,9 +1597,10 @@ async function uploadImageToCard(cardId) {
         });
         const data = await response.json();
         if (data.success) {
+            showToast('Slide added to carousel!');
             loadAdminBanners(); 
         } else {
-            showToast('Failed to upload banner: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to upload slide: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) { 
         console.error("Error uploading image:", err);
@@ -1423,13 +1609,19 @@ async function uploadImageToCard(cardId) {
 }
 
 async function deleteImageFromCard(cardId, imageIndex) {
-    if(!confirm("Remove this image?")) return;
+    if (!confirm("Remove this slide image from the carousel?")) return;
     try {
-        await fetch(`/api/banner-cards/${cardId}/images/${imageIndex}`, { 
+        const response = await fetch(`/api/banner-cards/${cardId}/images/${imageIndex}`, { 
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        loadAdminBanners();
+        const data = await response.json();
+        if (data.success) {
+            showToast('Slide removed');
+            loadAdminBanners();
+        } else {
+            showToast('Failed to remove slide', 'error');
+        }
     } catch (err) { 
         console.error("Error deleting image:", err);
         showToast('Error deleting image', 'error'); 
@@ -1448,12 +1640,141 @@ async function loadCategories() {
         const response = await fetch('/api/categories');
         const data = await response.json();
         if (data.success) {
-            localCategories = data.categories;
+            localCategories = data.categories || [];
             populateAddProductCategories();
         }
     } catch (err) {
         console.error("Error loading categories:", err);
     }
+}
+
+function filterCategories(query) {
+    const container = document.getElementById('categories-list-container');
+    if (!container) return;
+
+    if (!query) {
+        renderCategoriesList(localCategories);
+        return;
+    }
+
+    const filtered = localCategories.filter(cat => {
+        const nameMatch = (cat.displayName || '').toLowerCase().includes(query);
+        const slugMatch = (cat.slug || '').toLowerCase().includes(query);
+        const subMatch = (cat.subcategories || []).some(s => s.toLowerCase().includes(query));
+        return nameMatch || slugMatch || subMatch;
+    });
+
+    renderCategoriesList(filtered);
+}
+
+async function renderCategoriesTab() {
+    const container = document.getElementById('categories-list-container');
+    if (!container) return;
+
+    await loadCategories();
+
+    // Update stats pills
+    const totalCatEl = document.getElementById('cat-total-count');
+    const totalSubcatEl = document.getElementById('subcat-total-count');
+    
+    let totalSubcategories = 0;
+    localCategories.forEach(c => {
+        if (c.subcategories && Array.isArray(c.subcategories)) totalSubcategories += c.subcategories.length;
+    });
+
+    if (totalCatEl) totalCatEl.textContent = localCategories.length;
+    if (totalSubcatEl) totalSubcatEl.textContent = totalSubcategories;
+
+    renderCategoriesList(localCategories);
+}
+
+function renderCategoriesList(categories) {
+    const container = document.getElementById('categories-list-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!categories || categories.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1;" class="slider-empty-box">
+                <i class="fas fa-folder-open"></i>
+                <h3 style="margin: 0 0 6px 0; color: #1e293b; font-size: 16px; font-weight: 700;">No Categories Found</h3>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Add a new category above to populate your storefront navigation and product catalog.</p>
+            </div>
+        `;
+        return;
+    }
+
+    categories.forEach(cat => {
+        const subcategories = cat.subcategories || [];
+        let subListHtml = '';
+
+        if (subcategories.length > 0) {
+            subcategories.forEach(sub => {
+                subListHtml += `
+                    <span class="subcat-chip">
+                        <span>${escapeHTML(sub)}</span>
+                        <span class="subcat-delete-btn" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" title="Remove ${escapeHTML(sub)}">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </span>
+                `;
+            });
+        } else {
+            subListHtml = `<p style="margin: 4px 0 0; color: #94a3b8; font-size: 12px; font-style: italic;">No subcategories added yet.</p>`;
+        }
+
+        const iconSrc = cat.iconUrl || './img/profile_image.jpg';
+        const redirectText = cat.redirectUrl || `category.html?cat=${cat.slug}`;
+
+        container.innerHTML += `
+            <div class="cat-card-modern" data-aos="fade-up">
+                <div>
+                    <div class="cat-card-top">
+                        <div class="cat-card-info-wrap">
+                            <div class="cat-icon-container">
+                                <img src="${iconSrc}" alt="${escapeHTML(cat.displayName)}" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
+                            </div>
+                            <div class="cat-card-details">
+                                <h3 class="cat-card-name">${escapeHTML(cat.displayName)}</h3>
+                                <div class="cat-meta-tags">
+                                    <span class="cat-slug-pill">#${escapeHTML(cat.slug)}</span>
+                                    <span class="cat-route-pill" title="${escapeHTML(redirectText)}"><i class="fas fa-link" style="margin-right: 3px;"></i>${escapeHTML(redirectText)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cat-card-actions">
+                            <button class="btn-action-icon btn-action-edit" onclick="openEditCategoryModal('${cat._id}')" title="Edit Category">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action-icon btn-action-view" onclick="window.open('${escapeHTML(redirectText)}', '_blank')" title="View in Store">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                            <button class="btn-action-icon btn-action-delete" onclick="deleteCategory('${cat._id}')" title="Delete Category">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Subcategories Box -->
+                    <div class="cat-subcategories-section">
+                        <div class="cat-subcategories-header">
+                            <span><i class="fas fa-tags" style="color: var(--primary); margin-right: 4px;"></i> Subcategories (${subcategories.length})</span>
+                        </div>
+                        <div class="subcat-chips-wrap">
+                            ${subListHtml}
+                        </div>
+                        <div class="subcat-add-bar">
+                            <input type="text" id="new-sub-${cat._id}" placeholder="Type subcategory name & press Enter..." class="subcat-add-input" onkeydown="if(event.key==='Enter'){event.preventDefault(); handleAddSubcategory('${cat._id}');}">
+                            <button type="button" class="subcat-add-btn" onclick="handleAddSubcategory('${cat._id}')">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
 }
 
 async function populateAddProductCategories() {
@@ -1491,69 +1812,6 @@ function populateSubcategories(categorySlug) {
     });
 }
 
-async function renderCategoriesTab() {
-    const container = document.getElementById('categories-list-container');
-    if (!container) return;
-
-    await loadCategories(); // Refresh categories list
-
-    container.innerHTML = '';
-    
-    if (localCategories.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:#666;">No categories found. Add one above.</p>`;
-        return;
-    }
-
-    localCategories.forEach(cat => {
-        let subListHtml = '';
-        if (cat.subcategories && cat.subcategories.length > 0) {
-            cat.subcategories.forEach(sub => {
-                subListHtml += `
-                    <span style="display: inline-flex; align-items: center; background: #ffe6eb; border: 1px solid #e60050; border-radius: 15px; padding: 4px 12px; margin: 5px; font-size: 13px; font-weight: 600; color: #e60050;">
-                        ${escapeHTML(sub)}
-                        <i class="fas fa-times" onclick="deleteSubcategory('${escapeHTML(cat._id)}', '${escapeHTML(sub)}')" style="margin-left: 8px; cursor: pointer; color: #c50044;"></i>
-                    </span>
-                `;
-            });
-        } else {
-            subListHtml = `<p style="margin: 0; color: #888; font-size: 13px; font-style: italic;">No subcategories added yet.</p>`;
-        }
-
-        const iconSrc = cat.iconUrl || './img/profile_image.jpg';
-        const redirectText = cat.redirectUrl || `category.html?cat=${cat.slug}`;
-
-        container.innerHTML += `
-            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #111111; color: #333;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                        <img src="${iconSrc}" alt="${escapeHTML(cat.displayName)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;" onerror="this.onerror=null; this.src='./img/profile_image.jpg';">
-                        <div>
-                            <h3 style="margin: 0; color: #111;">${escapeHTML(cat.displayName)} <span style="font-size: 12px; color: #888; font-weight: normal; margin-left: 6px;">(Slug: ${escapeHTML(cat.slug)})</span></h3>
-                            <p style="margin: 3px 0 0; font-size: 12px; color: #666;"><i class="fas fa-link"></i> Link: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">${escapeHTML(redirectText)}</code></p>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn" onclick="openEditCategoryModal('${cat._id}')" style="margin-top:0; width:auto; padding: 6px 14px; font-size: 12px; background: #0d6efd; color: #fff;"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn" onclick="deleteCategory('${cat._id}')" style="margin-top:0; width:auto; padding: 6px 14px; font-size: 12px; background: #dc3545; color: #fff;"><i class="fas fa-trash"></i> Delete</button>
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: #555;">Subcategories:</h4>
-                    <div style="display: flex; flex-wrap: wrap; align-items: center;">
-                        ${subListHtml}
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <input type="text" id="new-sub-${cat._id}" placeholder="New Subcategory name" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
-                    <button class="btn" onclick="handleAddSubcategory('${cat._id}')" style="margin-top:0; width:auto; padding: 8px 15px; font-size: 13px; background: #111111; color: #fff;">Add Subcategory</button>
-                </div>
-            </div>
-        `;
-    });
-}
-
 async function handleAddCategory(e) {
     e.preventDefault();
     const nameInput = document.getElementById('new-cat-name');
@@ -1579,7 +1837,7 @@ async function handleAddCategory(e) {
     const submitBtn = document.getElementById('add-cat-submit-btn');
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerText = 'Creating...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     }
 
     try {
@@ -1597,7 +1855,7 @@ async function handleAddCategory(e) {
 
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Save & Publish Category';
         }
 
         if (!response) return;
@@ -1608,14 +1866,20 @@ async function handleAddCategory(e) {
             if (iconFileInput) iconFileInput.value = '';
             if (iconUrlInput) iconUrlInput.value = '';
             if (redirectInput) redirectInput.value = '';
+
+            const previewWrapper = document.getElementById('cat-icon-preview-wrapper');
+            const previewImg = document.getElementById('cat-icon-preview-img');
+            if (previewWrapper) previewWrapper.style.display = 'none';
+            if (previewImg) previewImg.src = '';
+
             renderCategoriesTab();
         } else {
-            showToast('Failed to add category: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to add category: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Category Card';
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Save & Publish Category';
         }
         console.error("Error adding category:", err);
         showToast('An error occurred connecting to the server.', 'error');
@@ -1643,9 +1907,10 @@ async function handleAddSubcategory(catId) {
         const data = await response.json();
         if (data.success) {
             input.value = '';
+            showToast('Subcategory added!');
             renderCategoriesTab();
         } else {
-            showToast('Failed to add subcategory: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to add subcategory: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         console.error("Error adding subcategory:", err);
@@ -1662,9 +1927,10 @@ async function deleteSubcategory(catId, subName) {
         if (!response) return;
         const data = await response.json();
         if (data.success) {
+            showToast('Subcategory removed');
             renderCategoriesTab();
         } else {
-            showToast('Failed to remove subcategory: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to remove subcategory: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         console.error("Error deleting subcategory:", err);
@@ -1673,7 +1939,7 @@ async function deleteSubcategory(catId, subName) {
 }
 
 async function deleteCategory(catId) {
-    if (!confirm("Are you sure you want to delete this Category? All its subcategories will be removed.")) return;
+    if (!confirm("Are you sure you want to delete this Category? All its subcategories will also be removed.")) return;
     try {
         const response = await fetchWithAuth(`/api/admin/categories/${catId}`, {
             method: 'DELETE'
@@ -1681,9 +1947,10 @@ async function deleteCategory(catId) {
         if (!response) return;
         const data = await response.json();
         if (data.success) {
+            showToast('Category deleted');
             renderCategoriesTab();
         } else {
-            showToast('Failed to delete category: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to delete category: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         console.error("Error deleting category:", err);
@@ -1757,7 +2024,7 @@ async function handleEditCategorySubmit(e) {
 
         if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.innerText = 'Save Category';
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
         }
 
         if (!response) return;
@@ -1768,12 +2035,12 @@ async function handleEditCategorySubmit(e) {
             closeEditCategoryModal();
             renderCategoriesTab();
         } else {
-            showToast('Failed to update category: ' + (data.message || 'Unknown error', 'error'));
+            showToast('Failed to update category: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (err) {
         if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.innerText = 'Save Category';
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
         }
         console.error("Error updating category:", err);
         showToast('An error occurred connecting to the server.', 'error');
@@ -1786,6 +2053,7 @@ window.deleteSubcategory = deleteSubcategory;
 window.handleAddSubcategory = handleAddSubcategory;
 window.openEditCategoryModal = openEditCategoryModal;
 window.closeEditCategoryModal = closeEditCategoryModal;
+window.filterCategories = filterCategories;
 
 // ==========================================
 // 🎟️ PROMO CODE MANAGEMENT
