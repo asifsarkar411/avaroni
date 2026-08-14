@@ -8,5 +8,12 @@ export const config = {
 };
 
 export default function handler(req, res) {
-  return app(req, res);
+  try {
+    return app(req, res);
+  } catch (e) {
+    console.error("Pages API error:", e);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: e.message, stack: e.stack });
+    }
+  }
 }
