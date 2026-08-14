@@ -7,6 +7,7 @@ export default function Sidebar({ isOpen, onClose }) {
     const [categories, setCategories] = useState([]);
     const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
     const [brandName, setBrandName] = useState('AVARONI');
+    const [openCategory, setOpenCategory] = useState(null);
 
     useEffect(() => {
         async function fetchSettingsAndCategories() {
@@ -33,6 +34,10 @@ export default function Sidebar({ isOpen, onClose }) {
         fetchSettingsAndCategories();
     }, []);
 
+    const toggleAccordion = (catId) => {
+        setOpenCategory(prev => (prev === catId ? null : catId));
+    };
+
     return (
         <div id="sidebar" className={'sidebar ' + (isOpen ? 'active' : '')}>
             <div className="sidebar-header">
@@ -53,26 +58,50 @@ export default function Sidebar({ isOpen, onClose }) {
                     
                     // Special cases for categories that used to be root html files
                     if (['/women', '/kids', '/ornament', 'women', 'kids', 'ornament'].includes(url)) {
-                        // Ensure leading slash when constructing the route
                         url = `/category/${url.replace(/^\//, '')}`;
                     }
                 }
+
+                const catId = cat._id || cat.slug || cat.name;
+                const hasSubs = Array.isArray(cat.subcategories) && cat.subcategories.length > 0;
+                const isExpanded = openCategory === catId;
                 
-                return (
-                    <div key={cat._id} className="sidebar-category-wrapper">
-                        <a href={url} onClick={onClose} style={{ textTransform: 'uppercase', display: 'flex', alignItems: 'center' }}>
-                            <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" style={{width: '20px', height: '20px', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', borderRadius: '50%'}} />
-                            {cat.name}
-                        </a>
-                        {cat.subcategories && cat.subcategories.length > 0 && (
-                            <div className="sidebar-subcategories" style={{ paddingLeft: '45px', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                if (hasSubs) {
+                    return (
+                        <div key={catId} className={`sidebar-category-wrapper ${isExpanded ? 'open' : ''}`}>
+                            <button
+                                type="button"
+                                className="sidebar-category-btn"
+                                onClick={() => toggleAccordion(catId)}
+                            >
+                                <span className="cat-btn-content">
+                                    <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" />
+                                    <span>{cat.displayName || cat.name}</span>
+                                </span>
+                                <i className="fas fa-chevron-down sidebar-chevron"></i>
+                            </button>
+                            <div className="sidebar-subcategories">
+                                <Link href={url} onClick={onClose} className="sidebar-sub-link all-sub-link">
+                                    <i className="fas fa-th-large"></i> All {cat.displayName || cat.name}
+                                </Link>
                                 {cat.subcategories.map((sub, idx) => (
-                                    <a key={idx} href={`${url}?sub=${encodeURIComponent(sub)}`} onClick={onClose} style={{ textTransform: 'capitalize', padding: '0', fontSize: '14px', color: '#888' }}>
-                                        - {sub}
-                                    </a>
+                                    <Link key={idx} href={`${url}?sub=${encodeURIComponent(sub)}`} onClick={onClose} className="sidebar-sub-link">
+                                        <i className="fas fa-minus"></i> {sub}
+                                    </Link>
                                 ))}
                             </div>
-                        )}
+                        </div>
+                    );
+                }
+
+                return (
+                    <div key={catId} className="sidebar-category-wrapper">
+                        <Link href={url} onClick={onClose} className="sidebar-category-btn">
+                            <span className="cat-btn-content">
+                                <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" />
+                                <span>{cat.displayName || cat.name}</span>
+                            </span>
+                        </Link>
                     </div>
                 );
             })}

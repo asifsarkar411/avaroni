@@ -550,19 +550,85 @@ sidebar.appendChild(headerDiv);
         'kidszone': 'fas fa-child'
     };
 
+    const catHeading = document.createElement('div');
+    catHeading.style.cssText = 'padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;';
+    catHeading.textContent = 'Categories';
+    sidebar.appendChild(catHeading);
+
     categories.forEach(cat => {
         const pageFile = getCategoryPageUrl(cat.slug, cat.name);
         const iconClass = iconMap[cat.slug] || iconMap[cat.name] || 'fas fa-tag';
+        const hasSubs = Array.isArray(cat.subcategories) && cat.subcategories.length > 0;
 
-        const link = document.createElement('a');
-        link.href = pageFile;
-        link.innerHTML = `<i class="${iconClass}"></i> ${cat.displayName}`;
-        sidebar.appendChild(link);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'sidebar-category-wrapper';
+
+        if (hasSubs) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'sidebar-category-btn';
+            toggleBtn.innerHTML = `
+                <span class="cat-btn-content">
+                    <i class="${iconClass}"></i>
+                    <span>${escapeHTML(cat.displayName || cat.name)}</span>
+                </span>
+                <i class="fas fa-chevron-down sidebar-chevron"></i>
+            `;
+
+            const subContainer = document.createElement('div');
+            subContainer.className = 'sidebar-subcategories';
+
+            const allLink = document.createElement('a');
+            allLink.href = pageFile;
+            allLink.className = 'sidebar-sub-link all-sub-link';
+            allLink.innerHTML = `<i class="fas fa-th-large"></i> All ${escapeHTML(cat.displayName || cat.name)}`;
+            subContainer.appendChild(allLink);
+
+            cat.subcategories.forEach(sub => {
+                if (!sub || !sub.trim()) return;
+                const subClean = sub.trim();
+                const subLink = document.createElement('a');
+                const subUrl = pageFile.includes('?') 
+                    ? `${pageFile}&sub=${encodeURIComponent(subClean)}` 
+                    : `${pageFile}?sub=${encodeURIComponent(subClean)}`;
+                subLink.href = subUrl;
+                subLink.className = 'sidebar-sub-link';
+                subLink.innerHTML = `<i class="fas fa-minus"></i> ${escapeHTML(subClean)}`;
+                subContainer.appendChild(subLink);
+            });
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const wasOpen = wrapper.classList.contains('open');
+                sidebar.querySelectorAll('.sidebar-category-wrapper.open').forEach(w => {
+                    if (w !== wrapper) w.classList.remove('open');
+                });
+                wrapper.classList.toggle('open', !wasOpen);
+            });
+
+            wrapper.appendChild(toggleBtn);
+            wrapper.appendChild(subContainer);
+            sidebar.appendChild(wrapper);
+        } else {
+            const link = document.createElement('a');
+            link.href = pageFile;
+            link.className = 'sidebar-category-btn';
+            link.style.textDecoration = 'none';
+            link.innerHTML = `
+                <span class="cat-btn-content">
+                    <i class="${iconClass}"></i>
+                    <span>${escapeHTML(cat.displayName || cat.name)}</span>
+                </span>
+            `;
+            wrapper.appendChild(link);
+            sidebar.appendChild(wrapper);
+        }
     });
 
     // Add divider
     const hr = document.createElement('hr');
-    hr.style.cssText = 'border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;';
+    hr.style.cssText = 'border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;';
     sidebar.appendChild(hr);
 
     const createSidebarLink = (href, iconClass, text) => {
@@ -587,6 +653,11 @@ sidebar.appendChild(headerDiv);
         const signInLink = createSidebarLink('login.html', 'fas fa-user-circle', 'Sign In / Register');
         sidebar.appendChild(signInLink);
     }
+
+    const quickHeading = document.createElement('div');
+    quickHeading.style.cssText = 'padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;';
+    quickHeading.textContent = 'Quick Links';
+    sidebar.appendChild(quickHeading);
 
     // Guarantee Track Order link is always included at the top of quick links
     const hasTrackOrder = footerLinks.some(link => link.getAttribute('href') === 'track-order.html');
