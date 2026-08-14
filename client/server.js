@@ -158,8 +158,11 @@ app.get('/uploads/:imageFile', (req, res) => {
 });
 
 // Fallback for root-requested naked uploaded images (e.g. /1786738489602.png)
-app.get('/:imageFile([^/]+\\.(?:png|jpg|jpeg|webp|gif|avif|svg|ico))$', (req, res, next) => {
+app.get('/:imageFile', (req, res, next) => {
     const filename = req.params.imageFile;
+    if (!filename || !/\.(png|jpe?g|webp|gif|avif|svg|ico)$/i.test(filename)) {
+        return next();
+    }
     const publicPath = path.join(__dirname, 'public', filename);
     if (fs.existsSync(publicPath)) {
         return res.sendFile(publicPath);
