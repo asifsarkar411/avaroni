@@ -24,6 +24,11 @@ function formatImageUrl(url) {
     let clean = url.trim().replace(/\\/g, '/');
     if (clean.startsWith('data:image/')) return clean;
     if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    
+    // If it's a naked filename like "1786738489602.png" without leading path
+    if (!clean.includes('/')) {
+        return '/uploads/' + clean;
+    }
     if (!clean.startsWith('/') && !clean.startsWith('./')) {
         clean = '/' + clean;
     }

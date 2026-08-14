@@ -132,12 +132,50 @@ app.use(express.static(path.join(__dirname, 'public'), {
         } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
             // CSS/JS: Cache for 1 hour, re-validate afterwards to maintain fresh styling/scripting
             res.setHeader('Cache-Control', 'public, max-age=3600');
-        } else if (/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i.test(filePath)) {
+        } else if (/\.(jpg|jpeg|png|gif|webp|svg|ico|avif)$/i.test(filePath)) {
             // Images: Cache long term (7 days) for instant loading
             res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
         }
     }
 })); // Serves your HTML/CSS/JS
+
+// Explicit /uploads static route with caching
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
+    setHeaders: function (res, filePath) {
+        if (/\.(jpg|jpeg|png|gif|webp|svg|ico|avif)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+        }
+    }
+}));
+
+// Fallback for missing images in /uploads/:imageFile (e.g. ephemeral serverless or deleted file)
+app.get('/uploads/:imageFile', (req, res) => {
+    const requestedPath = path.join(__dirname, 'public', 'uploads', req.params.imageFile);
+    if (fs.existsSync(requestedPath)) {
+        return res.sendFile(requestedPath);
+    }
+    // Return default profile/brand image instead of 404
+    return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
+});
+
+// Fallback for root-requested naked uploaded images (e.g. /1786738489602.png)
+app.get('/:imageFile([^/]+\\.(?:png|jpg|jpeg|webp|gif|avif|svg|ico))$', (req, res, next) => {
+    const filename = req.params.imageFile;
+    const publicPath = path.join(__dirname, 'public', filename);
+    if (fs.existsSync(publicPath)) {
+        return res.sendFile(publicPath);
+    }
+    const uploadsPath = path.join(__dirname, 'public', 'uploads', filename);
+    if (fs.existsSync(uploadsPath)) {
+        return res.sendFile(uploadsPath);
+    }
+    const imgPath = path.join(__dirname, 'public', 'img', filename);
+    if (fs.existsSync(imgPath)) {
+        return res.sendFile(imgPath);
+    }
+    // Return default brand placeholder image instead of 404
+    return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
+});
 
 // ==========================================
 // DATABASE CONNECTION (SERVERLESS OPTIMIZED)

@@ -2,6 +2,22 @@
 // AVARONI PREMIUM INVOICE GENERATOR
 // ==========================================
 
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.includes('/')) {
+        return '/uploads/' + clean;
+    }
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
 function loadScript(src) {
     return new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) {
@@ -97,7 +113,7 @@ async function generatePDFInvoice(order) {
         const cachedName = localStorage.getItem('site_brand_name');
         const cachedLogo = localStorage.getItem('site_brand_logo');
         if (cachedName) dynamicBrandName = cachedName;
-        if (cachedLogo) dynamicBrandLogo = cachedLogo;
+        if (cachedLogo) dynamicBrandLogo = formatImageUrl(cachedLogo);
     } catch(e) {}
 
     try {
@@ -105,7 +121,7 @@ async function generatePDFInvoice(order) {
         const sData = await sRes.json();
         if (sData.success && sData.settings) {
             if (sData.settings.brandName) dynamicBrandName = sData.settings.brandName;
-            if (sData.settings.brandLogo) dynamicBrandLogo = sData.settings.brandLogo;
+            if (sData.settings.brandLogo) dynamicBrandLogo = formatImageUrl(sData.settings.brandLogo);
         }
     } catch(e) {}
 
