@@ -1,0 +1,3482 @@
+require('dotenv').config();
+
+// Fallback to public DNS to resolve MongoDB SRV records (only needed on local networks with buggy DNS)
+if (!process.env.VERCEL && process.env.MONGO_URI && process.env.MONGO_URI.startsWith('mongodb+srv://')) {
+  try {
+    const dns = require('dns');
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (e) {
+    console.warn('DNS server override failed:', e);
+  }
+}
+
+const express = require('express');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
+const nodemailer = require('nodemailer');
+const sanitize = require('mongo-sanitize');
+const helmet = require('helmet');
+const cors = require('cors');
+const multer = require('multer');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+
+// HTML Escaper Helper Function
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// --- MODELS ---
+const User = require('./models/User');           // Secure Login User Model
+const Settings = require('./models/Settings');   // Settings Model
+const ActivityLog = require('./models/ActivityLog'); // Analytics Tracking Model
+const Order = require('./models/Order');         // E-commerce Order Model
+const Product = require('./models/Product');     // E-commerce Product Model
+const BannerCard = require('./models/BannerCard'); // E-commerce Slider Model
+const Category = require('./models/Category');   // Dynamic Categories Model
+const PromoCode = require('./models/PromoCode'); // Promo Codes Model
+const ReturnRequest = require('./models/ReturnRequest'); // Return Requests Model
+const ContactMessage = require('./models/ContactMessage'); // Contact Messages Model
+const Review = require('./models/Review');               // Customer Reviews Model
+const FlashSale = require('./models/FlashSale');           // Flash Sale Sticky Countdown Model
+const Voucher = require('./models/Voucher');             // Public Vouchers Model
+const Blog = require('./models/Blog');                   // Blogs Model
+// ==========================================
+// STARTUP ENVIRONMENT VARIABLE GUARD
+// ==========================================
+const REQUIRED_ENV_VARS = ['MONGO_URI', 'JWT_SECRET'];
+const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+    console.error(`CRITICAL: Missing required environment variables: ${missingVars.join(', ')}`);
+    console.error('Set them in your .env file (local) or Vercel Environment Variables (production).');
+    console.error('See .env.example for a template.');
+}
+
+const app = express();
+
+// Normalize URL path if invoked via Vercel serverless functions
+app.use((req, res, next) => {
+    if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/uploads') && !req.url.includes('.')) {
+        if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+            req.url = req.originalUrl;
+        } else {
+            req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+        }
+    }
+    next();
+});
+
+// ==========================================
+// MIDDLEWARE & SECURITY & OPTIMIZATION
+// ==========================================
+app.use(compression()); // Enable Gzip compression to reduce network payload sizes
+
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://*.google.com", "https://cdn.quilljs.com"],
+            scriptSrcElem: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://*.google.com", "https://cdn.quilljs.com"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://accounts.google.com", "https://cdn.jsdelivr.net", "https://cdn.quilljs.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
+            imgSrc: ["'self'", "data:", "blob:", "https:"],
+            connectSrc: ["'self'", "https:"],
+            frameSrc: ["'self'", "https://accounts.google.com"],
+            frameAncestors: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"]
+        }
+    },
+    crossOriginEmbedderPolicy: false,
+    xFrameOptions: { action: "sameorigin" },
+    xContentTypeOptions: true,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
+}));
+
+// Serve Favicon fallback to prevent 404 errors
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
+}); 
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Security: Allow CORS for production Vercel and local dev environments
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow all origins (standard for API) while supporting credentials
+        callback(null, true);
+    },
+    credentials: true
+}));
+
+// Security: Apply Rate Limiting to all /api routes to prevent brute-force and DDoS
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // limit each IP to 500 requests per windowMs
+    message: { success: false, message: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
+
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: function (res, filePath) {
+        // Optimize caching headers for static assets
+        if (filePath.endsWith('.html')) {
+            // HTML files: always re-validate to ensure latest content updates
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+            // CSS/JS: Cache for 1 hour, re-validate afterwards to maintain fresh styling/scripting
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+        } else if (/\.(jpg|jpeg|png|gif|webp|svg|ico|avif)$/i.test(filePath)) {
+            // Images: Cache long term (7 days) for instant loading
+            res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+        }
+    }
+})); // Serves your HTML/CSS/JS
+
+// Explicit /uploads static route with caching
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
+    setHeaders: function (res, filePath) {
+        if (/\.(jpg|jpeg|png|gif|webp|svg|ico|avif)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+        }
+    }
+}));
+
+// Fallback for missing images in /uploads/:imageFile (e.g. ephemeral serverless or deleted file)
+app.get('/uploads/:imageFile', (req, res) => {
+    const requestedPath = path.join(__dirname, 'public', 'uploads', req.params.imageFile);
+    if (fs.existsSync(requestedPath)) {
+        return res.sendFile(requestedPath);
+    }
+    // Return default profile/brand image instead of 404
+    return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
+});
+
+// Fallback for root-requested naked uploaded images (e.g. /1786738489602.png)
+app.get('/:imageFile([^/]+\\.(?:png|jpg|jpeg|webp|gif|avif|svg|ico))$', (req, res, next) => {
+    const filename = req.params.imageFile;
+    const publicPath = path.join(__dirname, 'public', filename);
+    if (fs.existsSync(publicPath)) {
+        return res.sendFile(publicPath);
+    }
+    const uploadsPath = path.join(__dirname, 'public', 'uploads', filename);
+    if (fs.existsSync(uploadsPath)) {
+        return res.sendFile(uploadsPath);
+    }
+    const imgPath = path.join(__dirname, 'public', 'img', filename);
+    if (fs.existsSync(imgPath)) {
+        return res.sendFile(imgPath);
+    }
+    // Return default brand placeholder image instead of 404
+    return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
+});
+
+// ==========================================
+// DATABASE CONNECTION (SERVERLESS OPTIMIZED)
+// ==========================================
+let cachedDb = global.mongoose;
+if (!cachedDb) {
+    cachedDb = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+    if (cachedDb.conn && mongoose.connection.readyState === 1) {
+        return cachedDb.conn;
+    }
+
+    if (!cachedDb.promise) {
+        const dbOptions = {
+            serverSelectionTimeoutMS: 8000,
+            maxPoolSize: 10
+        };
+        const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/glamour_store';
+        cachedDb.promise = mongoose.connect(mongoUri, dbOptions).then(async (mongooseInstance) => {
+            console.log('MongoDB Connected successfully');
+            
+            // Non-blocking background initializations
+            if (!process.env.VERCEL) {
+                seedCategories().catch(e => console.error('Seed categories error:', e.message));
+                seedDefaultBlogs().catch(e => console.error('Seed default blogs error:', e.message));
+                migrateUserRoles().catch(e => console.error('Migrate user roles error:', e.message));
+            }
+            return mongooseInstance;
+        }).catch(err => {
+            cachedDb.promise = null;
+            console.error('MongoDB Connection Error:', err.message);
+            throw err;
+        });
+    }
+
+    try {
+        cachedDb.conn = await cachedDb.promise;
+        return cachedDb.conn;
+    } catch (e) {
+        cachedDb.promise = null;
+        console.error('Database connection failed:', e.message);
+    }
+}
+
+// Global middleware ensuring DB connection for all API routes
+app.use('/api', async (req, res, next) => {
+    try {
+        await connectDB();
+        if (mongoose.connection.readyState !== 1) {
+            // Attempt one quick reconnection before rejecting
+            await connectDB();
+        }
+        next();
+    } catch (err) {
+        console.error('DB middleware error:', err);
+        return res.status(503).json({ success: false, message: 'Database connection failed. Please try again shortly.' });
+    }
+});
+
+// Initial local connection trigger
+connectDB();
+
+// Seed Categories Function
+async function seedCategories() {
+  try {
+    const count = await Category.countDocuments();
+    if (count === 0) {
+      const initialCats = [
+        { name: "women", displayName: "Women Dress", slug: "women", subcategories: ["Saree", "Three Piece", "Kurti"] },
+        { name: "ornament", displayName: "Ornament", slug: "ornament", subcategories: ["Necklace", "Ring", "Bracelet"] },
+        { name: "kids", displayName: "Kids Zone", slug: "kids", subcategories: ["Toys", "Clothing", "Shoes"] }
+      ];
+      await Category.insertMany(initialCats);
+      console.log('Categories seeded successfully');
+    }
+  } catch (err) {
+    console.error('Error seeding categories:', err);
+  }
+}
+
+// Preset Default Blogs
+const DEFAULT_PRESET_BLOGS = [
+    {
+        title: "Top 5 Trending Salwar Kameez Styles for Festive Seasons in Bangladesh",
+        slug: "trending-salwar-kameez-styles",
+        category: "Ethnic Trends",
+        tag: "Ethnic Trends",
+        author: "AVARONI Styling Team",
+        readTime: "4 min read",
+        excerpt: "Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bangladeshi festive celebrations by storm this season...",
+        description: "Explore the latest embroidered silk kameez, Anarkali cuts, and organza dupattas that are taking Bangladeshi festive celebrations by storm this season...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Ethnic fashion in Bangladesh is undergoing an exciting renaissance where centuries-old regal silhouettes blend effortlessly with lightweight contemporary drapes.</p>
+        <h4>1. Flared Anarkali Suits with Heavy Gota Patti</h4>
+        <p>Floor-length Anarkalis featuring intricate neckline embroidery and flowy organza dupattas remain the gold standard for Eid mornings and wedding galas.</p>
+        <h4>2. Straight Cut Minimalist Kurtis</h4>
+        <p>For casual gatherings and corporate elegance, straight-cut silk and linen kurtis paired with matching cigarette pants provide unparalleled comfort.</p>
+        <h4>3. Pastel Organza & Chiffon Coordinates</h4>
+        <p>Soft mint green, blush pink, and lavender palettes with subtle pearl and mirror work are dominating evening festive parties.</p>
+        <h4>4. Layered Cape & Jacket Kurtis</h4>
+        <p>Adding a sheer embroidered cape over a solid inner tunic creates instant drama and movement without weighing down your ensemble.</p>`,
+        isPublished: true,
+        views: 128
+    },
+    {
+        title: "How to Maintain & Preserve Your Hand-Crafted Ornaments & Gold-Plated Jewelry",
+        slug: "preserve-handcrafted-ornaments-jewelry",
+        category: "Jewelry Care",
+        tag: "Jewelry Care",
+        author: "Jewelry Experts",
+        readTime: "3 min read",
+        excerpt: "Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple, proven home care techniques...",
+        description: "Keep your gold-plated necklaces, oxidized silver earrings, and Kundan sets shining bright with these simple, proven home care techniques...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Hand-crafted ornaments and gold-plated jewelry are exquisite statement pieces. With basic precautions, their brilliant shine can last for generations.</p>
+        <h4>The Golden Rule: Last On, First Off</h4>
+        <p>Always put on your jewelry <em>after</em> applying perfumes, lotions, body sprays, and hair chemicals. Harsh chemicals can quickly oxidize plating.</p>
+        <h4>Proper Storage is Key</h4>
+        <p>Store each piece separately in airtight zip-lock bags or soft velvet pouches to prevent scratches and exposure to humid air.</p>
+        <h4>Cleaning Without Harsh Chemicals</h4>
+        <p>Gently wipe your ornaments with a clean microfiber cloth after each wear to remove sweat and oils before storing them away.</p>`,
+        isPublished: true,
+        views: 94
+    },
+    {
+        title: "Comfort Meets Elegance: Choosing Breathable Fabrics for Kids Wear",
+        slug: "breathable-fabrics-kids-wear",
+        category: "Kids Styling",
+        tag: "Kids Styling",
+        author: "Family Wardrobe Stylists",
+        readTime: "5 min read",
+        excerpt: "When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...",
+        description: "When dressing little ones for weddings and celebrations, cotton linings and lightweight silks offer the perfect balance of comfort and festive charm...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Children want to play, run, and explore — even during formal wedding ceremonies and festive family reunions. Here is how to keep them stylish and comfortable.</p>
+        <h4>100% Cotton Inner Linings</h4>
+        <p>Ensure any festive dress, lehenga, or panjabi has a soft, unbleached cotton inner layer that prevents itching and skin rashes.</p>
+        <h4>Lightweight Festive Silks</h4>
+        <p>Opt for art silk or soft jacquard instead of heavy brocades so your child stays cool under warm indoor lighting.</p>
+        <h4>Elasticated & Adjustable Waistbands</h4>
+        <p>Look for elastic waists and easy zip closures that allow hassle-free dressing and unrestricted playtime movement.</p>`,
+        isPublished: true,
+        views: 76
+    },
+    {
+        title: "The Ultimate Saree Care & Draping Guide: Jamdani, Katan & Georgette",
+        slug: "saree-care-and-draping-guide",
+        category: "Ethnic Trends",
+        tag: "Ethnic Trends",
+        author: "Master Drapers",
+        readTime: "4 min read",
+        excerpt: "Master the art of effortless pleating and learn the secrets of storing delicate weaves safely away from humidity and sunlight...",
+        description: "Master the art of effortless pleating and learn the secrets of storing delicate weaves safely away from humidity and sunlight...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>A saree is not merely attire; it is six yards of timeless poetry. Caring for heritage Bangladeshi sarees ensures they become cherished family heirlooms.</p>
+        <h4>Never Hang Heavy Katan or Silk Sarees</h4>
+        <p>Heavy zari weaves can stretch and tear if kept on metal hangers. Always fold them neatly in pure cotton saree bags.</p>
+        <h4>Refold Every 3-4 Months</h4>
+        <p>Change the fold lines periodically to prevent permanent creasing along the metallic embroidery threads.</p>
+        <h4>Dry Cleaning Recommended</h4>
+        <p>Always opt for professional dry cleaning for authentic Jamdani, pure Katan, and tissue sarees.</p>`,
+        isPublished: true,
+        views: 152
+    },
+    {
+        title: "How to Accessorize Traditional Bengali Outfits for Wedding Receptions",
+        slug: "accessorize-traditional-bengali-outfits",
+        category: "Jewelry Care",
+        tag: "Jewelry Care",
+        author: "AVARONI Stylists",
+        readTime: "3 min read",
+        excerpt: "From statement jhumkas to layered choker necklaces, learn how to balance bold jewelry with subtle embroidered dresses gracefully...",
+        description: "From statement jhumkas to layered choker necklaces, learn how to balance bold jewelry with subtle embroidered dresses gracefully...",
+        imageUrl: "./img/profile_image.jpg",
+        content: `<p>Finding the right balance when pairing jewelry with ethnic wear transforms a simple outfit into a show-stopping ensemble.</p>
+        <h4>Highlight One Focal Point</h4>
+        <p>If your necklace is heavy and ornate, opt for subtle stud earrings. If wearing dramatic chandelier jhumkas, skip the heavy necklace.</p>
+        <h4>Match Metal Tones with Embroidery</h4>
+        <p>Pair antique gold jewelry with warm golden zari work, and oxidized silver or platinum-toned jewelry with silver sequin embroidery.</p>`,
+        isPublished: true,
+        views: 89
+    }
+];
+
+// Seed Default Blogs Function
+async function seedDefaultBlogs(force = false) {
+    try {
+        const count = await Blog.countDocuments();
+        if (count === 0 || force) {
+            for (const blogData of DEFAULT_PRESET_BLOGS) {
+                await Blog.findOneAndUpdate(
+                    { title: blogData.title },
+                    { $setOnInsert: blogData },
+                    { upsert: true, new: true }
+                );
+            }
+            console.log('✅ Preset Default Blogs verified/seeded successfully');
+        }
+    } catch (err) {
+        console.error('Error seeding default blogs:', err);
+    }
+}
+
+async function migrateUserRoles() {
+    try {
+        const usersWithoutRole = await User.find({ role: { $exists: false } });
+        if (usersWithoutRole.length > 0) {
+            console.log(`Migrating ${usersWithoutRole.length} legacy users to admin role...`);
+            await User.updateMany({ role: { $exists: false } }, { $set: { role: 'admin' } });
+            console.log('User role migration completed.');
+        }
+    } catch (err) {
+        console.error('Error migrating user roles:', err);
+    }
+}
+
+// Helper function to handle image storage:
+// Always store Base64 Data URIs directly in MongoDB so images are self-contained
+// and render identically across Vercel production, localhost, and mobile without 404s.
+function saveBase64Image(base64Str) {
+    return base64Str || '';
+}
+
+// Convert local disk file paths (/uploads/xxx.jpeg) to Base64 if file exists on disk,
+// or fallback to placeholder image if missing on Vercel
+function convertDiskFileToBase64(imagePath) {
+    if (!imagePath || typeof imagePath !== 'string') return './img/profile_image.jpg';
+    if (imagePath.startsWith('data:image/')) return imagePath;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+
+    const relativePath = imagePath.replace(/^\//, '');
+    const localFilePath = path.join(__dirname, 'public', relativePath);
+
+    if (fs.existsSync(localFilePath)) {
+        try {
+            const fileBuffer = fs.readFileSync(localFilePath);
+            const ext = path.extname(localFilePath).toLowerCase().replace('.', '') || 'jpeg';
+            const mimeType = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : (ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : `image/${ext}`));
+            return `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+        } catch (e) {
+            console.error(`Error reading ${localFilePath}:`, e.message);
+        }
+    }
+    // Fallback if file is missing (e.g. on serverless Vercel filesystem)
+    return './img/profile_image.jpg';
+}
+
+// Database migration script to clean up disk file paths and convert to self-contained Base64
+async function migrateBase64ToFiles() {
+    try {
+        console.log("Checking database image URLs for Vercel compatibility...");
+
+        // 1. Products
+        const allProducts = await Product.find();
+        let prodMigratedCount = 0;
+        for (const prod of allProducts) {
+            if (!prod.imageUrl || typeof prod.imageUrl !== 'string' || !prod.imageUrl.trim()) {
+                prod.imageUrl = './img/profile_image.jpg';
+                await prod.save();
+                prodMigratedCount++;
+            } else if (prod.imageUrl.startsWith('/uploads/') || prod.imageUrl.startsWith('uploads/')) {
+                prod.imageUrl = convertDiskFileToBase64(prod.imageUrl);
+                await prod.save();
+                prodMigratedCount++;
+            }
+        }
+        if (prodMigratedCount > 0) {
+            console.log(`Normalized image URLs for ${prodMigratedCount} products.`);
+        }
+
+        // 2. BannerCards
+        const cards = await BannerCard.find();
+        let migratedCardsCount = 0;
+        for (const card of cards) {
+            if (!card || !Array.isArray(card.images)) continue;
+            let updated = false;
+            for (let i = 0; i < card.images.length; i++) {
+                if (card.images[i] && (card.images[i].startsWith('/uploads/') || card.images[i].startsWith('uploads/'))) {
+                    card.images[i] = convertDiskFileToBase64(card.images[i]);
+                    updated = true;
+                }
+            }
+            if (updated) {
+                card.markModified('images');
+                await card.save();
+                migratedCardsCount++;
+            }
+        }
+        if (migratedCardsCount > 0) {
+            console.log(`Migrated images in ${migratedCardsCount} banner cards.`);
+        }
+
+        console.log("Image URL optimization check finished.");
+    } catch (err) {
+        console.error("Migration execution error:", err);
+    }
+}
+
+
+// ==========================================
+// NODEMAILER SETUP (For 2FA, Password Reset, & Order Receipts)
+// ==========================================
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS 
+  },
+  tls: { rejectUnauthorized: false }
+});
+
+// ==========================================
+// MULTER CONFIGURATION (Image Uploads)
+// ==========================================
+const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : path.join(__dirname, 'public/uploads');
+try { if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true }); } catch(e) { console.warn('Upload dir creation skipped:', e.message); }
+
+app.use('/uploads', express.static(uploadDir));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir); 
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); 
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        // Allow modern image formats
+        const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp", "image/avif", "image/gif"];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Allowed formats: .jpg, .png, .jpeg, .webp, .avif, .gif"), false);
+        }
+    }
+});
+
+// ==========================================
+// 🔐 AUTHENTICATION ROUTES (Secure Login)
+// ==========================================
+
+// Rate limiters to prevent brute-force attacks
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,                   // 10 attempts per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many attempts. Please try again after 15 minutes.' }
+});
+
+const registerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5,                    // 5 registrations per hour per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many accounts created. Please try again later.' }
+});
+
+// 1. REGISTER
+app.post('/api/register', registerLimiter, async (req, res) => {
+    try {
+        const username = sanitize(req.body.username);
+        const email = sanitize(req.body.email);
+        const password = req.body.password; 
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ message: "Email already exists" });
+
+        const newUser = new User({ username, email, password });
+        await newUser.save();
+        res.status(201).json({ message: "Admin User created successfully" });
+    } catch (error) {
+        console.error("Registration Error:", error);
+        res.status(500).json({ message: "Server error during registration" });
+    }
+});
+
+// 2. LOGIN (Password Check & 2FA Trigger)
+app.post('/api/login', authLimiter, async (req, res) => {
+    try {
+        const rawEmail = sanitize(req.body.email || '');
+        const password = req.body.password || ''; 
+
+        if (!rawEmail || !password) {
+            return res.status(400).json({ message: "Email and password are required." });
+        }
+
+        const email = rawEmail.trim().toLowerCase();
+
+        // Case-insensitive email search
+        const user = await User.findOne({ email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') });
+        if (!user || user.role !== 'admin') return res.status(400).json({ message: "Invalid credentials" });
+
+        // Check Lockout
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            const remainingSeconds = Math.ceil((user.lockUntil - Date.now()) / 1000);
+            return res.status(403).json({ message: `Account locked. Try again in ${remainingSeconds} seconds.` });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) {
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+            if (user.failedLoginAttempts >= 3) {
+                user.lockUntil = Date.now() + 60000; 
+                await user.save();
+                return res.status(403).json({ message: "Account locked for 1 minute due to too many failed attempts." });
+            }
+            await user.save();
+            return res.status(400).json({ message: `Invalid password. ${3 - user.failedLoginAttempts} attempt(s) remaining.` });
+        }
+
+        user.failedLoginAttempts = 0;
+        user.lockUntil = undefined;
+
+        // Generate 2FA Code (Valid for 15 minutes)
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        user.twoFactorCode = otpCode;
+        user.twoFactorExpires = new Date(Date.now() + 900000); // 15 minutes
+        await user.save();
+
+        console.log(`🔑 [ADMIN OTP CODE FOR ${user.email}]: ${otpCode}`);
+
+        // Send email asynchronously in background if configured, without blocking HTTP response
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: user.email,
+                subject: 'Your Admin Verification Code - AVARONI',
+                text: `Your admin login verification code is: ${otpCode}\n\nIt is valid for 15 minutes.`
+            }, (mailErr) => {
+                if (mailErr) {
+                    console.warn("⚠️ SMTP Email Warning (code logged to console):", mailErr.message);
+                }
+            });
+        }
+
+        return res.json({ 
+            twoFactorRequired: true, 
+            code: otpCode,
+            message: `Verification Code: ${otpCode} (also sent to ${user.email})`
+        });
+    } catch (error) {
+        console.error("Login Error details:", error);
+        res.status(500).json({ message: "Server error during login: " + (error.message || "Unknown error") });
+    }
+});
+
+// Helper for JWT Secret with secure fallback
+function getJwtSecret() {
+    return process.env.JWT_SECRET || 'avaroni_secure_jwt_secret_key_987654321_fallback';
+}
+
+// 3. VERIFY 2FA & ISSUE JWT
+app.post('/api/verify-2fa', async (req, res) => {
+    try {
+        const rawEmail = sanitize(req.body.email || '');
+        const rawCode = sanitize(req.body.code || '').toString();
+        // Strip spaces, tabs, dashes so copy-pasted '123 456' or '123-456' works natively
+        const cleanCode = rawCode.replace(/[\s-]+/g, '').trim();
+        const email = rawEmail.trim().toLowerCase();
+        
+        if (!email || !cleanCode) {
+            return res.status(400).json({ message: "Email and 6-digit verification code are required." });
+        }
+
+        const user = await User.findOne({ 
+            email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i')
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "User account not found." });
+        }
+
+        if (!user.twoFactorCode) {
+            return res.status(400).json({ message: "No verification code active. Please log in again to generate a new code." });
+        }
+
+        if (user.twoFactorCode.toString().trim() !== cleanCode) {
+            return res.status(400).json({ message: "Invalid verification code. Please check the 6-digit code sent to your email." });
+        }
+
+        if (user.twoFactorExpires && new Date(user.twoFactorExpires).getTime() < Date.now()) {
+            return res.status(400).json({ message: "Verification code has expired. Please log in again to request a new code." });
+        }
+
+        const currentIp = req.ip || req.socket.remoteAddress || 'Unknown IP';
+        if (!Array.isArray(user.knownIps)) user.knownIps = [];
+        if (!user.knownIps.includes(currentIp)) {
+            user.knownIps.push(currentIp);
+            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                transporter.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: user.email,
+                    subject: 'Security Alert: New Admin Login Detected',
+                    text: `We noticed a successful admin login from a new IP Address: ${currentIp}`
+                }, () => {});
+            }
+        }
+
+        user.twoFactorCode = undefined;
+        user.twoFactorExpires = undefined;
+        user.loginCount = (user.loginCount || 0) + 1;
+        await user.save();
+
+        // Create JWT (uses getJwtSecret with fallback)
+        const token = jwt.sign({ id: user._id }, getJwtSecret(), { expiresIn: '10d' });
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error("2FA Verification Error:", error);
+        res.status(500).json({ message: "Server error verifying code" });
+    }
+});
+
+// 4. FORGOT / RESET PASSWORD
+app.post('/api/forgot-password', authLimiter, async (req, res) => {
+    try {
+        const user = await User.findOne({ email: sanitize(req.body.email) });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = Date.now() + 3600000; 
+        await user.save();
+
+        const resetLink = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}`;
+        transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: 'Admin Password Reset',
+            text: `Click here to reset your admin password: ${resetLink}`
+        }, (err) => {
+            if (err) return res.status(500).json({ message: "Email delivery failed" });
+            res.json({ message: "Reset link sent to email!" });
+        });
+    } catch (error) {
+        console.error("Forgot Password Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.post('/api/reset-password', authLimiter, async (req, res) => {
+    try {
+        const user = await User.findOne({ resetPasswordToken: sanitize(req.body.token), resetPasswordExpires: { $gt: Date.now() } });
+        if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+
+        user.password = req.body.password; 
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        user.failedLoginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
+
+        res.json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        res.status(500).json({ message: "Reset error" });
+    }
+});
+
+// ==========================================
+// 👤 CUSTOMER USER AUTHENTICATION ROUTES
+// ==========================================
+
+function isEmailIdentifier(str) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str.trim());
+}
+
+// Customer Register (Email or Phone + Password)
+app.post('/api/user/auth/register', authLimiter, async (req, res) => {
+    try {
+        const reqName = req.body.name || req.body.username;
+        const reqIdentifier = req.body.identifier || req.body.email || req.body.phone;
+        const password = req.body.password;
+
+        if (!reqName || !reqIdentifier || !password) {
+            return res.status(400).json({ success: false, message: "Name, email/phone, and password are required." });
+        }
+
+        const cleanName = sanitize(reqName).trim();
+        const cleanId = sanitize(reqIdentifier).trim();
+
+        const isEmail = isEmailIdentifier(cleanId);
+        const query = isEmail ? { email: cleanId.toLowerCase() } : { phone: cleanId };
+
+        const existingUser = await User.findOne(query);
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: isEmail ? "Account with this Gmail already exists." : "Account with this Phone Number already exists." });
+        }
+
+        const userData = {
+            username: cleanName,
+            password: password
+        };
+        if (isEmail) {
+            userData.email = cleanId.toLowerCase();
+        } else {
+            userData.phone = cleanId;
+        }
+
+        const newUser = new User(userData);
+        await newUser.save();
+
+        const token = jwt.sign(
+            { id: newUser._id, username: newUser.username, email: newUser.email, phone: newUser.phone },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.status(201).json({
+            success: true,
+            token,
+            user: {
+                id: newUser._id,
+                username: newUser.username,
+                email: newUser.email || '',
+                phone: newUser.phone || '',
+                avatar: newUser.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("User Register Error:", err);
+        res.status(500).json({ success: false, message: "Failed to register account." });
+    }
+});
+
+// Customer Login (Email or Phone + Password)
+app.post('/api/user/auth/login', authLimiter, async (req, res) => {
+    try {
+        const { identifier, password } = req.body;
+        if (!identifier || !password) {
+            return res.status(400).json({ success: false, message: "Please provide Gmail/Phone number and Password." });
+        }
+
+        const cleanId = sanitize(identifier).trim();
+        const isEmail = isEmailIdentifier(cleanId);
+        const query = isEmail 
+            ? { email: new RegExp(`^${cleanId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } 
+            : { phone: cleanId };
+
+        const user = await User.findOne(query);
+        if (!user || !user.password) {
+            return res.status(400).json({ success: false, message: "Invalid Gmail/Phone or password." });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Invalid Gmail/Phone or password." });
+        }
+
+        user.loginCount = (user.loginCount || 0) + 1;
+        await user.save();
+
+        const token = jwt.sign(
+            { id: user._id, username: user.username, email: user.email, phone: user.phone },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: user.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("User Login Error:", err);
+        res.status(500).json({ success: false, message: "Login failed. Please try again." });
+    }
+});
+
+// Customer Google Direct OAuth Login / Sign Up
+app.post('/api/user/auth/google', async (req, res) => {
+    try {
+        const { googleId, email, name, avatar } = req.body;
+        if (!email && !googleId) {
+            return res.status(400).json({ success: false, message: "Google authentication payload missing." });
+        }
+
+        const cleanEmail = email ? sanitize(email).trim().toLowerCase() : '';
+        let user = await User.findOne({ $or: [{ googleId }, { email: cleanEmail }] });
+
+        if (!user) {
+            user = new User({
+                username: name ? sanitize(name).trim() : (cleanEmail.split('@')[0] || 'User'),
+                email: cleanEmail,
+                googleId: googleId || '',
+                avatar: avatar || '',
+                password: Math.random().toString(36).slice(-10) + Date.now()
+            });
+            await user.save();
+        } else {
+            if (avatar && !user.avatar) user.avatar = avatar;
+            if (googleId && !user.googleId) user.googleId = googleId;
+            user.loginCount = (user.loginCount || 0) + 1;
+            await user.save();
+        }
+
+        const token = jwt.sign(
+            { id: user._id, username: user.username, email: user.email },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: user.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("Google Login Error:", err);
+        res.status(500).json({ success: false, message: "Google Sign-In failed." });
+    }
+});
+
+// Get Current Logged In User Profile
+app.get('/api/user/auth/me', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ success: false, message: "No token provided" });
+
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, getJwtSecret(), async (err, decoded) => {
+            if (err) return res.status(403).json({ success: false, message: "Invalid or expired session" });
+
+            const user = await User.findById(decoded.id).select('-password');
+            if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+            res.json({
+                success: true,
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    avatar: user.avatar || '',
+                    address: user.address || ''
+                }
+            });
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// Update Current User Profile
+app.put('/api/user/profile', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ success: false, message: "No token provided" });
+
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, getJwtSecret(), async (err, decoded) => {
+            if (err) return res.status(403).json({ success: false, message: "Invalid or expired session" });
+
+            const user = await User.findById(decoded.id);
+            if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+            const { phone, avatar, name, address } = req.body;
+            
+            if (phone !== undefined) user.phone = phone;
+            if (avatar !== undefined) user.avatar = avatar;
+            if (name !== undefined) user.username = name;
+            if (address !== undefined) user.address = address;
+
+            await user.save();
+
+            res.json({
+                success: true,
+                message: "Profile updated successfully",
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    avatar: user.avatar || '',
+                    address: user.address || ''
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Update Profile Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update profile" });
+    }
+});
+
+// Customer Forgot Password - Request Password Reset Email Link
+app.post('/api/user/auth/forgot-password', authLimiter, async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier || !identifier.trim()) {
+            return res.status(400).json({ success: false, message: "Please enter your registered Gmail address or phone number." });
+        }
+
+        const cleanIdentifier = sanitize(identifier).trim();
+        let query = {};
+        if (isEmailIdentifier(cleanIdentifier)) {
+            query = { email: cleanIdentifier.toLowerCase() };
+        } else if (/^\+?\d{7,15}$/.test(cleanIdentifier.replace(/[\s-]/g, ''))) {
+            query = { phone: cleanIdentifier.replace(/[\s-]/g, '') };
+        } else {
+            query = { $or: [{ email: cleanIdentifier.toLowerCase() }, { username: cleanIdentifier }] };
+        }
+
+        const user = await User.findOne(query);
+        if (!user) {
+            return res.json({ success: false, message: "No account found with that email or phone number." });
+        }
+
+        const targetEmail = user.email || (isEmailIdentifier(cleanIdentifier) ? cleanIdentifier.toLowerCase() : null);
+        if (!targetEmail) {
+            return res.status(400).json({ success: false, message: "No Gmail address associated with this account to send the reset link." });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = Date.now() + 3600000; // Token valid for 1 hour
+        await user.save();
+
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || 'localhost:3000';
+        const resetLink = `${protocol}://${host}/login.html?resetToken=${resetToken}`;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@avaroni.com',
+            to: targetEmail,
+            subject: '🔐 Password Reset Link - Avaroni (আভরণী)',
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 550px; margin: 0 auto; padding: 30px; background: #ffffff; border-radius: 16px; border: 1px solid #eaeaea; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <h1 style="color: #111111; margin: 0; font-size: 24px;">আভরণী | Avaroni</h1>
+                        <p style="color: #666666; font-size: 14px; margin-top: 4px;">Password Reset Instructions</p>
+                    </div>
+                    <div style="background: #fafafa; padding: 22px; border-radius: 12px; border: 1px solid #f0f0f0;">
+                        <p style="font-size: 15px; color: #111111; margin-top: 0;">Hello <strong>${escapeHTML(user.username || 'Valued Customer')}</strong>,</p>
+                        <p style="font-size: 14px; color: #444444; line-height: 1.6;">You requested a password reset for your Avaroni account. Click the button below to set a new password:</p>
+                        <div style="text-align: center; margin: 25px 0;">
+                            <a href="${resetLink}" style="background-color: #111111; color: #ffffff; text-decoration: none; padding: 13px 30px; border-radius: 10px; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">Reset My Password</a>
+                        </div>
+                        <p style="font-size: 12px; color: #777777; margin-bottom: 6px;">If the button above does not work, copy and paste this link into your browser:</p>
+                        <p style="font-size: 12px; color: #0066cc; word-break: break-all; margin-top: 0;"><a href="${resetLink}" style="color: #0066cc;">${resetLink}</a></p>
+                        <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;">
+                        <p style="font-size: 12px; color: #999999; margin: 0; text-align: center;">This reset link expires in 1 hour. If you did not request this, please ignore this email.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`[PASSWORD RESET GENERATED] Email: ${targetEmail} | Link: ${resetLink}`);
+            res.json({
+                success: true,
+                message: "Password reset link sent! Please check your Gmail inbox (and Spam folder).",
+                devResetLink: (!process.env.EMAIL_USER || process.env.NODE_ENV !== 'production') ? resetLink : undefined
+            });
+        } catch (err) {
+            console.error("Nodemailer delivery failed:", err.message);
+            res.status(500).json({
+                success: false,
+                message: "We encountered an issue sending the email. Please try again later."
+            });
+        }
+    } catch (err) {
+        console.error("User Forgot Password Error:", err);
+        res.status(500).json({ success: false, message: "Server error processing request." });
+    }
+});
+
+// Verify Password Reset Token
+app.get('/api/user/auth/verify-reset-token/:token', async (req, res) => {
+    try {
+        const token = sanitize(req.params.token);
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired password reset link." });
+        }
+
+        res.json({ success: true, email: user.email || user.username });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error verifying reset token." });
+    }
+});
+
+// Reset Password with Valid Token
+app.post('/api/user/auth/reset-password', authLimiter, async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword || newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: "New password must be at least 6 characters long." });
+        }
+
+        const sanitizedToken = sanitize(token);
+        const user = await User.findOne({
+            resetPasswordToken: sanitizedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired password reset token." });
+        }
+
+        user.password = newPassword; // Automatically hashed by pre-save hook in User model
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        user.failedLoginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
+
+        const authToken = jwt.sign(
+            { id: user._id, username: user.username, email: user.email },
+            getJwtSecret(),
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            message: "Password reset successful! Logging you in...",
+            token: authToken,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email || '',
+                phone: user.phone || '',
+                avatar: user.avatar || ''
+            }
+        });
+    } catch (err) {
+        console.error("User Reset Password Error:", err);
+        res.status(500).json({ success: false, message: "Failed to reset password." });
+    }
+});
+
+// Get Logged In User Purchase History
+app.get('/api/user/orders', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ success: false, message: "No token provided" });
+
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, getJwtSecret(), async (err, decoded) => {
+            if (err) return res.status(403).json({ success: false, message: "Invalid or expired session" });
+
+            const user = await User.findById(decoded.id);
+            if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+            const queryConditions = [];
+            if (user.email && user.email.trim()) {
+                queryConditions.push({ email: new RegExp(`^${user.email.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') });
+            }
+            if (user.phone && user.phone.trim()) {
+                queryConditions.push({ phone: user.phone.trim() });
+            }
+
+            if (queryConditions.length === 0) {
+                return res.json({ success: true, orders: [] });
+            }
+
+            const orders = await Order.find({ $or: queryConditions }).sort({ orderDate: -1 });
+            res.json({ success: true, orders });
+        });
+    } catch (err) {
+        console.error("User Orders Error:", err);
+        res.status(500).json({ success: false, message: "Failed to load order history." });
+    }
+});
+
+// ==========================================
+// 🛡️ JWT VERIFICATION MIDDLEWARE (Gatekeeper)
+// ==========================================
+function verifyAdminToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, getJwtSecret(), (err, decoded) => {
+        if (err) return res.status(403).json({ success: false, message: "Unauthorized: Invalid or expired token" });
+        req.user = decoded; 
+        next(); // Token is valid! Allow the action.
+    });
+}
+
+// ==========================================
+// 🛍️ PUBLIC ROUTES (Customers can access these)
+// ==========================================
+
+// ==========================================
+// ==========================================
+// 🏷️ CATEGORY ROUTES & SYNC
+// ==========================================
+
+// Helper function to generate clean URL slug
+function generateCategorySlug(str) {
+    if (!str) return 'cat-' + Date.now();
+    let slug = str.trim().toLowerCase()
+        .replace(/[\s_]+/g, '-')
+        .replace(/[^\w\u00C0-\u024F\u0980-\u09FF-]/g, '')
+        .replace(/-+/g, '-');
+    return slug || ('cat-' + Date.now());
+}
+
+// Auto-sync function to restore default & previously saved product categories
+async function syncCategoriesFromDatabase() {
+    try {
+        const catCount = await Category.countDocuments();
+        if (catCount === 0) {
+            const defaultCats = [
+                { name: "sarees", displayName: "Sarees", slug: "sarees", iconUrl: "./img/categories/saree.png", redirectUrl: "category.html?cat=sarees", subcategories: ["Silk", "Cotton", "Georgette", "Jamdani", "Party Wear"] },
+                { name: "salwar-kameez", displayName: "Salwar Kameez", slug: "salwar-kameez", iconUrl: "./img/categories/three-piece.png", redirectUrl: "category.html?cat=salwar-kameez", subcategories: ["Three Piece", "Kurti", "Unstitched", "Ready Made"] },
+                { name: "women", displayName: "Women Dress", slug: "women", iconUrl: "./img/categories/three-piece.png", redirectUrl: "category.html?cat=women", subcategories: ["Saree", "Three Piece", "Kurti"] },
+                { name: "kids", displayName: "Kids Zone", slug: "kids", iconUrl: "./img/categories/kids.jpg", redirectUrl: "kids.html", subcategories: ["Boys", "Girls", "Toys", "Clothing", "Shoes"] },
+                { name: "ornament", displayName: "Ornament", slug: "ornament", iconUrl: "./img/categories/jewellery.png", redirectUrl: "ornament.html", subcategories: ["Necklace", "Earrings", "Bangles", "Rings", "Bridal Set"] },
+                { name: "handbags", displayName: "Handbags", slug: "handbags", iconUrl: "./img/categories/handbag.jpg", redirectUrl: "category.html?cat=handbags", subcategories: ["Tote Bags", "Clutches", "Crossbody", "Party Purses"] },
+                { name: "footwear", displayName: "Footwear", slug: "footwear", iconUrl: "./img/categories/footwear.png", redirectUrl: "category.html?cat=footwear", subcategories: ["Heels", "Flats", "Sandals", "Sneakers"] }
+            ];
+            for (const c of defaultCats) {
+                await Category.findOneAndUpdate({ slug: c.slug }, { $setOnInsert: c }, { upsert: true, new: true });
+            }
+        }
+
+        // Also check if existing products have categories not yet in Category collection
+        const products = await Product.find({}, 'category subcategory').lean();
+        for (const p of products) {
+            if (!p.category || !p.category.trim()) continue;
+            const rawCat = p.category.trim();
+            const slug = generateCategorySlug(rawCat);
+            const sub = p.subcategory && p.subcategory.trim() ? p.subcategory.trim() : null;
+
+            let existingCat = await Category.findOne({
+                $or: [
+                    { slug: slug },
+                    { name: slug },
+                    { displayName: new RegExp(`^${rawCat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+                ]
+            });
+
+            if (!existingCat) {
+                existingCat = new Category({
+                    name: slug,
+                    displayName: rawCat,
+                    slug: slug,
+                    iconUrl: "",
+                    redirectUrl: `category.html?cat=${slug}`,
+                    subcategories: sub ? [sub] : []
+                });
+                await existingCat.save();
+            } else if (sub) {
+                existingCat.subcategories = existingCat.subcategories || [];
+                const subExists = existingCat.subcategories.some(s => s && s.toLowerCase() === sub.toLowerCase());
+                if (!subExists) {
+                    existingCat.subcategories.push(sub);
+                    existingCat.markModified('subcategories');
+                    await existingCat.save();
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Error syncing categories from database:", err);
+    }
+}
+
+// Get Categories (Public & Admin)
+app.get('/api/categories', async (req, res) => {
+    try {
+        let categories = await Category.find().sort({ createdAt: 1 });
+        if (!categories || categories.length === 0) {
+            await syncCategoriesFromDatabase();
+            categories = await Category.find().sort({ createdAt: 1 });
+        }
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error("Get Categories Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load categories" });
+    }
+});
+
+// Admin Get Categories Alias
+app.get('/api/admin/categories', async (req, res) => {
+    try {
+        let categories = await Category.find().sort({ createdAt: 1 });
+        if (!categories || categories.length === 0) {
+            await syncCategoriesFromDatabase();
+            categories = await Category.find().sort({ createdAt: 1 });
+        }
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error("Admin Get Categories Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load categories" });
+    }
+});
+
+// Add Category (Admin)
+app.post('/api/admin/categories', verifyAdminToken, async (req, res) => {
+    try {
+        const { displayName, name: altName, subcategories, iconUrl, redirectUrl } = req.body;
+        const targetName = (displayName || altName || '').trim();
+        if (!targetName) {
+            return res.status(400).json({ success: false, message: "Category name is required" });
+        }
+
+        const slug = generateCategorySlug(targetName);
+        const name = slug;
+
+        // Check if category already exists by slug or name
+        let category = await Category.findOne({ $or: [{ slug }, { name }] });
+        if (category) {
+            return res.status(400).json({ success: false, message: "Category already exists" });
+        }
+
+        category = new Category({
+            name,
+            displayName: targetName,
+            slug,
+            iconUrl: iconUrl || "",
+            redirectUrl: redirectUrl || "",
+            subcategories: Array.isArray(subcategories) ? subcategories : []
+        });
+
+        await category.save();
+        res.status(201).json({ success: true, category });
+    } catch (error) {
+        console.error("Add Category Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create category" });
+    }
+});
+
+// Update Category (Admin)
+app.put('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const { displayName, name: altName, iconUrl, redirectUrl } = req.body;
+        const targetId = req.params.id;
+        
+        let category = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            category = await Category.findById(targetId);
+        }
+        if (!category) {
+            category = await Category.findOne({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+
+        if (!category) {
+            return res.status(404).json({ success: false, message: "Category not found" });
+        }
+
+        const newName = (displayName || altName || '').trim();
+        if (newName) {
+            category.displayName = newName;
+        }
+        if (iconUrl !== undefined) category.iconUrl = iconUrl;
+        if (redirectUrl !== undefined) category.redirectUrl = redirectUrl.trim();
+
+        await category.save();
+        res.json({ success: true, category });
+    } catch (error) {
+        console.error("Update Category Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update category" });
+    }
+});
+
+// Add Subcategory (Admin)
+app.post('/api/admin/categories/:id/subcategories', verifyAdminToken, async (req, res) => {
+    try {
+        const { subcategory } = req.body;
+        if (!subcategory || !subcategory.trim()) {
+            return res.status(400).json({ success: false, message: "Subcategory name is required" });
+        }
+
+        const cleanSub = subcategory.trim();
+        const targetId = req.params.id;
+        let category = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            category = await Category.findById(targetId);
+        }
+        if (!category) {
+            category = await Category.findOne({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+
+        if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+        category.subcategories = category.subcategories || [];
+        const exists = category.subcategories.some(s => s && s.toLowerCase() === cleanSub.toLowerCase());
+        if (!exists) {
+            category.subcategories.push(cleanSub);
+            category.markModified('subcategories');
+            await category.save();
+        }
+
+        res.json({ success: true, category });
+    } catch (error) {
+        console.error("Add Subcategory Error:", error);
+        res.status(500).json({ success: false, message: "Failed to add subcategory" });
+    }
+});
+
+// Delete Subcategory (Admin)
+app.delete('/api/admin/categories/:id/subcategories/:subName', verifyAdminToken, async (req, res) => {
+    try {
+        const targetId = req.params.id;
+        let category = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            category = await Category.findById(targetId);
+        }
+        if (!category) {
+            category = await Category.findOne({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+
+        if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+        const subToDelete = decodeURIComponent(req.params.subName).trim().toLowerCase();
+        category.subcategories = (category.subcategories || []).filter(sub => sub && sub.toLowerCase() !== subToDelete);
+        category.markModified('subcategories');
+        await category.save();
+
+        res.json({ success: true, category });
+    } catch (error) {
+        console.error("Delete Subcategory Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete subcategory" });
+    }
+});
+
+// Delete Category (Admin)
+app.delete('/api/admin/categories/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const targetId = req.params.id;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+            await Category.findByIdAndDelete(targetId);
+        } else {
+            await Category.findOneAndDelete({ $or: [{ slug: targetId }, { name: targetId }] });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Category Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete category" });
+    }
+});
+
+// ==========================================
+// 🎟️ PROMO CODE ROUTES
+// ==========================================
+
+// Validate Promo Code (Public)
+app.post('/api/promocodes/validate', async (req, res) => {
+    try {
+        const { code, cartTotal } = req.body;
+        if (!code) return res.status(400).json({ success: false, message: "Promo code is required" });
+
+        const codeRegex = new RegExp(`^${code}$`, 'i');
+
+        // Check Voucher first
+        let discountSource = await Voucher.findOne({ code: codeRegex, isActive: true });
+        let isValid = false;
+        
+        if (discountSource) {
+            if (discountSource.minOrderAmount && cartTotal < discountSource.minOrderAmount) {
+                return res.status(400).json({ success: false, message: `Cart total must be at least ৳${discountSource.minOrderAmount} to use this voucher.` });
+            }
+            isValid = true;
+        } else {
+            // Fallback to Promo Code
+            discountSource = await PromoCode.findOne({ code: codeRegex, isActive: true });
+            if (discountSource) isValid = true;
+        }
+
+        if (!isValid || !discountSource) {
+            return res.status(404).json({ success: false, message: "Invalid or inactive promo code" });
+        }
+
+        res.json({
+            success: true,
+            code: discountSource.code,
+            discountType: discountSource.discountType,
+            discountValue: discountSource.discountValue
+        });
+    } catch (error) {
+        console.error("Validate Promo Code Error:", error);
+        res.status(500).json({ success: false, message: "Validation failed" });
+    }
+});
+
+// ==========================================
+// 🎟️ PUBLIC VOUCHERS ROUTES
+// ==========================================
+
+// Validate Voucher (Public)
+app.post('/api/vouchers/validate', async (req, res) => {
+    try {
+        const { code, cartTotal } = req.body;
+        if (!code) return res.status(400).json({ success: false, message: "Voucher code is required" });
+
+        const voucher = await Voucher.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') }, isActive: true });
+        if (!voucher) {
+            return res.status(404).json({ success: false, message: "Invalid or inactive voucher" });
+        }
+
+        if (voucher.minOrderAmount && cartTotal < voucher.minOrderAmount) {
+            return res.status(400).json({ success: false, message: `Cart total must be at least ৳${voucher.minOrderAmount} to use this voucher.` });
+        }
+
+        res.json({
+            success: true,
+            code: voucher.code,
+            title: voucher.title,
+            discountType: voucher.discountType,
+            discountValue: voucher.discountValue,
+            minOrderAmount: voucher.minOrderAmount
+        });
+    } catch (error) {
+        console.error("Validate Voucher Error:", error);
+        res.status(500).json({ success: false, message: "Validation failed" });
+    }
+});
+
+// Get Active Vouchers (Public)
+app.get('/api/vouchers/active', async (req, res) => {
+    try {
+        const vouchers = await Voucher.find({ isActive: true });
+        res.json({ success: true, vouchers });
+    } catch (error) {
+        console.error("Get Active Vouchers Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch active vouchers" });
+    }
+});
+
+// ==========================================
+// ⚡ FLASH SALE COUNTDOWN BANNER ROUTES
+// ==========================================
+
+// 1. Get Flash Sale Banner Config (Public)
+app.get('/api/flash-sale', async (req, res) => {
+    try {
+        const flashSale = await FlashSale.findOne().sort({ _id: -1 });
+        res.json({ success: true, flashSale });
+    } catch (error) {
+        console.error("Get Flash Sale Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load flash sale banner" });
+    }
+});
+
+// 2. Save / Update Flash Sale Banner Config (Admin)
+app.post('/api/admin/flash-sale', verifyAdminToken, async (req, res) => {
+    try {
+        const { title, subtitle, buttonText, buttonLink, endTime, isActive, bgColor, textColor, accentColor } = req.body;
+        
+        if (!endTime) {
+            return res.status(400).json({ success: false, message: "Countdown End Time is required." });
+        }
+
+        let flashSale = await FlashSale.findOne().sort({ _id: -1 });
+        if (!flashSale) {
+            flashSale = new FlashSale();
+        }
+
+        flashSale.title = title ? title.trim() : "⚡ Flash Sale Ends In:";
+        flashSale.subtitle = subtitle ? subtitle.trim() : "";
+        flashSale.buttonText = buttonText ? buttonText.trim() : "Shop Now";
+        flashSale.buttonLink = buttonLink ? buttonLink.trim() : "index.html#products";
+        flashSale.endTime = new Date(endTime);
+        flashSale.isActive = isActive !== undefined ? Boolean(isActive) : true;
+        flashSale.bgColor = bgColor || "#111111";
+        flashSale.textColor = textColor || "#ffffff";
+        flashSale.accentColor = accentColor || "#e60050";
+
+        await flashSale.save();
+        res.json({ success: true, message: "Flash sale countdown banner updated successfully!", flashSale });
+    } catch (error) {
+        console.error("Update Flash Sale Error:", error);
+        res.status(500).json({ success: false, message: "Failed to save flash sale banner config." });
+    }
+});
+
+// List Promo Codes (Admin)
+app.get('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
+    try {
+        const promos = await PromoCode.find();
+        res.json({ success: true, promos });
+    } catch (error) {
+        console.error("Get Promo Codes Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch promo codes" });
+    }
+});
+
+// Create Promo Code (Admin)
+app.post('/api/admin/promocodes', verifyAdminToken, async (req, res) => {
+    try {
+        const { code, discountType, discountValue } = req.body;
+        if (!code || !discountType || !discountValue) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const upperCode = code.toUpperCase().replace(/\s+/g, '');
+        
+        let existing = await PromoCode.findOne({ code: upperCode });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "Promo code already exists" });
+        }
+
+        const promo = new PromoCode({
+            code: upperCode,
+            discountType,
+            discountValue: Number(discountValue),
+            isActive: true
+        });
+
+        await promo.save();
+        res.status(201).json({ success: true, promo });
+    } catch (error) {
+        console.error("Create Promo Code Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create promo code" });
+    }
+});
+
+// Delete Promo Code (Admin)
+app.delete('/api/admin/promocodes/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await PromoCode.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Promo Code Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete promo code" });
+    }
+});
+
+// ==========================================
+// 🎟️ ADMIN VOUCHERS ROUTES
+// ==========================================
+
+// List Vouchers (Admin)
+app.get('/api/admin/vouchers', verifyAdminToken, async (req, res) => {
+    try {
+        const vouchers = await Voucher.find();
+        res.json({ success: true, vouchers });
+    } catch (error) {
+        console.error("Get Vouchers Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch vouchers" });
+    }
+});
+
+// Create Voucher (Admin)
+app.post('/api/admin/vouchers', verifyAdminToken, async (req, res) => {
+    try {
+        const { code, title, discountType, discountValue, minOrderAmount } = req.body;
+        if (!code || !title || !discountType || !discountValue) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const upperCode = code.toUpperCase().replace(/\s+/g, '');
+        
+        let existing = await Voucher.findOne({ code: upperCode });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "Voucher code already exists" });
+        }
+
+        const voucher = new Voucher({
+            code: upperCode,
+            title,
+            discountType,
+            discountValue: Number(discountValue),
+            minOrderAmount: Number(minOrderAmount) || 0,
+            isActive: true
+        });
+
+        await voucher.save();
+        res.status(201).json({ success: true, voucher });
+    } catch (error) {
+        console.error("Create Voucher Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create voucher" });
+    }
+});
+
+// Delete Voucher (Admin)
+app.delete('/api/admin/vouchers/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Voucher.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Voucher Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete voucher" });
+    }
+});
+
+// ==========================================
+// BLOGS ROUTES (Full CRUD & Preset Sync)
+// ==========================================
+
+// Get all blogs (Public - with optional ?category= and ?search=)
+app.get('/api/blogs', async (req, res) => {
+    try {
+        try {
+            const count = await Blog.countDocuments();
+            if (count === 0) {
+                await seedDefaultBlogs();
+            }
+        } catch(e) {}
+
+        let query = { isPublished: { $ne: false } };
+
+        if (req.query.category && req.query.category.toLowerCase() !== 'all') {
+            const catClean = req.query.category.trim();
+            const catRegex = new RegExp(`^${catClean}$`, 'i');
+            query.$or = [
+                { category: { $regex: catRegex } },
+                { tag: { $regex: catRegex } }
+            ];
+        }
+
+        if (req.query.search && req.query.search.trim()) {
+            const searchClean = req.query.search.trim();
+            const searchRegex = new RegExp(searchClean, 'i');
+            const searchClause = [
+                { title: { $regex: searchRegex } },
+                { excerpt: { $regex: searchRegex } },
+                { description: { $regex: searchRegex } },
+                { content: { $regex: searchRegex } },
+                { tag: { $regex: searchRegex } },
+                { category: { $regex: searchRegex } },
+                { author: { $regex: searchRegex } }
+            ];
+            if (query.$or) {
+                query.$and = [{ $or: query.$or }, { $or: searchClause }];
+                delete query.$or;
+            } else {
+                query.$or = searchClause;
+            }
+        }
+
+        const blogs = await Blog.find(query).sort({ createdAt: -1 });
+        return res.json({ success: true, blogs: (blogs && blogs.length > 0) ? blogs : DEFAULT_PRESET_BLOGS });
+    } catch (error) {
+        console.error("Get Blogs Error:", error);
+        return res.json({ success: true, blogs: DEFAULT_PRESET_BLOGS });
+    }
+});
+
+// Get Single Blog by ID or Slug (Public)
+app.get('/api/blogs/:id', async (req, res) => {
+    try {
+        let blog = null;
+        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+            blog = await Blog.findById(req.params.id);
+        }
+        if (!blog) {
+            blog = await Blog.findOne({ slug: req.params.id });
+        }
+        if (!blog) {
+            // Check preset blogs fallback
+            blog = DEFAULT_PRESET_BLOGS.find(b => b.slug === req.params.id || b.title === req.params.id);
+        }
+        if (!blog) {
+            return res.status(404).json({ success: false, message: "Blog not found" });
+        }
+
+        // Increment view count quietly if saved in DB
+        if (blog.views !== undefined && typeof blog.save === 'function') {
+            blog.views = (blog.views || 0) + 1;
+            await blog.save().catch(() => {});
+        }
+
+        res.json({ success: true, blog });
+    } catch (error) {
+        console.error("Get Single Blog Error:", error);
+        const fallback = DEFAULT_PRESET_BLOGS.find(b => b.slug === req.params.id) || DEFAULT_PRESET_BLOGS[0];
+        res.json({ success: true, blog: fallback });
+    }
+});
+
+// Get all blogs for Admin (Admin)
+app.get('/api/admin/blogs', verifyAdminToken, async (req, res) => {
+    try {
+        try {
+            const count = await Blog.countDocuments();
+            if (count === 0) {
+                await seedDefaultBlogs();
+            }
+        } catch(e) {}
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        const list = (blogs && blogs.length > 0) ? blogs : DEFAULT_PRESET_BLOGS;
+        res.json({ success: true, blogs: list, count: list.length });
+    } catch (error) {
+        console.error("Admin Get Blogs Error:", error);
+        res.json({ success: true, blogs: DEFAULT_PRESET_BLOGS, count: DEFAULT_PRESET_BLOGS.length });
+    }
+});
+
+// Create a new blog (Admin)
+app.post('/api/admin/blogs', verifyAdminToken, upload.single('image'), async (req, res) => {
+    try {
+        const { title, category, tag, author, readTime, excerpt, description, content, isPublished, imageUrl: inputImageUrl } = req.body;
+        if (!title || (!content && !description && !excerpt)) {
+            return res.status(400).json({ success: false, message: 'Title and content are required' });
+        }
+
+        let finalImageUrl = inputImageUrl || './img/profile_image.jpg';
+        if (req.file) {
+            finalImageUrl = `/uploads/${req.file.filename}`;
+        } else if (req.body.image && req.body.image.startsWith('data:image/')) {
+            finalImageUrl = req.body.image;
+        }
+
+        const cleanContent = content || description || excerpt || '';
+        const cleanExcerpt = excerpt || description || cleanContent.replace(/<[^>]*>?/gm, '').substring(0, 160) + '...';
+        const cleanCategory = category || tag || 'Ethnic Trends';
+        const cleanTag = tag || category || 'Ethnic Trends';
+        const cleanAuthor = author || 'AVARONI Styling Team';
+        const cleanReadTime = readTime || '4 min read';
+        const cleanSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString(36);
+
+        const newBlog = new Blog({
+            title: title.trim(),
+            slug: cleanSlug,
+            category: cleanCategory.trim(),
+            tag: cleanTag.trim(),
+            author: cleanAuthor.trim(),
+            readTime: cleanReadTime.trim(),
+            excerpt: cleanExcerpt.trim(),
+            description: cleanExcerpt.trim(),
+            content: cleanContent,
+            imageUrl: finalImageUrl,
+            isPublished: isPublished !== false && isPublished !== 'false',
+            views: 0
+        });
+
+        await newBlog.save();
+        res.status(201).json({ success: true, blog: newBlog, message: "Blog created successfully!" });
+    } catch (error) {
+        console.error("Create Blog Error:", error);
+        res.status(500).json({ success: false, message: 'Failed to create blog: ' + error.message });
+    }
+});
+
+// Update an existing blog (Admin)
+app.put('/api/admin/blogs/:id', verifyAdminToken, upload.single('image'), async (req, res) => {
+    try {
+        const blog = await Blog.findById(req.params.id);
+        if (!blog) {
+            return res.status(404).json({ success: false, message: "Blog not found" });
+        }
+
+        const { title, category, tag, author, readTime, excerpt, description, content, isPublished, imageUrl: inputImageUrl } = req.body;
+
+        if (title) blog.title = title.trim();
+        if (category) blog.category = category.trim();
+        if (tag) blog.tag = tag.trim();
+        if (author) blog.author = author.trim();
+        if (readTime) blog.readTime = readTime.trim();
+        if (excerpt) blog.excerpt = excerpt.trim();
+        if (description) blog.description = description.trim();
+        if (content) blog.content = content;
+        if (isPublished !== undefined) blog.isPublished = (isPublished === true || isPublished === 'true');
+
+        if (req.file) {
+            blog.imageUrl = `/uploads/${req.file.filename}`;
+        } else if (inputImageUrl) {
+            blog.imageUrl = inputImageUrl;
+        } else if (req.body.image && req.body.image.startsWith('data:image/')) {
+            blog.imageUrl = req.body.image;
+        }
+
+        await blog.save();
+        res.json({ success: true, blog, message: "Blog updated successfully!" });
+    } catch (error) {
+        console.error("Update Blog Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update blog" });
+    }
+});
+
+// Delete a blog (Admin)
+app.delete('/api/admin/blogs/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const blog = await Blog.findById(req.params.id);
+        if (!blog) {
+            return res.status(404).json({ success: false, message: "Blog not found" });
+        }
+
+        // Delete associated image file if local
+        if (blog.imageUrl && blog.imageUrl.startsWith('/uploads/')) {
+            const imagePath = path.join(__dirname, 'public', blog.imageUrl);
+            if (fs.existsSync(imagePath)) {
+                try { fs.unlinkSync(imagePath); } catch (e) {}
+            }
+        }
+
+        await Blog.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Blog deleted successfully" });
+    } catch (error) {
+        console.error("Delete Blog Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete blog" });
+    }
+});
+
+// Seed / Restore Preset Blogs (Admin)
+app.post('/api/admin/blogs/seed-preset', verifyAdminToken, async (req, res) => {
+    try {
+        await seedDefaultBlogs(true);
+        const blogs = await Blog.find().sort({ createdAt: -1 });
+        res.json({ success: true, message: "Preset blogs restored successfully!", blogs });
+    } catch (error) {
+        console.error("Restore Preset Blogs Error:", error);
+        res.status(500).json({ success: false, message: "Failed to restore preset blogs" });
+    }
+});
+
+// Get Products (supports ?category=, ?search=, ?section=, no params = all products)
+app.get('/api/products', async (req, res) => {
+    try {
+        let filter = { isAvailable: { $ne: false } }; 
+        if (req.query.category && req.query.category.toLowerCase() !== 'all') {
+            filter.category = { $regex: new RegExp(`^${req.query.category}$`, 'i') };
+        }
+        
+        // Search by name (case-insensitive partial match)
+        if (req.query.search) {
+            filter.name = { $regex: req.query.search, $options: 'i' };
+        }
+
+        // Filter by section flags
+        if (req.query.section === 'topSelling') filter.isTopSelling = true;
+        if (req.query.section === 'trending') filter.isTrending = true;
+        if (req.query.section === 'topRated') filter.isTopRated = true;
+
+        const products = await Product.find(filter).sort({ _id: -1 }); // Newest first
+        res.json({ success: true, products });
+    } catch (error) { 
+        console.error("Get Products Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// Get Single Product by ID
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        // Validate MongoDB ObjectId to prevent CastError 500 when invalid IDs are passed
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).json({ success: false, message: "Invalid product ID format" });
+        }
+
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+        
+        // Get related products (same category or subcategory, excluding this one)
+        let relatedFilter = { 
+            _id: { $ne: product._id }, 
+            isAvailable: true,
+            $or: [
+                { category: product.category },
+                { subcategory: product.subcategory && product.subcategory.trim() ? product.subcategory : '__none__' }
+            ]
+        };
+        const relatedProducts = await Product.find(relatedFilter).limit(8).sort({ _id: -1 });
+        
+        res.json({ success: true, product, relatedProducts });
+    } catch (error) { 
+        console.error("Get Product By ID Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// Place an Order & Send Email Confirmation
+// 🌟 FIX: Server-Side Total Recalculation & Tamper-Proof Order Placement
+
+// Helper to normalize image URLs for order records
+function formatImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+        return './img/profile_image.jpg';
+    }
+    let clean = url.trim().replace(/\\/g, '/');
+    if (clean.startsWith('data:image/')) return clean;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+    if (!clean.startsWith('/') && !clean.startsWith('./')) {
+        clean = '/' + clean;
+    }
+    return clean;
+}
+
+app.post(['/api/orders', '/api/checkout'], async (req, res) => {
+    try {
+        const { name, email, phone, address, paymentMethod, trxId, cartItems, promoCode, shippingFee } = req.body;
+
+        if (!name || !phone || !address) {
+            return res.status(400).json({ success: false, message: "Name, phone number, and delivery address are required." });
+        }
+
+        if (!Array.isArray(cartItems) || cartItems.length === 0) {
+            return res.status(400).json({ success: false, message: "Your shopping cart is empty." });
+        }
+
+        // 1. Recalculate Subtotal from Database Prices (Prevent Price Tampering)
+        let serverSubtotal = 0;
+        const verifiedCartItems = [];
+        const productsToUpdate = [];
+
+        for (let item of cartItems) {
+            const productId = item.id || item._id;
+            if (!productId) {
+                return res.status(400).json({ success: false, message: "Invalid product in cart." });
+            }
+
+            const dbProduct = await Product.findById(productId);
+            if (!dbProduct) {
+                return res.status(400).json({ success: false, message: `Product "${item.name || 'Item'}" no longer exists.` });
+            }
+
+            const requestedQty = Math.max(1, parseInt(item.quantity) || 1);
+            if (dbProduct.stockQuantity < requestedQty) {
+                return res.status(400).json({ success: false, message: `Insufficient stock for "${dbProduct.name}". Only ${dbProduct.stockQuantity} remaining.` });
+            }
+
+            const dbPrice = Number(dbProduct.price) || 0;
+            const itemTotal = dbPrice * requestedQty;
+            serverSubtotal += itemTotal;
+
+            verifiedCartItems.push({
+                id: dbProduct._id,
+                name: dbProduct.name,
+                buyingPrice: Number(dbProduct.buyingPrice) || 0,
+                price: dbPrice,
+                quantity: requestedQty,
+                image: formatImageUrl(dbProduct.imageUrl)
+            });
+
+            productsToUpdate.push({ dbProduct, requestedQty });
+        }
+
+        // 2. Validate & Recalculate Promo Code / Voucher Discount on Server
+        let serverDiscount = 0;
+        let appliedPromoCode = '';
+
+        if (promoCode && typeof promoCode === 'string' && promoCode.trim()) {
+            const cleanCode = promoCode.trim();
+            const codeRegex = new RegExp(`^${cleanCode}$`, 'i');
+            
+            // Check Voucher first
+            let discountSource = await Voucher.findOne({ code: codeRegex, isActive: true });
+            let isValid = false;
+
+            if (discountSource) {
+                if (!discountSource.minOrderAmount || serverSubtotal >= discountSource.minOrderAmount) {
+                    isValid = true;
+                }
+            } else {
+                // Fallback to Promo Code (secret code)
+                discountSource = await PromoCode.findOne({ code: codeRegex, isActive: true });
+                if (discountSource) isValid = true; // Secret codes don't have minOrderAmount
+            }
+
+            if (isValid && discountSource) {
+                appliedPromoCode = discountSource.code;
+                if (discountSource.discountType === 'percentage') {
+                    serverDiscount = serverSubtotal * (Number(discountSource.discountValue) / 100);
+                } else if (discountSource.discountType === 'fixed') {
+                    serverDiscount = Number(discountSource.discountValue);
+                }
+                serverDiscount = Math.min(serverSubtotal, Math.max(0, serverDiscount));
+            }
+        }
+
+        // 3. Recalculate Shipping Fee on Server
+        const requestedShipping = Number(shippingFee);
+        const serverShippingFee = (requestedShipping === 80) ? 80 : 150;
+
+        // 4. Calculate Final Server Total
+        const serverTotalAmount = Math.max(0, Math.round(serverSubtotal - serverDiscount)) + serverShippingFee;
+
+        // 5. Generate Sequential Order Number (ORD-0000001, ORD-0000002, ...)
+        let nextNum = 1;
+        const lastOrder = await Order.findOne({ orderNumber: /^ORD-\d+$/ }).sort({ _id: -1 });
+        if (lastOrder && lastOrder.orderNumber) {
+            const lastNum = parseInt(lastOrder.orderNumber.replace('ORD-', ''), 10);
+            if (!isNaN(lastNum)) nextNum = lastNum + 1;
+        }
+        const orderNumber = 'ORD-' + String(nextNum).padStart(7, '0');
+
+        // 6. Save Order with Server-Calculated Totals
+        const newOrder = new Order({ 
+            orderNumber,
+            customerName: name, 
+            email: email || '', 
+            phone, 
+            address, 
+            paymentMethod: paymentMethod || 'cod',
+            transactionId: trxId || '', 
+            cartItems: verifiedCartItems, 
+            totalAmount: serverTotalAmount,
+            discountAmount: Math.round(serverDiscount),
+            promoCode: appliedPromoCode,
+            shippingFee: serverShippingFee,
+            orderDate: new Date()
+        });
+        await newOrder.save(); 
+
+        // 7. Deduct Verified Product Inventory Stock
+        for (let { dbProduct, requestedQty } of productsToUpdate) {
+            dbProduct.stockQuantity -= requestedQty;
+            if (dbProduct.stockQuantity <= 0) dbProduct.isAvailable = false; 
+            await dbProduct.save();
+        }
+
+        // 8. Prepare & Send Confirmation Email
+        if (email) {
+            try {
+                const itemsListHtml = verifiedCartItems.map(item => 
+                    `<li style="margin-bottom: 5px;">${item.name} (x${item.quantity}) - ৳${item.price}</li>`
+                ).join('');
+
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: email, 
+                    subject: `Order Confirmation - ${orderNumber} | আভরণী`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+                            <h2 style="color: #111111; text-align: center;">Thank you for your order, ${name}!</h2>
+                            <p style="text-align: center; font-size: 16px;">Your order has been successfully placed and is being processed.</p>
+                            
+                            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                                <p style="margin: 0;"><strong>Order Number:</strong> <span style="font-size: 18px; color: #111111;">${orderNumber}</span></p>
+                                <p style="margin: 5px 0 0 0;"><strong>Payment Method:</strong> ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'bKash'}</p>
+                            </div>
+                            
+                            <h3>Order Details:</h3>
+                            <ul style="list-style-type: none; padding-left: 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                ${itemsListHtml}
+                            </ul>
+                            
+                            <h3 style="color: #333;">Total Amount: <span style="color: #111111;">৳${serverTotalAmount}</span></h3>
+                            
+                            <h4>Shipping Address:</h4>
+                            <p style="background-color: #f1f1f1; padding: 10px; border-radius: 4px;">${address}</p>
+                            
+                            <p style="text-align: center; margin-top: 30px; font-size: 14px; color: #777;">Thanks for shopping with আভরণী!</p>
+                        </div>
+                    `
+                };
+                await transporter.sendMail(mailOptions);
+            } catch (emailErr) {
+                console.warn("Order email notification warning:", emailErr);
+            }
+        }
+
+        // 9. Return Success Response
+        res.status(201).json({ 
+            success: true, 
+            message: 'Order placed successfully!', 
+            orderNumber,
+            totalAmount: serverTotalAmount,
+            order: newOrder
+        });
+    } catch (error) { 
+        console.error("Checkout Error:", error);
+        res.status(500).json({ success: false, message: "Failed to process order" }); 
+    }
+});
+
+// Get Banner Cards (For the Homepage Slider)
+app.get('/api/banner-cards', async (req, res) => {
+    try {
+        const cards = await BannerCard.find().sort({ createdAt: 1 });
+        res.json({ success: true, cards });
+    } catch (error) { 
+        console.error("Get Banner Cards Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// ==========================================
+// 🌟 CUSTOMER REVIEWS & RATINGS API 🌟
+// ==========================================
+
+// Submit a new Customer Review (Public)
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { productId, productName, reviewerName, rating, comment } = req.body;
+        if (!reviewerName || !rating || !comment) {
+            return res.status(400).json({ success: false, message: "Please provide name, rating, and comment." });
+        }
+
+        const newReview = new Review({
+            productId: productId || '',
+            productName: productName || 'General Review',
+            reviewerName,
+            rating: Number(rating),
+            comment,
+            isPublished: false
+        });
+
+        await newReview.save();
+        res.status(201).json({ success: true, message: "Thank you! Your review has been submitted for admin approval." });
+    } catch (error) {
+        console.error("Submit Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to submit review." });
+    }
+});
+
+// Fetch Published Reviews (For Homepage Slider)
+app.get('/api/reviews/published', async (req, res) => {
+    try {
+        const reviews = await Review.find({ isPublished: true }).sort({ createdAt: -1 });
+        res.json({ success: true, reviews });
+    } catch (error) {
+        console.error("Get Published Reviews Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch reviews." });
+    }
+});
+
+// Fetch ALL Reviews (Admin Protected)
+app.get('/api/admin/reviews', verifyAdminToken, async (req, res) => {
+    try {
+        const reviews = await Review.find().sort({ createdAt: -1 });
+        res.json({ success: true, reviews });
+    } catch (error) {
+        console.error("Get Admin Reviews Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch reviews." });
+    }
+});
+
+// Toggle Publish Status of Review (Admin Protected)
+app.put('/api/admin/reviews/:id/publish', verifyAdminToken, async (req, res) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) return res.status(404).json({ success: false, message: "Review not found." });
+
+        review.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : !review.isPublished;
+        await review.save();
+
+        res.json({ success: true, message: `Review ${review.isPublished ? 'published to homepage!' : 'un-published.'}`, review });
+    } catch (error) {
+        console.error("Publish Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update review status." });
+    }
+});
+
+// Delete Review (Admin Protected)
+app.delete('/api/admin/reviews/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Review.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Review deleted successfully." });
+    } catch (error) {
+        console.error("Delete Review Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete review." });
+    }
+});
+
+// ==========================================
+// 🔒 PROTECTED ADMIN ROUTES (Require JWT)
+// ==========================================
+
+app.get('/api/user-data', verifyAdminToken, async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: "Unauthorized token" });
+        }
+        let user = null;
+        try {
+            user = await User.findById(req.user.id).select('-password');
+        } catch (dbErr) {
+            console.warn("DB user lookup error, returning token user:", dbErr.message);
+        }
+        if (!user) {
+            return res.json({
+                success: true,
+                user: {
+                    _id: req.user.id,
+                    username: req.user.username || 'Admin',
+                    email: req.user.email || 'admin@avaroni.com',
+                    role: 'admin'
+                }
+            });
+        }
+        res.json({ success: true, user });
+    } catch (err) {
+        console.error("Get user-data error:", err);
+        res.json({
+            success: true,
+            user: {
+                _id: (req.user && req.user.id) ? req.user.id : 'admin',
+                username: 'Admin',
+                role: 'admin'
+            }
+        });
+    }
+});
+
+// Update global brand logo
+app.put('/api/admin/settings/logo', verifyAdminToken, async (req, res) => {
+    try {
+        const { logoUrl } = req.body;
+        if (!logoUrl) return res.status(400).json({ success: false, message: "Logo URL is required." });
+        
+        await Settings.findOneAndUpdate(
+            { key: 'brandLogo' },
+            { value: logoUrl },
+            { upsert: true, new: true }
+        );
+        
+        res.json({ success: true, message: "Brand logo updated successfully." });
+    } catch (err) {
+        console.error("Update Brand Logo Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Update global brand name
+app.put('/api/admin/settings/brandName', verifyAdminToken, async (req, res) => {
+    try {
+        const { brandName } = req.body;
+        if (!brandName || !brandName.trim()) return res.status(400).json({ success: false, message: "Brand name is required." });
+        
+        await Settings.findOneAndUpdate(
+            { key: 'brandName' },
+            { value: brandName.trim() },
+            { upsert: true, new: true }
+        );
+        
+        res.json({ success: true, message: "Brand name updated successfully." });
+    } catch (err) {
+        console.error("Update Brand Name Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Update top marquee announcement settings
+app.put('/api/admin/settings/marquee', verifyAdminToken, async (req, res) => {
+    try {
+        const { marqueeText, marqueeEnabled, marqueeSpeed } = req.body;
+        
+        if (marqueeText !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'marqueeText' },
+                { value: marqueeText.trim() },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (marqueeEnabled !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'marqueeEnabled' },
+                { value: String(marqueeEnabled) },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (marqueeSpeed !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'marqueeSpeed' },
+                { value: String(marqueeSpeed) },
+                { upsert: true, new: true }
+            );
+        }
+        
+        res.json({ success: true, message: "Marquee announcement settings updated successfully." });
+    } catch (err) {
+        console.error("Update Marquee Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Update homepage welcome popup settings
+app.put('/api/admin/settings/popup', verifyAdminToken, async (req, res) => {
+    try {
+        const { popupImage, popupEnabled, popupLink } = req.body;
+        
+        if (popupImage !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'popupImage' },
+                { value: popupImage },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (popupEnabled !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'popupEnabled' },
+                { value: String(popupEnabled) },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (popupLink !== undefined) {
+            await Settings.findOneAndUpdate(
+                { key: 'popupLink' },
+                { value: String(popupLink || '').trim() },
+                { upsert: true, new: true }
+            );
+        }
+        
+        res.json({ success: true, message: "Homepage popup settings updated successfully." });
+    } catch (err) {
+        console.error("Update Popup Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Delete/Remove homepage popup
+app.delete('/api/admin/settings/popup', verifyAdminToken, async (req, res) => {
+    try {
+        await Settings.deleteMany({ key: { $in: ['popupImage', 'popupEnabled', 'popupLink'] } });
+        res.json({ success: true, message: "Homepage popup removed successfully." });
+    } catch (err) {
+        console.error("Delete Popup Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// Get global settings (public)
+app.get('/api/settings', async (req, res) => {
+    try {
+        const settings = await Settings.find({});
+        const settingsMap = {};
+        settings.forEach(s => settingsMap[s.key] = s.value);
+        res.json({ success: true, settings: settingsMap });
+    } catch (err) {
+        console.error("Get Settings Error:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
+// ==========================================
+// ⚙️ ADMIN SETTINGS & USER MANAGEMENT ROUTES
+// ==========================================
+
+// Get All Users (Admin Protected)
+// (Duplicate removed)
+
+// 1. Change Admin Email
+app.put('/api/admin/settings/email', verifyAdminToken, async (req, res) => {
+    try {
+        const { currentPassword, newEmail } = req.body;
+        if (!currentPassword || !newEmail || !newEmail.trim()) {
+            return res.status(400).json({ success: false, message: "Current password and new email address are required." });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User account not found." });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Incorrect current password." });
+        }
+
+        const cleanEmail = sanitize(newEmail.trim().toLowerCase());
+        const existing = await User.findOne({ email: cleanEmail, _id: { $ne: user._id } });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "This email address is already in use by another user." });
+        }
+
+        user.email = cleanEmail;
+        await user.save();
+        res.json({ success: true, message: "Email updated successfully!", email: cleanEmail });
+    } catch (error) {
+        console.error("Change Email Error:", error);
+        res.status(500).json({ success: false, message: "Server error changing email." });
+    }
+});
+
+// 2. Change Admin Password
+app.put('/api/admin/settings/password', verifyAdminToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: "Current password and new password are required." });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: "New password must be at least 8 characters long." });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User account not found." });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Incorrect current password." });
+        }
+
+        user.password = newPassword; // Automatically hashed by pre('save') hook
+        await user.save();
+        res.json({ success: true, message: "Password updated successfully!" });
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Server error changing password." });
+    }
+});
+
+// 3. Get All Admin Users
+app.get('/api/admin/users', verifyAdminToken, async (req, res) => {
+    try {
+        const users = await User.find({ role: 'admin' }).select('-password -twoFactorCode').sort({ _id: -1 });
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error("Get Users Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch user accounts." });
+    }
+});
+
+// 3b. Get All Customer Users
+app.get('/api/admin/customers', verifyAdminToken, async (req, res) => {
+    try {
+        const customers = await User.find({ role: 'customer' }).select('-password -twoFactorCode').sort({ _id: -1 });
+        res.json({ success: true, customers });
+    } catch (error) {
+        console.error("Get Customers Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch customer accounts." });
+    }
+});
+
+// 4. Create Access for Another User
+app.post('/api/admin/users', verifyAdminToken, async (req, res) => {
+    try {
+        const username = sanitize(req.body.username || '').trim();
+        const email = sanitize(req.body.email || '').trim().toLowerCase();
+        const password = req.body.password || '';
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: "Username, email, and password are required." });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
+        }
+
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "An account with this email already exists." });
+        }
+
+        const newUser = new User({ username, email, password, role: 'admin' });
+        await newUser.save();
+        res.status(201).json({ success: true, message: `Access granted for user "${username}" (${email}).` });
+    } catch (error) {
+        console.error("Create User Error:", error);
+        res.status(500).json({ success: false, message: "Failed to create user account." });
+    }
+});
+
+// 5. Delete Sub-User Access
+app.delete('/api/admin/users/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const targetId = req.params.id;
+        if (targetId === req.user.id.toString()) {
+            return res.status(400).json({ success: false, message: "You cannot delete your own logged-in account." });
+        }
+
+        const totalAdmins = await User.countDocuments();
+        if (totalAdmins <= 1) {
+            return res.status(400).json({ success: false, message: "Cannot delete the sole remaining administrator account." });
+        }
+
+        await User.findByIdAndDelete(targetId);
+        res.json({ success: true, message: "User access revoked successfully." });
+    } catch (error) {
+        console.error("Delete User Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete user." });
+    }
+});
+
+// Get ALL products (Including hidden)
+app.get('/api/admin/products', verifyAdminToken, async (req, res) => {
+    try { 
+        const products = await Product.find().sort({ _id: -1 }); 
+        res.json({ success: true, products }); 
+    } catch (error) { 
+        console.error("Get Admin Products Error:", error);
+        res.status(500).json({ success: false, message: error.message || "Failed to fetch admin products" }); 
+    }
+});
+
+// Add Product
+// Product creation - JSON body with Base64 image
+app.post('/api/admin/products', verifyAdminToken, async (req, res) => {
+    try {
+        // Check Content-Type to decide parsing strategy
+        const contentType = req.headers['content-type'] || '';
+        
+        let imageUrl = "";
+        let bodyData = req.body;
+
+        // If multipart, use multer manually
+        if (contentType.includes('multipart/form-data')) {
+            await new Promise((resolve, reject) => {
+                upload.single('image')(req, res, (err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+            bodyData = req.body;
+            if (req.file) {
+                const mimeType = req.file.mimetype || 'image/jpeg';
+                const fileBuffer = fs.readFileSync(req.file.path);
+                imageUrl = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+            }
+        } else {
+            // JSON body with Base64 image — convert to high-res static file
+            imageUrl = saveBase64Image(bodyData.image || "");
+        }
+
+        if (!imageUrl) {
+            return res.status(400).json({ success: false, message: "Product image is required" });
+        }
+
+        const productData = {
+            name: bodyData.name, 
+            buyingPrice: Number(bodyData.buyingPrice) || 0,
+            price: Number(bodyData.price), 
+            category: bodyData.category,
+            subcategory: bodyData.subcategory || "",
+            size: bodyData.size || "",
+            colour: bodyData.colour || "",
+            brand: bodyData.brand || "",
+            weight: bodyData.weight || "",
+            care: bodyData.care || "",
+            additionalInfo: bodyData.additionalInfo || "",
+            description: bodyData.description || "",
+            stockQuantity: Number(bodyData.stock) || 1, 
+            discountType: bodyData.discountType || 'none',
+            discountValue: Number(bodyData.discountValue) || 0,
+            imageUrl: imageUrl,
+            isTopSelling: bodyData.isTopSelling === true || bodyData.isTopSelling === 'true',
+            isTrending: bodyData.isTrending === true || bodyData.isTrending === 'true',
+            isTopRated: bodyData.isTopRated === true || bodyData.isTopRated === 'true'
+        };
+        const newProduct = new Product(productData);
+        await newProduct.save();
+        res.status(201).json({ success: true });
+    } catch (error) { 
+        console.error("Add Product Error:", error);
+        res.status(500).json({ success: false, message: "Failed to add product" }); 
+    }
+});
+
+// Delete Product
+app.delete('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
+    try { 
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID format" });
+        }
+        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+        if (!deletedProduct) {
+            return res.status(404).json({ success: false, message: "Product not found or already deleted" });
+        }
+        res.json({ success: true, message: "Product deleted successfully!" }); 
+    } catch (error) { 
+        console.error("Delete Product Error:", error);
+        res.status(500).json({ success: false, message: error.message || "Failed to delete product" }); 
+    }
+});
+
+// Edit / Update Product (Admin)
+app.put('/api/admin/products/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const { name, buyingPrice, price, category, subcategory, size, colour, brand, weight, care, additionalInfo, description, stock, discountType, discountValue, image, isTopSelling, isTrending, isTopRated } = req.body;
+        
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        if (name !== undefined) product.name = name.trim();
+        if (buyingPrice !== undefined) product.buyingPrice = Number(buyingPrice);
+        if (price !== undefined) product.price = Number(price);
+        if (category !== undefined) product.category = category;
+        if (subcategory !== undefined) product.subcategory = subcategory;
+        if (size !== undefined) product.size = size.trim();
+        if (colour !== undefined) product.colour = colour.trim();
+        if (brand !== undefined) product.brand = brand.trim();
+        if (weight !== undefined) product.weight = weight.trim();
+        if (care !== undefined) product.care = care.trim();
+        if (additionalInfo !== undefined) product.additionalInfo = additionalInfo.trim();
+        if (description !== undefined) product.description = description.trim();
+        if (stock !== undefined) product.stockQuantity = Number(stock);
+        if (discountType !== undefined) product.discountType = discountType;
+        if (discountValue !== undefined) product.discountValue = Number(discountValue);
+        if (isTopSelling !== undefined) product.isTopSelling = (isTopSelling === true || isTopSelling === 'true');
+        if (isTrending !== undefined) product.isTrending = (isTrending === true || isTrending === 'true');
+        if (isTopRated !== undefined) product.isTopRated = (isTopRated === true || isTopRated === 'true');
+
+        // If a new image was uploaded (Base64 string), save as static high-res file
+        if (image && image.trim() !== '' && image !== product.imageUrl) {
+            product.imageUrl = saveBase64Image(image);
+        }
+
+        await product.save();
+        res.json({ success: true, message: "Product updated successfully!", product });
+    } catch (error) {
+        console.error("Update Product Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update product" });
+    }
+});
+
+// Toggle Product Availability
+app.patch('/api/admin/products/:id/toggle', verifyAdminToken, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+
+        product.isAvailable = !product.isAvailable;
+        await product.save();
+        res.json({ success: true });
+    } catch (error) { 
+        console.error("Toggle Product Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// Get Admin Dashboard Stats
+app.get('/api/admin/dashboard-stats', verifyAdminToken, async (req, res) => {
+    try {
+        const ordersCount = await Order.countDocuments();
+        const productsCount = await Product.countDocuments();
+        const bannersCount = await BannerCard.countDocuments();
+        const categoriesCount = await Category.countDocuments();
+        const returnsCount = await ReturnRequest.countDocuments();
+        const messagesCount = await ContactMessage.countDocuments({ status: 'unread' });
+
+        const revenueData = await Order.aggregate([
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+        const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+        const expenseData = await Order.aggregate([
+            { $unwind: "$cartItems" },
+            {
+                $group: {
+                    _id: null,
+                    totalExpense: { 
+                        $sum: { 
+                            $multiply: [
+                                { $toDouble: { $ifNull: ["$cartItems.buyingPrice", 0] } },
+                                { $toDouble: { $ifNull: ["$cartItems.quantity", 1] } }
+                            ] 
+                        } 
+                    }
+                }
+            }
+        ]);
+        const totalExpense = expenseData.length > 0 ? expenseData[0].totalExpense : 0;
+        const totalProfit = totalRevenue - totalExpense;
+
+        res.json({
+            success: true,
+            stats: {
+                ordersCount,
+                productsCount,
+                bannersCount,
+                categoriesCount,
+                slidersCount: 0,
+                returnsCount,
+                messagesCount,
+                totalRevenue,
+                totalExpense,
+                totalProfit
+            }
+        });
+    } catch (error) {
+        console.error("Dashboard Stats Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load statistics" });
+    }
+});
+
+// Get Admin Analytics & Graphs Data
+app.get('/api/admin/analytics', verifyAdminToken, async (req, res) => {
+    try {
+        const orders = await Order.find();
+        
+        // 1. Order Overview Status Breakdown
+        const orderStatusCounts = {
+            Pending: 0,
+            Processing: 0,
+            Approved: 0,
+            Cancelled: 0
+        };
+
+        orders.forEach(o => {
+            const rawStatus = (o.status || 'Pending').toLowerCase();
+            if (rawStatus.includes('process')) {
+                orderStatusCounts.Processing++;
+            } else if (rawStatus.includes('approve') || rawStatus.includes('deliver') || rawStatus.includes('complet')) {
+                orderStatusCounts.Approved++;
+            } else if (rawStatus.includes('cancel') || rawStatus.includes('reject')) {
+                orderStatusCounts.Cancelled++;
+            } else {
+                orderStatusCounts.Pending++;
+            }
+        });
+
+        // 2. Monthly Sales Trend (Last 6 Months)
+        const monthlySalesMap = {};
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const today = new Date();
+        
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+            monthlySalesMap[key] = 0;
+        }
+
+        orders.forEach(o => {
+            if (o.status !== 'Cancelled' && o.orderDate) {
+                const d = new Date(o.orderDate);
+                const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                if (monthlySalesMap[key] !== undefined) {
+                    monthlySalesMap[key] += (o.totalAmount || 0);
+                }
+            }
+        });
+
+        // 3. Monthly Payment Record (Breakdown by Payment Method)
+        const paymentMap = {
+            'Cash on Delivery': 0,
+            'bKash': 0,
+            'Nagad': 0,
+            'Rocket': 0,
+            'Bank Transfer': 0
+        };
+
+        orders.forEach(o => {
+            const method = o.paymentMethod || 'Cash on Delivery';
+            if (paymentMap[method] !== undefined) {
+                paymentMap[method] += (o.totalAmount || 0);
+            } else {
+                paymentMap['Cash on Delivery'] += (o.totalAmount || 0);
+            }
+        });
+
+        // 4. Top Selling Products
+        const productSalesMap = {};
+        orders.forEach(o => {
+            if (o.status !== 'Cancelled' && Array.isArray(o.cartItems)) {
+                o.cartItems.forEach(item => {
+                    const pName = item.name || 'Product';
+                    const qty = Number(item.quantity) || 1;
+                    productSalesMap[pName] = (productSalesMap[pName] || 0) + qty;
+                });
+            }
+        });
+
+        const topProducts = Object.keys(productSalesMap)
+            .map(name => ({ name, quantity: productSalesMap[name] }))
+            .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 5);
+
+        res.json({
+            success: true,
+            analytics: {
+                orderOverview: orderStatusCounts,
+                monthlySalesTrend: {
+                    labels: Object.keys(monthlySalesMap),
+                    data: Object.values(monthlySalesMap)
+                },
+                paymentRecord: {
+                    labels: Object.keys(paymentMap),
+                    data: Object.values(paymentMap)
+                },
+                topSellingProducts: {
+                    labels: topProducts.map(p => p.name),
+                    data: topProducts.map(p => p.quantity)
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Analytics Endpoint Error:", error);
+        res.status(500).json({ success: false, message: "Failed to load analytics" });
+    }
+});
+
+// Get Customer Orders
+app.get('/api/admin/orders', verifyAdminToken, async (req, res) => {
+    try {
+        const orders = await Order.find().sort({ orderDate: -1 });
+        res.json({ success: true, orders });
+    } catch (error) { 
+        console.error("Get Orders Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+// Update Order Status (Approve or Cancel) & Send Automated Email to Customer
+app.all('/api/admin/orders/:id/status', verifyAdminToken, async (req, res) => {
+    if (req.method !== 'PUT' && req.method !== 'POST') {
+        return res.status(405).json({ success: false, message: "Method not allowed" });
+    }
+    try {
+        const { status } = req.body;
+        if (!['Approved', 'Processing', 'Delivered', 'Cancelled', 'Pending'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status value." });
+        }
+
+        const order = await Order.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+
+        order.status = status;
+        await order.save();
+
+        // Send Email Notification to Customer for Status Updates
+        if (['Approved', 'Processing', 'Delivered', 'Cancelled'].includes(status)) {
+            let emailSubject = `Order ${status} - ${order.orderNumber} | আভরণী`;
+            let statusHeading = `🎉 Order ${status}!`;
+            let statusColor = '#28a745';
+            let statusMessage = `Your order <strong>${order.orderNumber}</strong> status has been updated to <strong>${status}</strong>.`;
+
+            if (status === 'Approved') {
+                emailSubject = `Order Approved - ${order.orderNumber} | আভরণী`;
+                statusHeading = `🎉 Order Approved!`;
+                statusColor = '#28a745';
+                statusMessage = `We are happy to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>APPROVED</strong> and is currently being processed for dispatch!`;
+            } else if (status === 'Processing') {
+                emailSubject = `Order Processing - ${order.orderNumber} | আভরণী`;
+                statusHeading = `⚙️ Order Processing!`;
+                statusColor = '#17a2b8';
+                statusMessage = `Your order <strong>${order.orderNumber}</strong> is currently <strong>IN PROCESSING / DISPATCH</strong>. Our courier team is preparing your package.`;
+            } else if (status === 'Delivered') {
+                emailSubject = `Order Delivered - ${order.orderNumber} | আভরণী`;
+                statusHeading = `📦 Order Delivered Successfully!`;
+                statusColor = '#20c997';
+                statusMessage = `Your order <strong>${order.orderNumber}</strong> has been <strong>DELIVERED SUCCESSFULLY</strong>. Thank you for shopping with আভরণী!`;
+            } else if (status === 'Cancelled') {
+                emailSubject = `Order Cancelled - ${order.orderNumber} | আভরণী`;
+                statusHeading = `❌ Order Cancelled`;
+                statusColor = '#dc3545';
+                statusMessage = `We regret to inform you that your order <strong>${order.orderNumber}</strong> has been <strong>CANCELLED</strong>. If you have questions or believe this is an error, please contact customer support.`;
+            }
+
+            const itemsListHtml = (order.cartItems || []).map(item => 
+                `<li style="margin-bottom: 5px;">${item.name} (x${item.quantity}) - ৳${item.price}</li>`
+            ).join('');
+
+            const emailBody = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px;">
+                    <h2 style="color: ${statusColor}; text-align: center;">
+                        ${statusHeading}
+                    </h2>
+                    <p style="font-size: 15px;">Dear <strong>${order.customerName}</strong>,</p>
+                    <p style="font-size: 14px; line-height: 1.6;">${statusMessage}</p>
+                    
+                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 5px solid ${statusColor};">
+                        <p style="margin: 0;"><strong>Order Number:</strong> <span style="color: #e60050; font-weight: bold;">${order.orderNumber}</span></p>
+                        <p style="margin: 5px 0 0 0;"><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold; text-transform: uppercase;">${status}</span></p>
+                        <p style="margin: 5px 0 0 0;"><strong>Payment Method:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'bKash'}</p>
+                    </div>
+
+                    <h3>Order Details:</h3>
+                    <ul style="list-style-type: none; padding-left: 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                        ${itemsListHtml}
+                    </ul>
+
+                    <h3 style="color: #333;">Total Amount: <span style="color: #e60050;">৳${order.totalAmount}</span></h3>
+
+                    <h4>Shipping Address:</h4>
+                    <p style="background-color: #f1f1f1; padding: 10px; border-radius: 4px;">${order.address}</p>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0 15px 0;">
+                    <p style="text-align: center; color: #888; font-size: 13px;">Thank you for shopping with <strong>আভরণী</strong>.</p>
+                </div>
+            `;
+
+            try {
+                if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                    await transporter.sendMail({
+                        from: process.env.EMAIL_USER,
+                        to: order.email,
+                        subject: emailSubject,
+                        html: emailBody
+                    });
+                    console.log(`Order status (${status}) email sent successfully to ${order.email}`);
+                }
+            } catch (mailErr) {
+                console.error("Failed to send order status update email:", mailErr);
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Order status updated to "${status}" successfully!`,
+            order 
+        });
+    } catch (error) {
+        console.error("Update Order Status Error:", error);
+        res.status(500).json({ success: false, message: "Failed to update order status." });
+    }
+});
+
+// Delete Order API (Admin Only)
+app.delete('/api/admin/orders/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+        res.json({ success: true, message: "Order deleted successfully." });
+    } catch (error) {
+        console.error("Delete Order Error:", error);
+        res.status(500).json({ success: false, message: "Failed to delete order." });
+    }
+});
+
+// Track Order API (Public - Search by orderNumber or MongoDB _id)
+app.get('/api/orders/track/:orderId', async (req, res) => {
+    try {
+        const queryStr = (req.params.orderId || '').trim();
+        if (!queryStr) {
+            return res.status(400).json({ success: false, message: "Order ID is required." });
+        }
+
+        // Try exact match or regex match on orderNumber
+        let order = await Order.findOne({ 
+            orderNumber: new RegExp(`^${queryStr.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') 
+        });
+
+        // Fallback: search by Mongo ObjectId
+        if (!order && mongoose.Types.ObjectId.isValid(queryStr)) {
+            order = await Order.findById(queryStr);
+        }
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found. Please check your Order ID and try again." });
+        }
+
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error("Track Order Error:", error);
+        res.status(500).json({ success: false, message: "Server error tracking order." });
+    }
+});
+
+// Get Order by Order Number (for invoice generation)
+app.get('/api/orders/:orderNumber', async (req, res) => {
+    try {
+        const queryStr = (req.params.orderNumber || '').trim();
+        let order = await Order.findOne({ 
+            orderNumber: new RegExp(`^${queryStr.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') 
+        });
+        if (!order && mongoose.Types.ObjectId.isValid(queryStr)) {
+            order = await Order.findById(queryStr);
+        }
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error("Get Order Error:", error);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Admin Manage Banner Cards
+app.post('/api/banner-cards', verifyAdminToken, async (req, res) => {
+    try {
+        const newCard = new BannerCard({ images: [] });
+        await newCard.save();
+        res.json({ success: true, card: newCard });
+    } catch (error) { 
+        console.error("Create Banner Card Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+app.patch('/api/banner-cards/:cardId/heading', verifyAdminToken, async (req, res) => {
+    try {
+        const card = await BannerCard.findById(req.params.cardId);
+        if (!card) return res.status(404).json({ success: false, message: "Card not found" });
+
+        card.heading = req.body.heading;
+        await card.save();
+        res.json({ success: true });
+    } catch (error) { 
+        console.error("Update Banner Heading Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+app.delete('/api/banner-cards/:cardId', verifyAdminToken, async (req, res) => {
+    try { 
+        await BannerCard.findByIdAndDelete(req.params.cardId); 
+        res.json({ success: true }); 
+    } catch (error) { 
+        console.error("Delete Banner Card Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+
+app.post('/api/banner-cards/:cardId/images', verifyAdminToken, upload.single('image'), async (req, res) => {
+    try {
+        let imageUrl = "";
+        
+        // Support both Base64 JSON and Multer file upload
+        if (req.body.image) {
+            imageUrl = saveBase64Image(req.body.image);
+        } else if (req.file) {
+            const mimeType = req.file.mimetype || 'image/jpeg';
+            const fileBuffer = fs.readFileSync(req.file.path);
+            imageUrl = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+        } else {
+            return res.status(400).json({ success: false, message: "Image is required" });
+        }
+
+        const card = await BannerCard.findById(req.params.cardId);
+        if (!card) return res.status(404).json({ success: false, message: "Card not found" });
+
+        card.images.push(imageUrl);
+        await card.save();
+        res.json({ success: true });
+    } catch (error) { 
+        console.error("Upload Banner Image Error:", error);
+        res.status(500).json({ success: false, message: "Failed to upload image" }); 
+    }
+});
+
+app.delete('/api/banner-cards/:cardId/images/:imageIndex', verifyAdminToken, async (req, res) => {
+    try {
+        const card = await BannerCard.findById(req.params.cardId);
+        if (!card) return res.status(404).json({ success: false, message: "Card not found" });
+
+        card.images.splice(req.params.imageIndex, 1);
+        await card.save();
+        res.json({ success: true });
+    } catch (error) { 
+        console.error("Delete Banner Image Error:", error);
+        res.status(500).json({ success: false }); 
+    }
+});
+// ==========================================
+// ↩️ PRODUCT RETURN REQUESTS ROUTES
+// ==========================================
+
+// Submit a Return Request (Public)
+app.post('/api/returns', async (req, res) => {
+    try {
+        const { orderId, email, reason, details } = req.body;
+        if (!orderId || !email || !reason) {
+            return res.status(400).json({ success: false, message: "Missing required fields." });
+        }
+
+        // Validate that order exists and matches email
+        const order = await Order.findOne({ orderNumber: orderId.trim() });
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order ID not found." });
+        }
+
+        if (order.email.toLowerCase() !== email.trim().toLowerCase()) {
+            return res.status(400).json({ success: false, message: "Email does not match the record for this order ID." });
+        }
+
+        // Check if a request already exists for this order
+        const existingRequest = await ReturnRequest.findOne({ orderNumber: orderId.trim() });
+        if (existingRequest) {
+            return res.status(400).json({ success: false, message: "A return request has already been submitted for this order ID." });
+        }
+
+        const newRequest = new ReturnRequest({
+            orderNumber: orderId.trim(),
+            email: email.trim().toLowerCase(),
+            reason,
+            details: details || ''
+        });
+        await newRequest.save();
+
+        res.json({ success: true, message: "Return request submitted successfully." });
+    } catch (error) {
+        console.error("Submit Return Request Error:", error);
+        res.status(500).json({ success: false, message: "Server error. Please try again later." });
+    }
+});
+
+// Get all Return Requests (Admin)
+app.get('/api/admin/returns', verifyAdminToken, async (req, res) => {
+    try {
+        const returns = await ReturnRequest.find().sort({ createdAt: -1 });
+        res.json({ success: true, returns });
+    } catch (error) {
+        console.error("Get Return Requests Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// Approve or Reject a Return Request (Admin)
+app.patch('/api/admin/returns/:id/status', verifyAdminToken, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status update." });
+        }
+
+        const request = await ReturnRequest.findById(req.params.id);
+        if (!request) {
+            return res.status(404).json({ success: false, message: "Return request not found." });
+        }
+
+        request.status = status;
+        await request.save();
+
+        // Retrieve customer order details for customer name
+        const order = await Order.findOne({ orderNumber: request.orderNumber });
+        const customerName = order ? order.customerName : 'Customer';
+
+        // Send Email notification to Customer
+        const isApproved = status === 'approved';
+        const emailSubject = isApproved 
+            ? `Your Return Request has been Approved | আভরণী`
+            : `Update on Your Return Request | আভরণী`;
+            
+        const emailBody = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: ${isApproved ? '#28a745' : '#dc3545'}; text-align: center;">
+                    Return Request ${isApproved ? 'Approved' : 'Rejected'}
+                </h2>
+                <p>Dear ${customerName},</p>
+                <p>We are writing to update you on your return request for Order ID: <strong>${request.orderNumber}</strong>.</p>
+                
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid ${isApproved ? '#28a745' : '#dc3545'};">
+                    <p style="margin: 0;"><strong>Status:</strong> <span style="font-size: 16px; color: ${isApproved ? '#28a745' : '#dc3545'}; text-transform: uppercase; font-weight: bold;">${status}</span></p>
+                    <p style="margin: 5px 0 0 0;"><strong>Reason for Return:</strong> ${request.reason}</p>
+                </div>
+
+                ${isApproved 
+                    ? `<p>Our support team will contact you shortly via phone or email to coordinate the product pickup or drop-off process and complete your refund/exchange.</p>`
+                    : `<p>Unfortunately, your return request could not be approved at this time. If you have questions or believe this is in error, please reply to this email or contact customer service.</p>`
+                }
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="text-align: center; color: #888; font-size: 12px;">Thank you for choosing আভরণী.</p>
+            </div>
+        `;
+
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: request.email,
+                subject: emailSubject,
+                html: emailBody
+            });
+            console.log(`Return request status email sent successfully to ${request.email}`);
+        } catch (mailErr) {
+            console.error("Failed to send return status email:", mailErr);
+        }
+
+        res.json({ success: true, message: `Return request ${status} successfully.` });
+    } catch (error) {
+        console.error("Update Return Request Status Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// ==========================================
+// 📬 CUSTOMER CONTACT MESSAGES ROUTES
+// ==========================================
+
+// Submit a Contact Message (Public)
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, message } = req.body;
+        if (!name || !email || !message) {
+            return res.status(400).json({ success: false, message: "Missing required fields." });
+        }
+
+        const newMessage = new ContactMessage({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            message: message.trim()
+        });
+        await newMessage.save();
+
+        res.json({ success: true, message: "Message sent successfully." });
+    } catch (error) {
+        console.error("Submit Contact Message Error:", error);
+        res.status(500).json({ success: false, message: "Server error. Please try again later." });
+    }
+});
+
+// Get all Contact Messages (Admin)
+app.get('/api/admin/messages', verifyAdminToken, async (req, res) => {
+    try {
+        const messages = await ContactMessage.find().sort({ createdAt: -1 });
+        res.json({ success: true, messages });
+    } catch (error) {
+        console.error("Get Contact Messages Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// Mark Contact Message as Read (Admin)
+app.patch('/api/admin/messages/:id/read', verifyAdminToken, async (req, res) => {
+    try {
+        const message = await ContactMessage.findById(req.params.id);
+        if (!message) {
+            return res.status(404).json({ success: false, message: "Message not found." });
+        }
+
+        message.status = 'read';
+        await message.save();
+
+        res.json({ success: true, message: "Message marked as read." });
+    } catch (error) {
+        console.error("Mark Message Read Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// Delete a Contact Message (Admin)
+app.delete('/api/admin/messages/:id', verifyAdminToken, async (req, res) => {
+    try {
+        const result = await ContactMessage.findByIdAndDelete(req.params.id);
+        if (!result) {
+            return res.status(404).json({ success: false, message: "Message not found." });
+        }
+        res.json({ success: true, message: "Message deleted successfully." });
+    } catch (error) {
+        console.error("Delete Message Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+});
+
+// ==========================================
+// 🎨 BANNER CARDS ROUTES
+// ==========================================
+app.get('/api/banner-cards', async (req, res) => {
+    try {
+        const cards = await BannerCard.find().sort({ createdAt: 1 });
+        res.json({ success: true, cards });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/banner-cards', verifyAdminToken, async (req, res) => {
+    try {
+        const newCard = new BannerCard();
+        await newCard.save();
+        res.json({ success: true, card: newCard });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.patch('/api/banner-cards/:id/heading', verifyAdminToken, async (req, res) => {
+    try {
+        const { heading } = req.body;
+        const card = await BannerCard.findByIdAndUpdate(req.params.id, { heading }, { new: true });
+        if (!card) return res.status(404).json({ success: false, message: 'Card not found' });
+        res.json({ success: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/banner-cards/:id/images', verifyAdminToken, async (req, res) => {
+    try {
+        const { image } = req.body;
+        if (!image) return res.status(400).json({ success: false, message: 'Image is required' });
+        
+        const card = await BannerCard.findById(req.params.id);
+        if (!card) return res.status(404).json({ success: false, message: 'Card not found' });
+        
+        card.images.push(image);
+        await card.save();
+        res.json({ success: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/banner-cards/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await BannerCard.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Card deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/banner-cards/:id/images/:imgIndex', verifyAdminToken, async (req, res) => {
+    try {
+        const card = await BannerCard.findById(req.params.id);
+        if (!card) return res.status(404).json({ success: false, message: 'Card not found' });
+        
+        const idx = parseInt(req.params.imgIndex);
+        if (idx >= 0 && idx < card.images.length) {
+            card.images.splice(idx, 1);
+            await card.save();
+        }
+        res.json({ success: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
+
+// ==========================================
+// 📈 ANALYTICS & TRACKING ROUTES
+// ==========================================
+
+// Endpoint to receive tracking events from frontend
+app.post('/api/analytics/track', async (req, res) => {
+    try {
+        const data = Array.isArray(req.body) ? req.body : [req.body];
+        
+        // Basic validation
+        const validData = data.filter(d => d.sessionId && d.type && d.page);
+        
+        if (validData.length > 0) {
+            await ActivityLog.insertMany(validData);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Tracking Error:", err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Endpoint to fetch analytics for Admin Dashboard
+app.get('/api/admin/analytics/activity', verifyAdminToken, async (req, res) => {
+    try {
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 7);
+
+        // Top Exit Pages
+        const exitPages = await ActivityLog.aggregate([
+            { $match: { type: 'exit_page', timestamp: { $gte: last7Days }, page: { $nin: ['/admin.html', '/admin-login.html', '/admin'] } } },
+            { $group: { _id: "$page", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top Dead Clicks
+        const deadClicks = await ActivityLog.aggregate([
+            { $match: { type: 'dead_click', timestamp: { $gte: last7Days }, page: { $nin: ['/admin.html', '/admin-login.html', '/admin'] } } },
+            { $group: { 
+                _id: { page: "$page", element: "$element", className: "$className", text: "$text" }, 
+                count: { $sum: 1 } 
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        // Top Normal Clicks
+        const topClicks = await ActivityLog.aggregate([
+            { $match: { type: 'click', timestamp: { $gte: last7Days }, page: { $nin: ['/admin.html', '/admin-login.html', '/admin'] } } },
+            { $group: { 
+                _id: { page: "$page", element: "$element", text: "$text" }, 
+                count: { $sum: 1 } 
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+
+        res.json({ success: true, exitPages, deadClicks, topClicks });
+    } catch (err) {
+        console.error("Analytics Fetch Error:", err);
+        res.status(500).json({ success: false, message: "Error fetching analytics data." });
+    }
+});
+
+// ==========================================
+// START SERVER
+// ==========================================
+// Only listen locally — Vercel handles this automatically in serverless mode
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`E-commerce Secured Backend running on http://localhost:${PORT}`));
+}
+
+// Export for Vercel serverless deployment
+module.exports = app;
