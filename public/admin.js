@@ -708,6 +708,7 @@ function switchTab(tabName) {
         if (tabName === 'add-product') cleanTitle = "Add New Product";
         if (tabName === 'manage-categories') cleanTitle = "Manage Categories";
         if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
+        if (tabName === 'manage-vouchers') cleanTitle = "Manage Public Vouchers";
         if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
         if (tabName === 'manage-popup') cleanTitle = "Homepage Welcome Popup Banner";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";

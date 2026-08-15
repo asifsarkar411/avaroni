@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getImageUrl } from '@/utils/image';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Sidebar({ isOpen, onClose }) {
+    const { user } = useAuth();
     const [categories, setCategories] = useState([]);
     const [brandLogo, setBrandLogo] = useState('/img/profile_image.jpg');
     const [brandName, setBrandName] = useState('AVARONI');
@@ -18,12 +20,12 @@ export default function Sidebar({ isOpen, onClose }) {
                 ]);
                 
                 const catData = await catRes.json();
-                if (catData.success) {
+                if (catData.success && Array.isArray(catData.categories)) {
                     setCategories(catData.categories);
                 }
 
                 const setData = await setRes.json();
-                if (setData.success) {
+                if (setData.success && setData.settings) {
                     if (setData.settings.brandLogo) setBrandLogo(setData.settings.brandLogo);
                     if (setData.settings.brandName) setBrandName(setData.settings.brandName);
                 }
@@ -42,15 +44,46 @@ export default function Sidebar({ isOpen, onClose }) {
         <div id="sidebar" className={'sidebar ' + (isOpen ? 'active' : '')}>
             <div className="sidebar-header">
                 <Link href="/" className="sidebar-brand" onClick={onClose}>
-                    <img src={brandLogo} alt="Logo" className="sidebar-logo" />
+                    <img
+                        src={getImageUrl(brandLogo)}
+                        alt="Logo"
+                        className="sidebar-logo"
+                        onError={(e) => { e.target.src = '/img/profile_image.jpg'; }}
+                    />
                     <span>{brandName}</span>
                 </Link>
-                <a href="#" onClick={(e) => { e.preventDefault(); onClose(); }} className="close-btn">&times;</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); onClose(); }} className="close-btn" aria-label="Close menu">&times;</a>
             </div>
             
-            <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Categories</div>
+            {/* Account / User Status */}
+            <div style={{ padding: '10px 15px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                <Link
+                    href="/profile"
+                    onClick={onClose}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px 14px',
+                        background: user ? '#ecfdf5' : '#f9fafb',
+                        borderRadius: '8px',
+                        color: user ? '#059669' : '#374151',
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        textDecoration: 'none'
+                    }}
+                >
+                    <i className={user ? 'fas fa-user-check' : 'fas fa-user-circle'} style={{ fontSize: '16px' }}></i>
+                    <span>{user ? `My Account (${user.username || 'User'})` : 'Sign In / Register'}</span>
+                </Link>
+            </div>
+
+            <div style={{ padding: '12px 15px 6px', color: '#888', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Shop Categories
+            </div>
             {categories.map(cat => {
-                let url = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`;
+                let rawSlug = cat.slug || cat.name.toLowerCase();
+                let url = cat.redirectUrl || `/category/${encodeURIComponent(rawSlug)}`;
                 
                 // Cleanup old HTML extensions
                 if (url.endsWith('.html')) {
@@ -75,7 +108,12 @@ export default function Sidebar({ isOpen, onClose }) {
                                 onClick={() => toggleAccordion(catId)}
                             >
                                 <span className="cat-btn-content">
-                                    <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" />
+                                    <img
+                                        src={getImageUrl(cat.iconUrl || cat.icon || cat.image)}
+                                        alt=""
+                                        loading="lazy"
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
                                     <span>{cat.displayName || cat.name}</span>
                                 </span>
                                 <i className="fas fa-chevron-down sidebar-chevron"></i>
@@ -84,11 +122,17 @@ export default function Sidebar({ isOpen, onClose }) {
                                 <Link href={url} onClick={onClose} className="sidebar-sub-link all-sub-link">
                                     <i className="fas fa-th-large"></i> All {cat.displayName || cat.name}
                                 </Link>
-                                {cat.subcategories.map((sub, idx) => (
-                                    <Link key={idx} href={`${url}?sub=${encodeURIComponent(sub)}`} onClick={onClose} className="sidebar-sub-link">
-                                        <i className="fas fa-minus"></i> {sub}
-                                    </Link>
-                                ))}
+                                {cat.subcategories.map((sub, idx) => {
+                                    const subClean = typeof sub === 'string' ? sub : (sub.name || String(sub));
+                                    const subUrl = url.includes('?') 
+                                        ? `${url}&sub=${encodeURIComponent(subClean)}` 
+                                        : `${url}?sub=${encodeURIComponent(subClean)}`;
+                                    return (
+                                        <Link key={idx} href={subUrl} onClick={onClose} className="sidebar-sub-link">
+                                            <i className="fas fa-minus"></i> {subClean}
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
                     );
@@ -98,7 +142,12 @@ export default function Sidebar({ isOpen, onClose }) {
                     <div key={catId} className="sidebar-category-wrapper">
                         <Link href={url} onClick={onClose} className="sidebar-category-btn">
                             <span className="cat-btn-content">
-                                <img src={getImageUrl(cat.iconUrl || cat.icon || cat.image)} alt="" loading="lazy" />
+                                <img
+                                    src={getImageUrl(cat.iconUrl || cat.icon || cat.image)}
+                                    alt=""
+                                    loading="lazy"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                />
                                 <span>{cat.displayName || cat.name}</span>
                             </span>
                         </Link>
@@ -106,15 +155,17 @@ export default function Sidebar({ isOpen, onClose }) {
                 );
             })}
             
-            <hr style={{ border: '0', borderTop: '1px solid rgba(0,0,0,0.1)', margin: '15px 0' }} />
+            <hr style={{ border: '0', borderTop: '1px solid rgba(0,0,0,0.08)', margin: '15px 0' }} />
             
-            <div style={{ padding: '10px 15px', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Links</div>
+            <div style={{ padding: '8px 15px 6px', color: '#888', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Quick Links
+            </div>
             <Link href="/track-order" onClick={onClose}><i className="fas fa-truck"></i> Track Order</Link>
             <Link href="/faq" onClick={onClose}><i className="fas fa-question-circle"></i> FAQ & Help</Link>
             <Link href="/blog" onClick={onClose}><i className="fas fa-newspaper"></i> Fashion Blog</Link>
             <Link href="/sitemap" onClick={onClose}><i className="fas fa-sitemap"></i> Sitemap</Link>
-            <a href="/return-product.html" onClick={onClose}><i className="fas fa-undo"></i> Return Product</a>
-            <a href="/return-policy.html" onClick={onClose}><i className="fas fa-file-contract"></i> Return Policy</a>
+            <Link href="/return-product" onClick={onClose}><i className="fas fa-undo"></i> Return Product</Link>
+            <Link href="/return-policy" onClick={onClose}><i className="fas fa-file-contract"></i> Return Policy</Link>
             <Link href="/about" onClick={onClose}><i className="fas fa-info-circle"></i> About Us</Link>
             <Link href="/contact" onClick={onClose}><i className="fas fa-envelope"></i> Contact Us</Link>
         </div>

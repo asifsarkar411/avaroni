@@ -441,18 +441,6 @@ async function fetchSettings() {
     }
 }
 
-function updateFavicon(iconUrl) {
-    if (!iconUrl) return;
-    let favicon = document.querySelector("link[rel='icon'], link[rel='shortcut icon']");
-    if (!favicon) {
-        favicon = document.createElement('link');
-        favicon.rel = 'icon';
-        document.head.appendChild(favicon);
-    }
-    favicon.type = 'image/png';
-    favicon.href = iconUrl;
-}
-
 let chartInstances = {};
 
 function destroyChart(canvasId) {
@@ -720,6 +708,7 @@ function switchTab(tabName) {
         if (tabName === 'add-product') cleanTitle = "Add New Product";
         if (tabName === 'manage-categories') cleanTitle = "Manage Categories";
         if (tabName === 'manage-promocodes') cleanTitle = "Manage Promocodes";
+        if (tabName === 'manage-vouchers') cleanTitle = "Manage Public Vouchers";
         if (tabName === 'manage-banners') cleanTitle = "Manage Homepage Slider";
         if (tabName === 'manage-popup') cleanTitle = "Homepage Welcome Popup Banner";
         if (tabName === 'manage-returns') cleanTitle = "Customer Return Requests";
@@ -2334,8 +2323,6 @@ window.deleteVoucher = deleteVoucher;
 
 
 // ==========================================
-// NAVBAR PROMO SLIDER MANAGEMENT
-// ==========================================
 // CUSTOMER RETURN REQUESTS MANAGEMENT
 // ==========================================
 
@@ -3014,6 +3001,7 @@ async function handleRemovePopupImage() {
         showToast("Error removing popup.", "error");
     }
 }
+
 
 async function handleChangePassword(e) {
     e.preventDefault();

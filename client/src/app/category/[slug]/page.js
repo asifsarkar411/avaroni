@@ -1,14 +1,16 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
 import { calculateDiscountedPrice, formatDiscountTag } from '@/utils/price';
 
-export default function CategoryPage() {
+function CategoryContent() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const slug = params.slug; // e.g., 'women'
+    const subParam = searchParams.get('sub');
 
     const [masterProducts, setMasterProducts] = useState([]);
     const [products, setProducts] = useState([]);
@@ -31,7 +33,7 @@ export default function CategoryPage() {
                 const catData = await catRes.json();
                 let actualCategoryQuery = slug;
 
-                if (catData.success) {
+                if (catData.success && Array.isArray(catData.categories)) {
                     const matchedCategory = catData.categories.find(c => c.slug === slug || c.name.toLowerCase() === slug.toLowerCase());
                     if (matchedCategory) {
                         setCategoryName(matchedCategory.displayName || matchedCategory.name);
@@ -46,7 +48,14 @@ export default function CategoryPage() {
                 const data = await res.json();
                 if (data.success && Array.isArray(data.products)) {
                     setMasterProducts(data.products);
-                    setProducts(data.products);
+                    
+                    if (subParam) {
+                        const targetSub = subParam.toLowerCase();
+                        const filtered = data.products.filter(p => p.subcategory && p.subcategory.trim().toLowerCase() === targetSub);
+                        setProducts(filtered);
+                    } else {
+                        setProducts(data.products);
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching category data:", err);
@@ -55,7 +64,7 @@ export default function CategoryPage() {
         }
         
         fetchCategoryData();
-    }, [slug]);
+    }, [slug, subParam]);
 
     // Listen for filter and sort events from Navbar
     useEffect(() => {
@@ -88,7 +97,7 @@ export default function CategoryPage() {
     return (
         <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
             <h2 className="page-title" style={{ textAlign: 'center', margin: '40px 0 20px', color: '#111', fontSize: '2rem', fontWeight: '600' }}>
-                {categoryName}
+                {categoryName} {subParam ? `— ${subParam}` : ''}
             </h2>
             
             {loading ? (
@@ -143,9 +152,17 @@ export default function CategoryPage() {
             ) : (
                 <div style={{ textAlign: 'center', padding: '50px 20px', color: '#666' }}>
                     <i className="fas fa-box-open" style={{ fontSize: '3rem', marginBottom: '15px', color: '#ccc' }}></i>
-                    <h3>No products found in this category.</h3>
+                    <h3>No products found in this {subParam ? `subcategory (${subParam})` : 'category'}.</h3>
                 </div>
             )}
         </div>
+    );
+}
+
+export default function CategoryPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center' }}><i className="fas fa-spinner fa-spin fa-2x"></i></div>}>
+            <CategoryContent />
+        </Suspense>
     );
 }

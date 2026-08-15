@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart -  AVARONI (Avaroni)</title>
+    <meta name="description" content="Review your selected items and proceed to secure checkout at  AVARONI (Avaroni).">
+    
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="AVARONI (Avaroni)">
+    <meta property="og:title" content="Shopping Cart -  AVARONI (Avaroni)">
+    <meta property="og:description" content="Review your items and proceed to checkout at Avaroni!">
+    <meta property="og:image" content="./img/profile_image.jpg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Shopping Cart -  AVARONI (Avaroni)">
+    <meta name="twitter:description" content="Review your items and proceed to checkout at Avaroni!">
+    <meta name="twitter:image" content="./img/profile_image.jpg">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <img src="./img/profile_image.jpg" alt="Logo" class="nav-logo">
+            <B>AVARONI</B>
+        </a>
+        <!-- Search & Filter Bar -->
+        <div class="search-bar-container">
+            <div class="search-bar-inner">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search search-bar-icon"></i>
+                    <input type="text" id="global-search-input" placeholder="Search for products..." autocomplete="off">
+                    <button id="search-clear-btn" class="search-clear-btn" style="display:none;"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="search-filter-divider"></div>
+                <div class="search-filter-wrapper">
+                    <i class="fas fa-sliders-h search-filter-icon"></i>
+                    <select id="global-filter-select" class="search-filter-select" title="Filter & Sort Products">
+                        <option value="all">Filter & Sort</option>
+                        <optgroup label="Price">
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </optgroup>
+                        <optgroup label="Subcategories" id="filter-subcategories-group">
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            <div id="search-results-dropdown" class="search-results-dropdown"></div>
+        </div>
+        <div class="nav-links">
+            <a href="wishlist.html" class="wishlist-icon" title="Wishlist"><i class="far fa-heart"></i><span id="wishlist-count" class="wishlist-badge">0</span></a>
+            <i id="menu-icon-btn" class="fas fa-bars menu-icon" style="cursor: pointer; font-size: 24px; margin-left: 15px; color: #333;"></i>
+        </div>
+    </nav>
+
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <img src="./img/profile_image.jpg" alt="Logo" class="sidebar-logo">
+                <span style="font-size:20px; font-weight:700; color:#333333; letter-spacing:0.5px;">AVARONI</span>
+            </a>
+            <a href="javascript:void(0)" id="close-sidebar-btn" class="close-btn" style="color:#555555; text-decoration:none; font-size:32px; border-bottom:none;">&times;</a>
+        </div>
+        <div id="sidebar-categories-container"></div>
+        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 15px 0;">
+        <div style="padding: 10px 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</div>
+        <a href="track-order.html"><i class="fas fa-truck"></i> Track Order</a>
+        <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
+        <a href="blog.html"><i class="fas fa-newspaper"></i> Blog</a>
+        <a href="sitemap.html"><i class="fas fa-sitemap"></i> Sitemap</a>
+        <a href="about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+
+    <div class="cart-price-summary">
+            <div class="cart-price-row">
+                <span>Subtotal</span>
+                <span>৳<span id="cart-subtotal">0</span></span>
+            </div>
+            <div class="cart-price-row" style="font-size: 13px; color: #aaa;">
+                <span>Shipping</span>
+                <span>Calculated at checkout</span>
+            </div>
+            <div class="cart-price-row total-row">
+                <span>Estimated Total</span>
+                <span>৳<span id="cart-total">0</span></span>
+            </div>
+        </div>
+
+        <div class="cart-actions">
+            <a href="index.html" class="btn" style="background: #0dc61a; text-decoration: none;"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
+            <a href="payment.html" class="btn" id="proceed-to-payment-btn" style="background: #ff1467; text-decoration: none;"><i class="fas fa-credit-card"></i> Proceed to Checkout</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof AOS !== "undefined") {
+                AOS.init({
+                    duration: 800,
+                    once: true,
+                    offset: 50
+                });
+            }
+        });
+    </script>
+</body>
+</html>

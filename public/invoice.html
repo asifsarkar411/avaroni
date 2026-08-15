@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice | AVARONI</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #d4af37;
+            --accent-hover: #b8972e;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+            --surface: #ffffff;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 40px 20px;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .action-bar {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-print {
+            background-color: #ffffff;
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn-print:hover {
+            background-color: #f8fafc;
+            transform: translateY(-2px);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--primary), #1e293b);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.3);
+        }
+
+        .invoice-wrapper {
+            background: var(--surface);
+            width: 100%;
+            max-width: 800px;
+            padding: 0;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.1);
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Top decorative bar */
+        .invoice-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+            background-size: 200% 100%;
+            animation: gradientMove 5s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Watermark */
+        .invoice-wrapper::after {
+            content: 'AVARONI';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 120px;
+            font-weight: 800;
+            color: rgba(15, 23, 42, 0.02);
+            pointer-events: none;
+            z-index: 0;
+            white-space: nowrap;
+        }
+
+        .invoice-content {
+            padding: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .brand-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .brand-tagline {
+            font-size: 13px;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .invoice-title-wrapper {
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: var(--primary);
+            margin: 0 0 10px;
+            text-transform: uppercase;
+        }
+
+        .invoice-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 5px 0;
+        }
+        
+        .invoice-meta strong {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            background: var(--bg-light);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .info-section {
+            flex: 1;
+        }
+
+        .info-section:last-child {
+            text-align: right;
+        }
+
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .info-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(46, 125, 50, 0.1);
+            color: #2e7d32;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: #b45309; }
+        .status-cancelled { background: rgba(220, 38, 38, 0.1); color: #b91c1c; }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        th {
+            background: var(--primary);
+            color: #ffffff;
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: none;
+        }
+
+        th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
+        th:nth-child(3) { text-align: center; }
+
+        tr:hover td {
+            background-color: rgba(248, 250, 252, 0.8);
+        }
+
+        td {
+            padding: 20px 16px;
+            font-size: 14px;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td:last-child { text-align: right; font-weight: 600; }
+        td:nth-child(3) { text-align: center; }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 15px;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 50px;
+        }
+
+        .totals-box {
+            width: 350px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .totals-row strong {
+            color: var(--text-dark);
+        }
+
+        .totals-row.discount {
+            color: #10b981;
+        }
+        
+        .totals-row.discount strong {
+            color: #10b981;
+        }
+
+        .grand-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--border);
+        }
+
+        .grand-total-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .grand-total-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: var(--primary);
+            color: #ffffff;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+
+        .footer-thank-you {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0 0 10px;
+            letter-spacing: 1px;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 5px 0;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Print Styles */
+        @media print {
+            body { background: #ffffff; padding: 0; }
+            .action-bar { display: none; }
+            .invoice-wrapper { box-shadow: none; border-radius: 0; max-width: 100%; }
+            .footer { border-radius: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .invoice-wrapper::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .info-container { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .totals-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div>Preparing your invoice...</div>
+    </div>
+
+    <div class="action-bar" id="action-bar" style="display: none;">
+        <button class="btn btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> Print Invoice
+        </button>
+        <button class="btn btn-download" onclick="downloadAsPDF()">
+            <i class="fas fa-file-pdf"></i> Download PDF
+        </button>
+    </div>
+
+    <div class="invoice-wrapper" id="invoice-wrapper">
+        <div class="invoice-content" id="invoice-content">
+            <!-- Content injected via JS -->
+        </div>
+    </div>
+
+    <!-- html2pdf library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderNumber = urlParams.get('orderNumber');
+        let currentOrder = null;
+
+        if (!orderNumber) {
+            document.getElementById('loading').innerHTML = '<div style="color:#ef4444;text-align:center;"><i class="fas fa-exclamation-circle fa-3x" style="margin-bottom:15px;"></i><br>Invalid Order Number</div>';
+        } else {
+            fetchOrderDetails(orderNumber);
+        }
+
+        async function fetchOrderDetails(orderNo) {
+            try {
+                const response = await fetch(`/api/orders/${orderNo}`);
+                const data = await response.json();
+                
+                if (data.success && data.order) {
+                    currentOrder = data.order;
+                    renderInvoice(currentOrder);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('action-bar').style.display = 'flex';
+                } else {
+                    document.getElementById('loading').innerHTML = '<div style="color:#ef4444;text-align:center;"><i class="fas fa-exclamation-triangle fa-3x" style="margin-bottom:15px;"></i><br>Order not found</div>';
+                }
+            } catch (error) {
+                console.error("Error fetching order:", error);
+                document.getElementById('loading').innerHTML = '<div style="color:#ef4444;text-align:center;"><i class="fas fa-times-circle fa-3x" style="margin-bottom:15px;"></i><br>Failed to load invoice</div>';
+            }
+        }
+
+        function getStatusClass(status) {
+            const s = (status || '').toLowerCase();
+            if (s.includes('cancel') || s.includes('reject')) return 'status-cancelled';
+            if (s.includes('pending')) return 'status-pending';
+            return ''; // default success
+        }
+
+        function renderInvoice(order) {
+            const orderDate = new Date(order.orderDate || Date.now()).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
+
+            let itemsHtml = '';
+            let subtotal = 0;
+            
+            const cartItems = order.cartItems || [];
+            cartItems.forEach((item, index) => {
+                const price = Number(item.price);
+                const quantity = Number(item.quantity);
+                const itemTotal = price * quantity;
+                subtotal += itemTotal;
+                let itemDetails = item.name;
+                let extras = [];
+                if (item.size) extras.push(`Size: ${item.size}`);
+                if (item.color || item.colour) extras.push(`Color: ${item.color || item.colour}`);
+                if (extras.length > 0) {
+                    itemDetails += ` <br><span style="font-size: 11px; color: #64748b;">${extras.join(' | ')}</span>`;
+                }
+
+                itemsHtml += \`
+                    <tr>
+                        <td>\${String(index + 1).padStart(2, '0')}</td>
+                        <td class="item-name">\${itemDetails}</td>
+                        <td>\${quantity}</td>
+                        <td>৳\${price.toLocaleString()}</td>
+                        <td>৳\${itemTotal.toLocaleString()}</td>
+                    </tr>
+                \`;
+            });
+
+            const discount = order.discountAmount !== undefined ? Number(order.discountAmount) : 0;
+            const delivery = order.shippingFee !== undefined ? Number(order.shippingFee) : (order.totalAmount - subtotal + discount > 0 ? order.totalAmount - subtotal + discount : 0);
+
+            const content = \`
+                <div class="header">
+                    <div class="brand-section" style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+                        <img src="./img/profile_image.jpg" alt="AVARONI" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);" onerror="this.src='/img/profile_image.jpg';">
+                        <div>
+                            <h1 class="brand-name" style="margin: 0; line-height: 1.1;">AVARONI</h1>
+                            <div class="brand-tagline">Premium Fashion & Beauty</div>
+                        </div>
+                    </div>
+                    <div class="invoice-title-wrapper">
+                        <h2 class="invoice-title">INVOICE</h2>
+                        <div class="invoice-meta" style="font-size: 15px; font-weight: 800; color: var(--primary);">INVOICE \${(String(order.orderNumber || order._id || '1').replace(/\\D/g, '') || String(order.orderNumber || '1').slice(-7)).padStart(7, '0')}</div>
+                        <div class="invoice-meta">Order Ref: <strong>\${order.orderNumber}</strong></div>
+                        <div class="invoice-meta">Date: <strong>\${orderDate}</strong></div>
+                    </div>
+                </div>
+
+                <div class="info-container">
+                    <div class="info-section">
+                        <div class="info-label">Billed To</div>
+                        <div class="info-name">\${order.customerName}</div>
+                        <div class="info-text"><i class="fas fa-phone fa-fw" style="color:#94a3b8;margin-right:5px;"></i> \${order.phone}</div>
+                        <div class="info-text"><i class="fas fa-envelope fa-fw" style="color:#94a3b8;margin-right:5px;"></i> \${order.email || 'N/A'}</div>
+                        <div class="info-text" style="margin-top: 10px; color: #475569; max-width: 250px;">
+                            <i class="fas fa-map-marker-alt fa-fw" style="color:#94a3b8;margin-right:5px;"></i> \${order.address}
+                        </div>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-label">Order Details</div>
+                        <div class="info-text"><strong>Order ID:</strong> \${order.orderNumber || order._id}</div>
+                        <div class="info-text"><strong>Invoice No:</strong> \${(String(order.orderNumber || order._id || '1').replace(/\\D/g, '') || String(order.orderNumber || '1').slice(-7)).padStart(7, '0')}</div>
+                        <div class="info-text"><strong>Method:</strong> \${order.paymentMethod === 'cod' ? 'Cash on Delivery' : (order.paymentMethod || 'Cash on Delivery')}</div>
+                        <div class="info-text"><strong>Transaction ID:</strong> \${order.transactionId || order.trxId || 'N/A'}</div>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Item Description</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        \${itemsHtml}
+                    </tbody>
+                </table>
+
+                <div class="totals-section">
+                    <div class="totals-box">
+                        <div class="totals-row">
+                            <span>Subtotal</span>
+                            <strong>৳\${subtotal.toLocaleString()}</strong>
+                        </div>
+                        <div class="totals-row">
+                            <span>Delivery Fee</span>
+                            <strong>৳\${delivery.toLocaleString()}</strong>
+                        </div>
+                        \${discount > 0 ? \`
+                        <div class="totals-row discount">
+                            <span>Discount \${order.promoCode ? \`(\${order.promoCode})\` : ''}</span>
+                            <strong>-৳\${discount.toLocaleString()}</strong>
+                        </div>
+                        \` : ''}
+                        <div class="grand-total">
+                            <span class="grand-total-label">Grand Total</span>
+                            <span class="grand-total-amount">৳\${Number(order.totalAmount).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            \`;
+
+            const footer = \`
+                <div class="footer">
+                    <div class="footer-thank-you">Thank you for your business!</div>
+                    <div class="footer-note">This is a computer-generated invoice and does not require a physical signature.</div>
+                    <div class="footer-note">For any inquiries, please contact us at support@avaroni.com</div>
+                </div>
+            \`;
+
+            document.getElementById('invoice-content').innerHTML = content;
+            if (!document.getElementById('invoice-footer-injected')) {
+                const footerDiv = document.createElement('div');
+                footerDiv.id = 'invoice-footer-injected';
+                footerDiv.innerHTML = footer;
+                document.getElementById('invoice-wrapper').appendChild(footerDiv);
+            }
+        }
+
+        function downloadAsPDF() {
+            if (!currentOrder) return;
+            
+            const element = document.getElementById('invoice-wrapper');
+            const originalBorderRadius = element.style.borderRadius;
+            const originalBoxShadow = element.style.boxShadow;
+            
+            // Temporary styles for PDF rendering to ensure it fits perfectly and looks like print
+            element.style.borderRadius = '0';
+            element.style.boxShadow = 'none';
+
+            const opt = {
+                margin:       0,
+                filename:     \`AVARONI_Invoice_\${currentOrder.orderNumber}.pdf\`,
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            const btn = document.querySelector('.btn-download');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore styles
+                element.style.borderRadius = originalBorderRadius;
+                element.style.boxShadow = originalBoxShadow;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
