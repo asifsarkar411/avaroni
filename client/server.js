@@ -139,6 +139,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
     }
 })); // Serves your HTML/CSS/JS
 
+// Explicit /uploads/img alias route to prevent 404s
+app.use('/uploads/img', express.static(path.join(__dirname, 'public', 'img')));
+
 // Explicit /uploads static route with caching
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
     setHeaders: function (res, filePath) {
@@ -150,9 +153,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
 
 // Fallback for missing images in /uploads/:imageFile (e.g. ephemeral serverless or deleted file)
 app.get('/uploads/:imageFile', (req, res) => {
-    const requestedPath = path.join(__dirname, 'public', 'uploads', req.params.imageFile);
+    const filename = req.params.imageFile;
+    const requestedPath = path.join(__dirname, 'public', 'uploads', filename);
     if (fs.existsSync(requestedPath)) {
         return res.sendFile(requestedPath);
+    }
+    const imgPath = path.join(__dirname, 'public', 'img', filename);
+    if (fs.existsSync(imgPath)) {
+        return res.sendFile(imgPath);
     }
     return res.sendFile(path.join(__dirname, 'public', 'img', 'profile_image.jpg'));
 });
