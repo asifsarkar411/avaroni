@@ -8,6 +8,7 @@ import TabbedProductSection from '@/components/TabbedProductSection';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
+import { getCategoryUrl } from '@/utils/category';
 import { calculateDiscountedPrice, formatDiscountTag } from '@/utils/price';
 
 const FEATURED_TABS = [
@@ -95,7 +96,7 @@ export default function Home() {
             ) : (
                 <div className="category-grid" id="category-grid">
                     {categories.map(cat => (
-                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = cat.redirectUrl || `/category/${cat.slug || cat.name.toLowerCase()}`}>
+                        <div key={cat._id} className="category-card" data-aos="zoom-in" onClick={() => window.location.href = getCategoryUrl(cat)}>
                             <div className="category-image-wrap img-skeleton-wrap">
                                 <img 
                                     src={getImageUrl(cat.imageUrl || cat.image || cat.iconUrl || cat.icon)} 

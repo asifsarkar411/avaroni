@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getImageUrl } from '@/utils/image';
+import { getCategoryUrl } from '@/utils/category';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -82,19 +83,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 Shop Categories
             </div>
             {categories.map(cat => {
-                let rawSlug = cat.slug || cat.name.toLowerCase();
-                let url = cat.redirectUrl || `/category/${encodeURIComponent(rawSlug)}`;
-                
-                // Cleanup old HTML extensions
-                if (url.endsWith('.html')) {
-                    url = url.replace(/\.html$/, '');
-                    
-                    // Special cases for categories that used to be root html files
-                    if (['/women', '/kids', '/ornament', 'women', 'kids', 'ornament'].includes(url)) {
-                        url = `/category/${url.replace(/^\//, '')}`;
-                    }
-                }
-
+                const url = getCategoryUrl(cat);
                 const catId = cat._id || cat.slug || cat.name;
                 const hasSubs = Array.isArray(cat.subcategories) && cat.subcategories.length > 0;
                 const isExpanded = openCategory === catId;

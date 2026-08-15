@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getImageUrl } from '@/utils/image';
+import { getCategoryUrl } from '@/utils/category';
 
 export default function Navbar({ onMenuClick }) {
     const router = useRouter();
@@ -272,18 +273,24 @@ export default function Navbar({ onMenuClick }) {
                             {categories.length === 0 ? (
                                 <div style={{padding: '10px 20px', color: '#999', fontSize: '13px'}}>Loading...</div>
                             ) : (
-                                categories.map(cat => (
-                                    <div key={cat._id} className="nav-dropdown-item">
-                                        <Link href={`/category/${cat.slug || cat.name.toLowerCase()}`}>{cat.name}</Link>
-                                        {cat.subcategories && cat.subcategories.length > 0 && (
-                                            <div className="nav-subcategories">
-                                                {cat.subcategories.map((sub, idx) => (
-                                                    <Link key={idx} href={`/category/${cat.slug || cat.name.toLowerCase()}?sub=${encodeURIComponent(sub)}`}>{sub}</Link>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
+                                categories.map(cat => {
+                                    const catUrl = getCategoryUrl(cat);
+                                    return (
+                                        <div key={cat._id} className="nav-dropdown-item">
+                                            <Link href={catUrl}>{cat.name}</Link>
+                                            {cat.subcategories && cat.subcategories.length > 0 && (
+                                                <div className="nav-subcategories">
+                                                    {cat.subcategories.map((sub, idx) => {
+                                                        const subUrl = catUrl.includes('?') ? `${catUrl}&sub=${encodeURIComponent(sub)}` : `${catUrl}?sub=${encodeURIComponent(sub)}`;
+                                                        return (
+                                                            <Link key={idx} href={subUrl}>{sub}</Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
                             )}
                         </div>
                     </div>
