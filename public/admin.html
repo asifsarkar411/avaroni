@@ -125,16 +125,18 @@
 
         .sidebar-nav {
             flex: 1;
-            padding: 16px 12px;
+            min-height: 0;
+            padding: 16px 14px;
             display: flex;
             flex-direction: column;
             gap: 4px;
             overflow-y: auto;
             overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         .sidebar-nav::-webkit-scrollbar {
-            width: 4px;
+            width: 5px;
         }
         .sidebar-nav::-webkit-scrollbar-thumb {
             background: #1e293b;
@@ -142,13 +144,14 @@
         }
 
         .sidebar-section-title {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #4b5f88;
-            padding: 14px 12px 6px;
+            letter-spacing: 1.2px;
+            color: #64748b;
+            padding: 16px 12px 6px;
             user-select: none;
+            flex-shrink: 0;
         }
 
         /* Accordion Menu Group */
@@ -156,8 +159,8 @@
             display: flex;
             flex-direction: column;
             border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            flex-shrink: 0;
         }
 
         .accordion-header {
@@ -165,20 +168,23 @@
             align-items: center;
             justify-content: space-between;
             width: 100%;
+            min-height: 42px;
             padding: 10px 14px;
             background: transparent;
             border: none;
-            color: var(--sidebar-text);
+            color: #94a3b8;
             font-size: 13.5px;
             font-weight: 600;
             text-align: left;
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s ease;
+            flex-shrink: 0;
+            line-height: 1.4;
         }
 
         .accordion-header:hover {
-            background-color: var(--sidebar-hover);
+            background-color: #13234d;
             color: #ffffff;
         }
 
@@ -191,6 +197,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            white-space: nowrap;
         }
 
         .accordion-title-wrap i {
@@ -198,6 +205,7 @@
             width: 18px;
             text-align: center;
             color: #8198c6;
+            flex-shrink: 0;
         }
 
         .accordion-header:hover .accordion-title-wrap i,
@@ -207,8 +215,9 @@
 
         .accordion-chevron {
             font-size: 11px;
-            color: #5d75a5;
+            color: #64748b;
             transition: transform 0.25s ease;
+            flex-shrink: 0;
         }
 
         .sidebar-accordion.open .accordion-chevron {
@@ -220,10 +229,11 @@
             display: none;
             flex-direction: column;
             gap: 2px;
-            padding: 4px 0 6px 32px;
-            background: var(--sidebar-sub-bg);
-            border-radius: 6px;
+            padding: 6px 0 6px 12px;
+            margin-left: 20px;
+            border-left: 1.5px solid rgba(255, 255, 255, 0.1);
             margin-top: 2px;
+            flex-shrink: 0;
         }
 
         .sidebar-accordion.open .accordion-body {
@@ -236,10 +246,11 @@
             align-items: center;
             gap: 12px;
             width: 100%;
-            padding: 10px 14px;
+            min-height: 40px;
+            padding: 9px 14px;
             background: transparent;
             border: none;
-            color: var(--sidebar-text);
+            color: #94a3b8;
             font-size: 13.5px;
             font-weight: 600;
             text-align: left;
@@ -247,13 +258,19 @@
             border-radius: 8px;
             transition: all 0.2s ease;
             text-decoration: none;
+            flex-shrink: 0;
+            line-height: 1.4;
+            white-space: nowrap;
         }
 
         .sub-tab-btn {
-            padding: 8px 12px;
+            min-height: 34px;
+            padding: 7px 12px;
             font-size: 12.5px;
             font-weight: 500;
-            color: #8da4d0;
+            color: #94a3b8;
+            gap: 10px;
+            border-radius: 6px;
         }
 
         .sub-tab-btn::before {
@@ -263,10 +280,11 @@
             border-radius: 50%;
             background: #4b6393;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
         .tab-btn:hover, .sub-tab-btn:hover {
-            background-color: var(--sidebar-hover);
+            background-color: #13234d;
             color: #ffffff;
         }
 
@@ -302,6 +320,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            flex-shrink: 0;
+            background: rgba(0,0,0,0.1);
         }
 
         .clear-cache-sidebar-btn {
