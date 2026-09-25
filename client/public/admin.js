@@ -689,9 +689,13 @@ function initMobileAdminSidebar() {
 }
 
 function switchTab(tabName) {
+    if (!tabName) tabName = 'dashboard';
     localStorage.setItem('activeAdminTab', tabName);
     document.querySelectorAll('.tab-btn, .sub-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+    });
     document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active-parent'));
     
     // Highlight matching button
@@ -706,8 +710,16 @@ function switchTab(tabName) {
         }
     });
     
-    const targetTab = document.getElementById(`${tabName}-tab`);
-    if (targetTab) targetTab.classList.add('active');
+    let targetTab = document.getElementById(`${tabName}-tab`);
+    if (!targetTab) {
+        // Fallback to dashboard if invalid tabName
+        tabName = 'dashboard';
+        targetTab = document.getElementById('dashboard-tab');
+    }
+    if (targetTab) {
+        targetTab.classList.add('active');
+        targetTab.style.display = 'block';
+    }
 
     // Update Topbar Title
     const titleElement = document.getElementById('tab-title');
