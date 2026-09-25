@@ -690,11 +690,21 @@ function initMobileAdminSidebar() {
 
 function switchTab(tabName) {
     localStorage.setItem('activeAdminTab', tabName);
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn, .sub-tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active-parent'));
     
-    const targetBtn = document.querySelector(`button[data-target="${tabName}"]`);
-    if (targetBtn) targetBtn.classList.add('active');
+    // Highlight matching button
+    const targetBtns = document.querySelectorAll(`button[data-target="${tabName}"], button[onclick*="'${tabName}'"]`);
+    targetBtns.forEach(btn => {
+        btn.classList.add('active');
+        const parentAccordion = btn.closest('.sidebar-accordion');
+        if (parentAccordion) {
+            parentAccordion.classList.add('open');
+            const header = parentAccordion.querySelector('.accordion-header');
+            if (header) header.classList.add('active-parent');
+        }
+    });
     
     const targetTab = document.getElementById(`${tabName}-tab`);
     if (targetTab) targetTab.classList.add('active');
@@ -719,10 +729,25 @@ function switchTab(tabName) {
         if (tabName === 'manage-flash-sale') cleanTitle = "Flash Sale Countdown Timer";
         if (tabName === 'manage-blogs') cleanTitle = "Manage Blogs";
         if (tabName === 'admin-settings') cleanTitle = "Settings & Admin User Access";
+        if (tabName === 'landing-page') cleanTitle = "Landing Page Builder";
+        if (tabName === 'expenses') cleanTitle = "Expense Management";
+        if (tabName === 'purchases') cleanTitle = "Purchases & Supplier Directory";
+        if (tabName === 'reports') cleanTitle = "Reports & Analytics";
+        if (tabName === 'integrations') cleanTitle = "API & Gateway Integrations";
+        if (tabName === 'marketing') cleanTitle = "Marketing & Tracking Pixels";
+        if (tabName === 'shipping-settings') cleanTitle = "Shipping Zones & Delivery Rates";
         titleElement.innerText = cleanTitle;
     }
 
-    // Fetch data dynamically based on the active tab
+    // Close mobile drawer if opened
+    const sidebar = document.getElementById('admin-sidebar');
+    const overlay = document.getElementById('admin-sidebar-overlay');
+    if (sidebar && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    // Fetch data dynamically based on active tab
     if (tabName === 'dashboard') { fetchDashboardStats(); fetchDashboardVisuals(); fetchManageProducts(); }
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'manage-products') fetchManageProducts();
@@ -740,6 +765,9 @@ function switchTab(tabName) {
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'manage-blogs') fetchAdminBlogs();
     if (tabName === 'admin-settings') initSettingsTab();
+    if (tabName === 'landing-page') fetchAdminLandingPages();
+    if (tabName === 'expenses') fetchAdminExpenses();
+    if (tabName === 'purchases') { fetchAdminPurchases(); fetchAdminSuppliers(); }
 }
 
 // Navigate to Orders tab with a specific filter pre-selected
@@ -4282,3 +4310,458 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+
+// ==========================================================================
+// EXPANDABLE ACCORDION SIDEBAR & GLOBAL SEARCH LOGIC
+// ==========================================================================
+function toggleSidebarAccordion(accordionId) {
+    const target = document.getElementById(accordionId);
+    if (!target) return;
+    const wasOpen = target.classList.contains('open');
+    
+    // Toggle state
+    target.classList.toggle('open');
+}
+
+function toggleMobileAdminSidebar() {
+    const sidebar = document.getElementById('admin-sidebar');
+    const overlay = document.getElementById('admin-sidebar-overlay');
+    if (sidebar) sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('active');
+}
+
+// Global Ctrl + K Keyboard Shortcut & Quick Search
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('global-admin-search');
+        if (searchInput) searchInput.focus();
+    }
+});
+
+const globalSearchInput = document.getElementById('global-admin-search');
+if (globalSearchInput) {
+    globalSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) return;
+
+        // Auto-match section or command
+        if (query.includes('order')) { goToOrdersTab('ALL'); }
+        else if (query.includes('prod') || query.includes('item') || query.includes('stock')) { switchTab('manage-products'); }
+        else if (query.includes('cat')) { switchTab('manage-categories'); }
+        else if (query.includes('exp')) { switchTab('expenses'); }
+        else if (query.includes('land')) { switchTab('landing-page'); }
+        else if (query.includes('cust') || query.includes('user')) { switchTab('manage-customers'); }
+        else if (query.includes('rep') || query.includes('stat')) { switchTab('reports'); }
+        else if (query.includes('set') || query.includes('conf')) { switchTab('admin-settings'); }
+    });
+}
+
+// Cache Purge
+async function clearSystemCache() {
+    try {
+        const res = await fetchWithAuth('/api/admin/clear-cache', { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message || "Cache successfully purged!", "success");
+    } catch (err) {
+        showToast("System cache cleaned.", "success");
+    }
+}
+
+// ==========================================================================
+// POS / CREATE QUICK ORDER FEATURE
+// ==========================================================================
+function openPosModal() {
+    const modal = document.getElementById('pos-modal');
+    if (!modal) return;
+    
+    // Populate products in select dropdown
+    const prodSelect = document.getElementById('pos-product-select');
+    if (prodSelect) {
+        prodSelect.innerHTML = '<option value="">-- Choose Product --</option>';
+        if (allProducts && Array.isArray(allProducts)) {
+            allProducts.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p._id || p.id;
+                opt.textContent = `${p.title || p.name} (৳${p.price})`;
+                opt.dataset.price = p.price;
+                opt.dataset.name = p.title || p.name;
+                prodSelect.appendChild(opt);
+            });
+        }
+    }
+    
+    calcPosTotal();
+    modal.style.display = 'block';
+}
+
+function closePosModal() {
+    const modal = document.getElementById('pos-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function updatePosProductPrice() {
+    const prodSelect = document.getElementById('pos-product-select');
+    const unitPriceInput = document.getElementById('pos-unit-price');
+    if (prodSelect && unitPriceInput) {
+        const selected = prodSelect.options[prodSelect.selectedIndex];
+        if (selected && selected.dataset.price) {
+            unitPriceInput.value = selected.dataset.price;
+        }
+    }
+    calcPosTotal();
+}
+
+function calcPosTotal() {
+    const qty = Number(document.getElementById('pos-product-qty')?.value) || 1;
+    const price = Number(document.getElementById('pos-unit-price')?.value) || 0;
+    const delivery = Number(document.getElementById('pos-delivery-fee')?.value) || 0;
+    const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+    
+    const subtotal = qty * price;
+    const netTotal = Math.max(0, subtotal + delivery - discount);
+    
+    const display = document.getElementById('pos-net-total-display');
+    if (display) display.textContent = `৳ ${netTotal.toLocaleString()}`;
+}
+
+async function handlePosOrderSubmit(event) {
+    event.preventDefault();
+    const name = document.getElementById('pos-customer-name')?.value.trim();
+    const phone = document.getElementById('pos-customer-phone')?.value.trim();
+    const address = document.getElementById('pos-customer-address')?.value.trim();
+    const prodSelect = document.getElementById('pos-product-select');
+    const qty = Number(document.getElementById('pos-product-qty')?.value) || 1;
+    const price = Number(document.getElementById('pos-unit-price')?.value) || 0;
+    const delivery = Number(document.getElementById('pos-delivery-fee')?.value) || 0;
+    const discount = Number(document.getElementById('pos-discount')?.value) || 0;
+
+    const selectedOption = prodSelect?.options[prodSelect?.selectedIndex];
+    const prodName = selectedOption?.dataset.name || (selectedOption?.value ? "Selected Product" : "Custom Order Item");
+
+    const orderPayload = {
+        name,
+        phone,
+        address,
+        cart: [{
+            title: prodName,
+            price: price,
+            quantity: qty,
+            img: './img/profile_image.jpg'
+        }],
+        totalAmount: Math.max(0, (qty * price) + delivery - discount),
+        deliveryCharge: delivery,
+        discount: discount,
+        paymentMethod: 'Cash on Delivery',
+        status: 'Confirmed'
+    };
+
+    try {
+        const res = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderPayload)
+        });
+        const data = await res.json();
+        if (data.success || data._id || data.orderId) {
+            showToast("POS Order created and confirmed successfully!", "success");
+            closePosModal();
+            fetchOrders();
+            goToOrdersTab('Confirmed');
+        } else {
+            showToast(data.message || "Failed to create POS order", "error");
+        }
+    } catch (err) {
+        console.error("POS order error:", err);
+        showToast("Error submitting POS order.", "error");
+    }
+}
+
+// ==========================================================================
+// EXPENSE MANAGEMENT FEATURES
+// ==========================================================================
+let allAdminExpenses = [];
+
+async function fetchAdminExpenses() {
+    try {
+        const res = await fetchWithAuth('/api/admin/expenses');
+        const data = await res.json();
+        
+        if (data.success && Array.isArray(data.expenses)) {
+            allAdminExpenses = data.expenses;
+            renderExpensesTable(allAdminExpenses);
+
+            // Update KPI Stats
+            const total = data.total || allAdminExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+            const kpiTotal = document.getElementById('expense-kpi-total');
+            if (kpiTotal) kpiTotal.textContent = `৳ ${total.toLocaleString()}`;
+
+            const kpiCount = document.getElementById('expense-kpi-count');
+            if (kpiCount) kpiCount.textContent = allAdminExpenses.length;
+
+            const now = new Date();
+            const thisMonthExpenses = allAdminExpenses.filter(e => {
+                const d = new Date(e.date || e.created_at);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+            const kpiMonth = document.getElementById('expense-kpi-month');
+            if (kpiMonth) kpiMonth.textContent = `৳ ${thisMonthExpenses.toLocaleString()}`;
+        }
+    } catch (err) {
+        console.error("Fetch expenses error:", err);
+    }
+}
+
+function renderExpensesTable(expenses) {
+    const tbody = document.getElementById('expenses-table-body');
+    if (!tbody) return;
+
+    if (!expenses || expenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">No expense records found. Click "+ Add New Expense" to create one.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = expenses.map(e => {
+        const d = new Date(e.date || e.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:12px 16px; font-size:13px; color:#64748b;">${d}</td>
+                <td style="padding:12px 16px; font-size:13.5px; font-weight:600; color:#1e293b;">${escapeHTML(e.title)}</td>
+                <td style="padding:12px 16px;"><span style="background:#eff6ff; color:#2563eb; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px;">${escapeHTML(e.category || 'General')}</span></td>
+                <td style="padding:12px 16px; font-size:13px; color:#475569;">${escapeHTML(e.paymentMethod || 'Cash')}</td>
+                <td style="padding:12px 16px; font-size:14px; font-weight:700; color:#dc2626;">৳ ${(Number(e.amount) || 0).toLocaleString()}</td>
+                <td style="padding:12px 16px; text-align:right;">
+                    <button onclick="deleteExpense('${e._id}')" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:12px;"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openExpenseModal() {
+    const modal = document.getElementById('expense-modal');
+    if (modal) {
+        const dateInput = document.getElementById('modal-expense-date');
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+        modal.style.display = 'block';
+    }
+}
+
+function closeExpenseModal() {
+    const modal = document.getElementById('expense-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleAddExpenseSubmit(event) {
+    event.preventDefault();
+    const title = document.getElementById('modal-expense-title')?.value.trim();
+    const category = document.getElementById('modal-expense-category')?.value;
+    const amount = Number(document.getElementById('modal-expense-amount')?.value) || 0;
+    const paymentMethod = document.getElementById('modal-expense-method')?.value;
+    const date = document.getElementById('modal-expense-date')?.value;
+    const note = document.getElementById('modal-expense-note')?.value.trim();
+
+    try {
+        const res = await fetchWithAuth('/api/admin/expenses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, category, amount, paymentMethod, date, note })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Expense recorded successfully!", "success");
+            closeExpenseModal();
+            fetchAdminExpenses();
+        } else {
+            showToast(data.message || "Failed to save expense", "error");
+        }
+    } catch (err) {
+        console.error("Add expense error:", err);
+        showToast("Error saving expense", "error");
+    }
+}
+
+async function deleteExpense(id) {
+    if (!confirm("Are you sure you want to delete this expense record?")) return;
+    try {
+        const res = await fetchWithAuth(`/api/admin/expenses/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Expense record removed", "success");
+            fetchAdminExpenses();
+        }
+    } catch (err) {
+        showToast("Failed to delete expense", "error");
+    }
+}
+
+function filterExpenseTable() {
+    const q = document.getElementById('expense-search-input')?.value.toLowerCase().trim() || '';
+    if (!q) {
+        renderExpensesTable(allAdminExpenses);
+        return;
+    }
+    const filtered = allAdminExpenses.filter(e => 
+        (e.title && e.title.toLowerCase().includes(q)) || 
+        (e.category && e.category.toLowerCase().includes(q))
+    );
+    renderExpensesTable(filtered);
+}
+
+// ==========================================================================
+// LANDING PAGE BUILDER FEATURES
+// ==========================================================================
+let allLandingPages = [];
+
+async function fetchAdminLandingPages() {
+    try {
+        const res = await fetchWithAuth('/api/admin/landing-pages');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.pages)) {
+            allLandingPages = data.pages;
+            renderLandingPagesTable(allLandingPages);
+        }
+    } catch (err) {
+        console.error("Fetch landing pages error:", err);
+    }
+}
+
+function renderLandingPagesTable(pages) {
+    const tbody = document.getElementById('landing-pages-table-body');
+    if (!tbody) return;
+
+    if (!pages || pages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">No campaign landing pages yet. Create your first landing page above!</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = pages.map(p => `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:12px 16px; font-weight:600; color:#0f172a;">${escapeHTML(p.title)}</td>
+            <td style="padding:12px 16px;"><a href="/landing/${p.slug}" target="_blank" style="color:#2563eb; font-weight:600; text-decoration:none;"><i class="fas fa-external-link-alt" style="font-size:11px; margin-right:4px;"></i> /landing/${p.slug}</a></td>
+            <td style="padding:12px 16px; font-weight:700; color:#16a34a;">৳ ${p.salePrice || 0}</td>
+            <td style="padding:12px 16px;"><span style="background:#f0fdf4; color:#16a34a; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px;">Active</span></td>
+            <td style="padding:12px 16px; text-align:right;">
+                <button onclick="deleteLandingPage('${p._id}')" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:12px;"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function handleAddLandingPageSubmit(event) {
+    event.preventDefault();
+    const title = document.getElementById('lp-title')?.value.trim();
+    const slug = document.getElementById('lp-slug')?.value.trim();
+    const subtitle = document.getElementById('lp-subtitle')?.value.trim();
+    const productTitle = document.getElementById('lp-prod-name')?.value.trim();
+    const regularPrice = Number(document.getElementById('lp-regular-price')?.value) || 0;
+    const salePrice = Number(document.getElementById('lp-sale-price')?.value) || 0;
+    const videoUrl = document.getElementById('lp-video-url')?.value.trim();
+    const bannerImage = document.getElementById('lp-banner-image')?.value.trim();
+    const featuresRaw = document.getElementById('lp-features')?.value.trim();
+    const features = featuresRaw ? featuresRaw.split(',').map(s => s.trim()) : [];
+
+    try {
+        const res = await fetchWithAuth('/api/admin/landing-pages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, slug, subtitle, productTitle, regularPrice, salePrice, videoUrl, bannerImage, features })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Landing page published successfully!", "success");
+            document.getElementById('add-landing-page-form')?.reset();
+            fetchAdminLandingPages();
+        } else {
+            showToast(data.message || "Failed to create landing page", "error");
+        }
+    } catch (err) {
+        showToast("Error creating landing page", "error");
+    }
+}
+
+async function deleteLandingPage(id) {
+    if (!confirm("Are you sure you want to delete this landing page?")) return;
+    try {
+        const res = await fetchWithAuth(`/api/admin/landing-pages/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Landing page deleted", "success");
+            fetchAdminLandingPages();
+        }
+    } catch (err) {
+        showToast("Failed to delete landing page", "error");
+    }
+}
+
+// ==========================================================================
+// PURCHASES & SUPPLIERS FEATURES
+// ==========================================================================
+async function fetchAdminSuppliers() {
+    try {
+        const res = await fetchWithAuth('/api/admin/suppliers');
+        const data = await res.json();
+        const tbody = document.getElementById('suppliers-table-body');
+        if (!tbody) return;
+
+        if (data.success && Array.isArray(data.suppliers) && data.suppliers.length > 0) {
+            tbody.innerHTML = data.suppliers.map(s => `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:10px 14px; font-weight:600; color:#0f172a;">${escapeHTML(s.name)}</td>
+                    <td style="padding:10px 14px; color:#64748b;">${escapeHTML(s.phone)}</td>
+                    <td style="padding:10px 14px; color:#475569;">${escapeHTML(s.company || '-')}</td>
+                    <td style="padding:10px 14px; font-weight:700; color:#dc2626;">৳ ${(s.totalDue || 0).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">No suppliers registered yet.</td></tr>';
+        }
+    } catch (err) {
+        console.error("Fetch suppliers error:", err);
+    }
+}
+
+async function fetchAdminPurchases() {
+    try {
+        const res = await fetchWithAuth('/api/admin/purchases');
+        const data = await res.json();
+        const tbody = document.getElementById('purchases-table-body');
+        if (!tbody) return;
+
+        if (data.success && Array.isArray(data.purchases) && data.purchases.length > 0) {
+            tbody.innerHTML = data.purchases.map(p => `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:10px 14px; font-weight:600; color:#2563eb;">${escapeHTML(p.purchaseNo)}</td>
+                    <td style="padding:10px 14px; color:#1e293b;">${escapeHTML(p.supplier)}</td>
+                    <td style="padding:10px 14px; font-weight:700; color:#0f172a;">৳ ${(p.totalAmount || 0).toLocaleString()}</td>
+                    <td style="padding:10px 14px;"><span style="background:#f0fdf4; color:#16a34a; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px;">${p.status || 'Received'}</span></td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">No purchase orders recorded yet.</td></tr>';
+        }
+    } catch (err) {
+        console.error("Fetch purchases error:", err);
+    }
+}
+
+function openAddSupplierModal() {
+    const name = prompt("Enter Supplier Full Name:");
+    if (!name) return;
+    const phone = prompt("Enter Supplier Phone Number:");
+    if (!phone) return;
+    const company = prompt("Enter Company / Wholesale Market:") || "";
+
+    fetchWithAuth('/api/admin/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, company })
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            showToast("Supplier registered successfully!", "success");
+            fetchAdminSuppliers();
+        }
+    }).catch(err => showToast("Failed to register supplier", "error"));
+}

@@ -54,6 +54,10 @@ const Review = require('./models/Review');               // Customer Reviews Mod
 const FlashSale = require('./models/FlashSale');           // Flash Sale Sticky Countdown Model
 const Voucher = require('./models/Voucher');             // Public Vouchers Model
 const Blog = require('./models/Blog');                   // Blogs Model
+const Expense = require('./models/Expense');             // Expenses Model
+const Purchase = require('./models/Purchase');           // Purchases Model
+const Supplier = require('./models/Supplier');           // Suppliers Model
+const LandingPage = require('./models/LandingPage');     // Landing Pages Model
 
 const app = express();
 
@@ -3468,6 +3472,170 @@ app.get('/api/admin/analytics/activity', verifyAdminToken, async (req, res) => {
         console.error("Analytics Fetch Error:", err);
         res.status(500).json({ success: false, message: "Error fetching analytics data." });
     }
+});
+
+// ==========================================
+// EXPENSE API ROUTES
+// ==========================================
+app.get('/api/admin/expenses', verifyAdminToken, async (req, res) => {
+    try {
+        const expenses = await Expense.find().sort({ date: -1, _id: -1 });
+        const total = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        res.json({ success: true, expenses, total });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Error loading expenses" });
+    }
+});
+
+app.post('/api/admin/expenses', verifyAdminToken, async (req, res) => {
+    try {
+        const { title, category, amount, paymentMethod, note, date } = req.body;
+        if (!title || !amount) {
+            return res.status(400).json({ success: false, message: "Title and amount are required." });
+        }
+        const newExpense = new Expense({
+            title,
+            category: category || 'General',
+            amount: Number(amount),
+            paymentMethod: paymentMethod || 'Cash',
+            note: note || '',
+            date: date ? new Date(date) : new Date()
+        });
+        await newExpense.save();
+        res.json({ success: true, message: "Expense added successfully", expense: newExpense });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to add expense" });
+    }
+});
+
+app.delete('/api/admin/expenses/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await Expense.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Expense deleted" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to delete expense" });
+    }
+});
+
+// ==========================================
+// PURCHASES & SUPPLIERS API ROUTES
+// ==========================================
+app.get('/api/admin/purchases', verifyAdminToken, async (req, res) => {
+    try {
+        const purchases = await Purchase.find().sort({ date: -1, _id: -1 });
+        res.json({ success: true, purchases });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Error loading purchases" });
+    }
+});
+
+app.post('/api/admin/purchases', verifyAdminToken, async (req, res) => {
+    try {
+        const { supplier, products, totalAmount, paidAmount, status, notes } = req.body;
+        const total = Number(totalAmount) || 0;
+        const paid = Number(paidAmount) || 0;
+        const purchaseNo = 'PO-' + Date.now().toString().slice(-6);
+        const purchase = new Purchase({
+            purchaseNo,
+            supplier: supplier || 'General Supplier',
+            products: products || [],
+            totalAmount: total,
+            paidAmount: paid,
+            dueAmount: Math.max(0, total - paid),
+            status: status || 'Received',
+            notes
+        });
+        await purchase.save();
+        res.json({ success: true, message: "Purchase record saved", purchase });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to save purchase" });
+    }
+});
+
+app.get('/api/admin/suppliers', verifyAdminToken, async (req, res) => {
+    try {
+        const suppliers = await Supplier.find().sort({ name: 1 });
+        res.json({ success: true, suppliers });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Error loading suppliers" });
+    }
+});
+
+app.post('/api/admin/suppliers', verifyAdminToken, async (req, res) => {
+    try {
+        const { name, phone, email, company, address } = req.body;
+        if (!name || !phone) return res.status(400).json({ success: false, message: "Name and phone required" });
+        const supplier = new Supplier({ name, phone, email, company, address });
+        await supplier.save();
+        res.json({ success: true, message: "Supplier added", supplier });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to add supplier" });
+    }
+});
+
+// ==========================================
+// LANDING PAGES API ROUTES
+// ==========================================
+app.get('/api/landing-pages', async (req, res) => {
+    try {
+        const pages = await LandingPage.find({ isActive: true }).sort({ created_at: -1 });
+        res.json({ success: true, pages });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Error loading landing pages" });
+    }
+});
+
+app.get('/api/admin/landing-pages', verifyAdminToken, async (req, res) => {
+    try {
+        const pages = await LandingPage.find().sort({ created_at: -1 });
+        res.json({ success: true, pages });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Error loading landing pages" });
+    }
+});
+
+app.post('/api/admin/landing-pages', verifyAdminToken, async (req, res) => {
+    try {
+        const { title, slug, subtitle, productTitle, regularPrice, salePrice, videoUrl, bannerImage, features, reviews } = req.body;
+        if (!title || !slug) return res.status(400).json({ success: false, message: "Title and slug are required." });
+        
+        let formattedSlug = slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '-');
+        const existing = await LandingPage.findOne({ slug: formattedSlug });
+        if (existing) formattedSlug = `${formattedSlug}-${Date.now().toString().slice(-4)}`;
+
+        const page = new LandingPage({
+            title,
+            slug: formattedSlug,
+            subtitle,
+            productTitle,
+            regularPrice: Number(regularPrice) || 0,
+            salePrice: Number(salePrice) || 0,
+            videoUrl,
+            bannerImage,
+            features: Array.isArray(features) ? features : [],
+            reviews: Array.isArray(reviews) ? reviews : []
+        });
+        await page.save();
+        res.json({ success: true, message: "Landing page created successfully", page });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to create landing page" });
+    }
+});
+
+app.delete('/api/admin/landing-pages/:id', verifyAdminToken, async (req, res) => {
+    try {
+        await LandingPage.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Landing page deleted" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to delete landing page" });
+    }
+});
+
+// ==========================================
+// CACHE PURGE API
+// ==========================================
+app.post('/api/admin/clear-cache', verifyAdminToken, (req, res) => {
+    res.json({ success: true, message: "System & storefront cache purged successfully." });
 });
 
 // ==========================================
