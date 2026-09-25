@@ -776,10 +776,14 @@ function switchTab(tabName) {
     if (tabName === 'user-tracking') fetchUserTrackingAnalytics();
     if (tabName === 'manage-flash-sale') initFlashSaleTab();
     if (tabName === 'manage-blogs') fetchAdminBlogs();
-    if (tabName === 'admin-settings') initSettingsTab();
+    if (tabName === 'admin-settings' || tabName === 'security') initSettingsTab();
     if (tabName === 'landing-page') fetchAdminLandingPages();
     if (tabName === 'expenses') fetchAdminExpenses();
     if (tabName === 'purchases') { fetchAdminPurchases(); fetchAdminSuppliers(); }
+    if (tabName === 'reports') fetchAdminReports();
+    if (tabName === 'marketing') loadMarketingSettings();
+    if (tabName === 'shipping-settings') loadShippingSettings();
+    if (tabName === 'integrations') loadIntegrationSettings();
 }
 
 // Navigate to Orders tab with a specific filter pre-selected
@@ -4384,7 +4388,7 @@ async function clearSystemCache() {
 // ==========================================================================
 // POS / CREATE QUICK ORDER FEATURE
 // ==========================================================================
-function openPosModal() {
+async function openPosModal() {
     const modal = document.getElementById('pos-modal');
     if (!modal) return;
     
@@ -4392,13 +4396,28 @@ function openPosModal() {
     const prodSelect = document.getElementById('pos-product-select');
     if (prodSelect) {
         prodSelect.innerHTML = '<option value="">-- Choose Product --</option>';
-        if (allProducts && Array.isArray(allProducts)) {
-            allProducts.forEach(p => {
+        let prodList = [];
+        if (typeof currentInventoryProducts !== 'undefined' && Array.isArray(currentInventoryProducts) && currentInventoryProducts.length > 0) {
+            prodList = currentInventoryProducts;
+        } else {
+            try {
+                const res = await fetch('/api/products');
+                const data = await res.json();
+                prodList = Array.isArray(data) ? data : (data.products || []);
+                currentInventoryProducts = prodList;
+            } catch (e) {
+                console.error("Failed to load products for POS", e);
+            }
+        }
+        
+        if (Array.isArray(prodList)) {
+            prodList.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p._id || p.id;
-                opt.textContent = `${p.title || p.name} (৳${p.price})`;
-                opt.dataset.price = p.price;
-                opt.dataset.name = p.title || p.name;
+                const pTitle = p.title || p.name || 'Untitled Product';
+                opt.textContent = `${pTitle} (৳${p.price || 0})`;
+                opt.dataset.price = p.price || 0;
+                opt.dataset.name = pTitle;
                 prodSelect.appendChild(opt);
             });
         }
@@ -4711,27 +4730,146 @@ async function deleteLandingPage(id) {
 // ==========================================================================
 // PURCHASES & SUPPLIERS FEATURES
 // ==========================================================================
+let allSuppliersList = [];
+
 async function fetchAdminSuppliers() {
     try {
         const res = await fetchWithAuth('/api/admin/suppliers');
         const data = await res.json();
         const tbody = document.getElementById('suppliers-table-body');
-        if (!tbody) return;
+        const paySelect = document.getElementById('pay-supplier-select');
+        const poSelect = document.getElementById('po-supplier-select');
 
-        if (data.success && Array.isArray(data.suppliers) && data.suppliers.length > 0) {
-            tbody.innerHTML = data.suppliers.map(s => `
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:10px 14px; font-weight:600; color:#0f172a;">${escapeHTML(s.name)}</td>
-                    <td style="padding:10px 14px; color:#64748b;">${escapeHTML(s.phone)}</td>
-                    <td style="padding:10px 14px; color:#475569;">${escapeHTML(s.company || '-')}</td>
-                    <td style="padding:10px 14px; font-weight:700; color:#dc2626;">৳ ${(s.totalDue || 0).toLocaleString()}</td>
-                </tr>
-            `).join('');
-        } else {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">No suppliers registered yet.</td></tr>';
+        if (data.success && Array.isArray(data.suppliers)) {
+            allSuppliersList = data.suppliers;
+            if (tbody) {
+                if (allSuppliersList.length > 0) {
+                    tbody.innerHTML = allSuppliersList.map(s => `
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:10px 14px; font-weight:600; color:#0f172a;">${escapeHTML(s.name)}</td>
+                            <td style="padding:10px 14px; color:#64748b;">${escapeHTML(s.phone)}</td>
+                            <td style="padding:10px 14px; color:#475569;">${escapeHTML(s.company || '-')}</td>
+                            <td style="padding:10px 14px; font-weight:700; color:#dc2626;">৳ ${(s.totalDue || 0).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">No suppliers registered yet.</td></tr>';
+                }
+            }
+
+            // Populate Supplier dropdowns
+            [paySelect, poSelect].forEach(sel => {
+                if (sel) {
+                    sel.innerHTML = '<option value="">-- Choose Supplier --</option>' + 
+                        allSuppliersList.map(s => `<option value="${escapeHTML(s.name)}" data-due="${s.totalDue || 0}" data-id="${s._id}">${escapeHTML(s.name)} (${escapeHTML(s.company || s.phone)})</option>`).join('');
+                }
+            });
         }
     } catch (err) {
         console.error("Fetch suppliers error:", err);
+    }
+}
+
+function openAddSupplierModal() {
+    const modal = document.getElementById('add-supplier-modal');
+    if (modal) modal.style.display = 'block';
+}
+
+function closeAddSupplierModal() {
+    const modal = document.getElementById('add-supplier-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleAddSupplierSubmit(event) {
+    event.preventDefault();
+    const name = document.getElementById('sup-name')?.value.trim();
+    const phone = document.getElementById('sup-phone')?.value.trim();
+    const company = document.getElementById('sup-company')?.value.trim();
+    const email = document.getElementById('sup-email')?.value.trim();
+    const address = document.getElementById('sup-address')?.value.trim();
+
+    try {
+        const res = await fetchWithAuth('/api/admin/suppliers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, company, email, address })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Supplier registered successfully!", "success");
+            closeAddSupplierModal();
+            document.getElementById('add-supplier-form')?.reset();
+            fetchAdminSuppliers();
+        } else {
+            showToast(data.message || "Failed to add supplier", "error");
+        }
+    } catch (err) {
+        showToast("Error adding supplier", "error");
+    }
+}
+
+function openSupplierPaymentModal() {
+    const modal = document.getElementById('supplier-payment-modal');
+    if (modal) {
+        fetchAdminSuppliers();
+        modal.style.display = 'block';
+    }
+}
+
+function closeSupplierPaymentModal() {
+    const modal = document.getElementById('supplier-payment-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function updateSupplierPaymentDueDisplay() {
+    const sel = document.getElementById('pay-supplier-select');
+    const dueInfo = document.getElementById('pay-supplier-due-info');
+    const dueAmount = document.getElementById('pay-current-due-amount');
+    if (sel && dueInfo && dueAmount) {
+        const opt = sel.options[sel.selectedIndex];
+        if (opt && opt.value) {
+            const due = Number(opt.dataset.due) || 0;
+            dueAmount.textContent = `৳ ${due.toLocaleString()}`;
+            dueInfo.style.display = 'block';
+        } else {
+            dueInfo.style.display = 'none';
+        }
+    }
+}
+
+async function handleSupplierPaymentSubmit(event) {
+    event.preventDefault();
+    const supplierName = document.getElementById('pay-supplier-select')?.value;
+    const amount = Number(document.getElementById('pay-amount')?.value) || 0;
+    const method = document.getElementById('pay-method')?.value;
+    const notes = document.getElementById('pay-notes')?.value.trim();
+
+    if (!supplierName) {
+        showToast("Please select a supplier", "error");
+        return;
+    }
+
+    try {
+        const res = await fetchWithAuth('/api/admin/expenses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: `Supplier Payment: ${supplierName}`,
+                category: 'Supplier Payment',
+                amount: amount,
+                paymentMethod: method,
+                note: notes
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Recorded ৳${amount.toLocaleString()} payment for ${supplierName}`, "success");
+            closeSupplierPaymentModal();
+            fetchAdminSuppliers();
+            fetchAdminExpenses();
+        }
+    } catch (e) {
+        showToast("Failed to record supplier payment", "error");
     }
 }
 
@@ -4759,21 +4897,213 @@ async function fetchAdminPurchases() {
     }
 }
 
-function openAddSupplierModal() {
-    const name = prompt("Enter Supplier Full Name:");
-    if (!name) return;
-    const phone = prompt("Enter Supplier Phone Number:");
-    if (!phone) return;
-    const company = prompt("Enter Company / Wholesale Market:") || "";
+function openAddPurchaseModal() {
+    const modal = document.getElementById('add-purchase-modal');
+    if (modal) {
+        fetchAdminSuppliers();
+        modal.style.display = 'block';
+    }
+}
 
-    fetchWithAuth('/api/admin/suppliers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, company })
-    }).then(res => res.json()).then(data => {
+function closeAddPurchaseModal() {
+    const modal = document.getElementById('add-purchase-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function calcPoTotal() {
+    const qty = Number(document.getElementById('po-qty')?.value) || 1;
+    const cost = Number(document.getElementById('po-unit-cost')?.value) || 0;
+    const totalInput = document.getElementById('po-total-amount');
+    if (totalInput) totalInput.value = qty * cost;
+}
+
+async function handleAddPurchaseSubmit(event) {
+    event.preventDefault();
+    const supplier = document.getElementById('po-supplier-select')?.value;
+    const productName = document.getElementById('po-product-name')?.value.trim();
+    const quantity = Number(document.getElementById('po-qty')?.value) || 1;
+    const unitCost = Number(document.getElementById('po-unit-cost')?.value) || 0;
+    const totalAmount = quantity * unitCost;
+    const paidAmount = Number(document.getElementById('po-paid-amount')?.value) || 0;
+    const notes = document.getElementById('po-notes')?.value.trim();
+
+    try {
+        const res = await fetchWithAuth('/api/admin/purchases', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                supplier,
+                items: [{ productName, quantity, unitCost, totalCost: totalAmount }],
+                totalAmount,
+                paidAmount,
+                notes
+            })
+        });
+        const data = await res.json();
         if (data.success) {
-            showToast("Supplier registered successfully!", "success");
+            showToast("Purchase Order recorded successfully!", "success");
+            closeAddPurchaseModal();
+            document.getElementById('add-purchase-form')?.reset();
+            fetchAdminPurchases();
             fetchAdminSuppliers();
+        } else {
+            showToast(data.message || "Failed to record purchase", "error");
         }
-    }).catch(err => showToast("Failed to register supplier", "error"));
+    } catch (e) {
+        showToast("Error recording purchase order", "error");
+    }
+}
+
+// ==========================================================================
+// REPORTS & ANALYTICS FEATURES
+// ==========================================================================
+async function fetchAdminReports() {
+    try {
+        // Fetch dashboard stats & expenses
+        fetchDashboardStats();
+        fetchAdminExpenses();
+    } catch (e) {
+        console.error("Report fetch error:", e);
+    }
+}
+
+// ==========================================================================
+// MARKETING & PIXELS CONFIG
+// ==========================================================================
+async function loadMarketingSettings() {
+    try {
+        const res = await fetchWithAuth('/api/admin/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            const s = data.settings;
+            if (document.getElementById('fb-pixel-id')) document.getElementById('fb-pixel-id').value = s.fb_pixel_id || '';
+            if (document.getElementById('fb-capi-token')) document.getElementById('fb-capi-token').value = s.fb_capi_token || '';
+            if (document.getElementById('ga4-id')) document.getElementById('ga4-id').value = s.ga4_id || '';
+            if (document.getElementById('gtm-id')) document.getElementById('gtm-id').value = s.gtm_id || '';
+            if (document.getElementById('tiktok-pixel-id')) document.getElementById('tiktok-pixel-id').value = s.tiktok_pixel_id || '';
+        }
+    } catch (e) {
+        console.error("Failed to load marketing settings", e);
+    }
+}
+
+async function saveMarketingSettings(event) {
+    if (event) event.preventDefault();
+    const settings = {
+        fb_pixel_id: document.getElementById('fb-pixel-id')?.value.trim() || '',
+        fb_capi_token: document.getElementById('fb-capi-token')?.value.trim() || '',
+        ga4_id: document.getElementById('ga4-id')?.value.trim() || '',
+        gtm_id: document.getElementById('gtm-id')?.value.trim() || '',
+        tiktok_pixel_id: document.getElementById('tiktok-pixel-id')?.value.trim() || ''
+    };
+
+    try {
+        const res = await fetchWithAuth('/api/admin/settings/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Marketing pixels & tracking configuration saved!", "success");
+        } else {
+            showToast("Failed to save marketing pixels", "error");
+        }
+    } catch (e) {
+        showToast("Error saving marketing pixels", "error");
+    }
+}
+
+// ==========================================================================
+// SHIPPING & DELIVERY CHARGES CONFIG
+// ==========================================================================
+async function loadShippingSettings() {
+    try {
+        const res = await fetchWithAuth('/api/admin/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            const s = data.settings;
+            const insideDhaka = document.getElementById('shipping-inside-dhaka');
+            const outsideDhaka = document.getElementById('shipping-outside-dhaka');
+            const subAreas = document.getElementById('shipping-sub-areas');
+            const freeMin = document.getElementById('shipping-free-min');
+            if (insideDhaka && s.shipping_inside_dhaka) insideDhaka.value = s.shipping_inside_dhaka;
+            if (outsideDhaka && s.shipping_outside_dhaka) outsideDhaka.value = s.shipping_outside_dhaka;
+            if (subAreas && s.shipping_sub_areas) subAreas.value = s.shipping_sub_areas;
+            if (freeMin && s.shipping_free_min) freeMin.value = s.shipping_free_min;
+        }
+    } catch (e) {
+        console.error("Failed to load shipping settings", e);
+    }
+}
+
+async function saveShippingSettings(event) {
+    if (event) event.preventDefault();
+    const settings = {
+        shipping_inside_dhaka: document.getElementById('shipping-inside-dhaka')?.value || '70',
+        shipping_outside_dhaka: document.getElementById('shipping-outside-dhaka')?.value || '130',
+        shipping_sub_areas: document.getElementById('shipping-sub-areas')?.value || '100',
+        shipping_free_min: document.getElementById('shipping-free-min')?.value || '3000'
+    };
+
+    try {
+        const res = await fetchWithAuth('/api/admin/settings/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Shipping zones and delivery rates updated!", "success");
+        } else {
+            showToast("Failed to update shipping rates", "error");
+        }
+    } catch (e) {
+        showToast("Error updating shipping rates", "error");
+    }
+}
+
+// ==========================================================================
+// INTEGRATIONS CONFIG
+// ==========================================================================
+async function loadIntegrationSettings() {
+    try {
+        const res = await fetchWithAuth('/api/admin/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            const s = data.settings;
+            if (document.getElementById('steadfast-api-key')) document.getElementById('steadfast-api-key').value = s.steadfast_api_key || '';
+            if (document.getElementById('steadfast-secret-key')) document.getElementById('steadfast-secret-key').value = s.steadfast_secret_key || '';
+            if (document.getElementById('sms-api-key')) document.getElementById('sms-api-key').value = s.sms_api_key || '';
+            if (document.getElementById('sms-sender-id')) document.getElementById('sms-sender-id').value = s.sms_sender_id || 'AVARONI';
+        }
+    } catch (e) {
+        console.error("Failed to load integration settings", e);
+    }
+}
+
+async function saveIntegrationSettings(type, event) {
+    if (event) event.preventDefault();
+    let settings = {};
+    if (type === 'steadfast') {
+        settings.steadfast_api_key = document.getElementById('steadfast-api-key')?.value || '';
+        settings.steadfast_secret_key = document.getElementById('steadfast-secret-key')?.value || '';
+    } else if (type === 'sms') {
+        settings.sms_api_key = document.getElementById('sms-api-key')?.value || '';
+        settings.sms_sender_id = document.getElementById('sms-sender-id')?.value || 'AVARONI';
+    }
+
+    try {
+        const res = await fetchWithAuth('/api/admin/settings/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`${type.toUpperCase()} credentials saved successfully!`, "success");
+        }
+    } catch (e) {
+        showToast("Error saving configuration", "error");
+    }
 }

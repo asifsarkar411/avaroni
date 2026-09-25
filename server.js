@@ -557,9 +557,13 @@ const registerLimiter = rateLimit({
 // 1. REGISTER
 app.post('/api/register', registerLimiter, async (req, res) => {
     try {
-        const username = sanitize(req.body.username);
-        const email = sanitize(req.body.email);
+        const email = String(sanitize(req.body.email) || '').trim().toLowerCase();
+        const username = String(sanitize(req.body.username) || (email ? email.split('@')[0] : 'Admin')).trim();
         const password = req.body.password; 
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required." });
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: "Email already exists" });
@@ -576,14 +580,12 @@ app.post('/api/register', registerLimiter, async (req, res) => {
 // 2. LOGIN (Password Check & 2FA Trigger)
 app.post('/api/login', authLimiter, async (req, res) => {
     try {
-        const rawEmail = sanitize(req.body.email || '');
-        const password = req.body.password || ''; 
+        const email = String(sanitize(req.body.email) || '').trim().toLowerCase();
+        const password = String(req.body.password || ''); 
 
-        if (!rawEmail || !password) {
+        if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required." });
         }
-
-        const email = rawEmail.trim().toLowerCase();
 
         // Case-insensitive email search
         const user = await User.findOne({ email: new RegExp(`^${email.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') });
