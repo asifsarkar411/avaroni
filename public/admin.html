@@ -1012,6 +1012,463 @@
             display: block;
         }
 
+    
+        /* ========================================================= */
+        /* EXECUTIVE THEME & COLORFUL COMPONENT DESIGN SYSTEM        */
+        /* ========================================================= */
+        :root {
+            --primary: #0d47a1;
+            --primary-hover: #082d6b;
+            --primary-light: rgba(13, 71, 161, 0.08);
+            --primary-accent: #f59e0b;
+            --sidebar-bg: #091533;
+            --sidebar-sub-bg: #060e24;
+            --sidebar-hover: #13234d;
+            --sidebar-text: #94a3b8;
+            --sidebar-text-active: #ffffff;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --bg-main: #f4f6fb;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --border-focus: #3b82f6;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.03);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+            --shadow-lg: 0 16px 36px rgba(0,0,0,0.09);
+            --shadow-hover: 0 14px 30px rgba(0,0,0,0.08);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        /* Rich Colorful Buttons */
+        .btn, .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+            color: #ffffff !important;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 13.5px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(13, 71, 161, 0.25);
+        }
+
+        .btn:hover, .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 71, 161, 0.35);
+            background: linear-gradient(135deg, #082d6b 0%, #0d47a1 100%);
+            color: #ffffff;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25) !important;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25) !important;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35) !important;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25) !important;
+        }
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35) !important;
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25) !important;
+        }
+        .btn-purple:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35) !important;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        .btn-outline-primary {
+            background: transparent !important;
+            color: var(--primary) !important;
+            border: 1.5px solid var(--primary) !important;
+            box-shadow: none !important;
+        }
+        .btn-outline-primary:hover {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+        }
+
+        /* Order Status Colorful Badges */
+        .badge-pending {
+            background: #fffbeb !important;
+            color: #b45309 !important;
+            border: 1px solid #fde68a !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .badge-confirmed {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .badge-processing {
+            background: #eef2ff !important;
+            color: #4338ca !important;
+            border: 1px solid #c7d2fe !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .badge-shipped {
+            background: #faf5ff !important;
+            color: #7e22ce !important;
+            border: 1px solid #e9d5ff !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .badge-delivered {
+            background: #ecfdf5 !important;
+            color: #047857 !important;
+            border: 1px solid #a7f3d0 !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .badge-cancelled {
+            background: #fef2f2 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fecaca !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .badge-refunded {
+            background: #f8fafc !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        /* Colorful Stat Cards in Dashboard */
+        .stat-card.c-blue {
+            border-left: 4px solid #2563eb;
+        }
+        .stat-card.c-green {
+            border-left: 4px solid #10b981;
+        }
+        .stat-card.c-amber {
+            border-left: 4px solid #f59e0b;
+        }
+        .stat-card.c-purple {
+            border-left: 4px solid #8b5cf6;
+        }
+        .stat-card.c-rose {
+            border-left: 4px solid #ef4444;
+        }
+        .stat-card.c-cyan {
+            border-left: 4px solid #06b6d4;
+        }
+
+        .stat-icon.icon-blue {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+        }
+        .stat-icon.icon-green {
+            background: #ecfdf5 !important;
+            color: #10b981 !important;
+        }
+        .stat-icon.icon-yellow {
+            background: #fffbeb !important;
+            color: #f59e0b !important;
+        }
+        .stat-icon.icon-purple {
+            background: #f5f3ff !important;
+            color: #8b5cf6 !important;
+        }
+        .stat-icon.icon-pink {
+            background: #fdf2f8 !important;
+            color: #ec4899 !important;
+        }
+
+        /* Panel Boxes & Form Cards */
+        .panel-box, .form-container, .form-glass-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 26px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            margin-bottom: 25px;
+            transition: all 0.25s ease;
+        }
+
+        .panel-box:hover, .form-glass-card:hover {
+            box-shadow: 0 8px 28px rgba(0,0,0,0.05);
+        }
+
+        .panel-header h2, .panel-header h3 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Inputs Polish */
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 7px;
+            color: #334155;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="date"], input[type="datetime-local"], select, textarea {
+            width: 100%;
+            padding: 11px 15px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            color: var(--text-dark);
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 3.5px rgba(13, 71, 161, 0.12);
+        }
+
+        /* Table Modernization */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+        }
+
+        thead tr th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 14px 18px;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        tbody tr td {
+            padding: 14px 18px;
+            font-size: 13.5px;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            background: #ffffff;
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-responsive {
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        /* Action Buttons Inside Tables */
+        .action-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            margin: 0 2px;
+        }
+        .action-icon-btn.view-btn {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+        .action-icon-btn.view-btn:hover {
+            background: #2563eb;
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        .action-icon-btn.edit-btn {
+            background: #ecfdf5;
+            color: #059669;
+        }
+        .action-icon-btn.edit-btn:hover {
+            background: #059669;
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        .action-icon-btn.delete-btn {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .action-icon-btn.delete-btn:hover {
+            background: #dc2626;
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        .action-icon-btn.print-btn {
+            background: #f5f3ff;
+            color: #7c3aed;
+        }
+        .action-icon-btn.print-btn:hover {
+            background: #7c3aed;
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        /* Order Filter Pills */
+        .order-filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 15px 0 20px 0;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 15px;
+        }
+
+        .order-filter-btn {
+            padding: 8px 16px;
+            border-radius: 24px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+
+        .order-filter-btn:hover {
+            background: #f8fafc;
+            color: var(--primary);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        .order-filter-btn.active {
+            background: linear-gradient(135deg, #0d47a1, #1565c0) !important;
+            color: #ffffff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 4px 12px rgba(13, 71, 161, 0.3) !important;
+        }
+
+        /* Section Headings */
+        .content-header {
+            margin-bottom: 24px;
+        }
+        .content-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .content-header p {
+            font-size: 13.5px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
     </style>
 </head>
 <body>
@@ -1574,13 +2031,17 @@
                         </div>
 
                         <!-- Status Filter Pills -->
-                        <div class="order-filter-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 15px 0 20px 0; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                            <button class="order-filter-btn active" data-status="ALL" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #111; background: #111; color: white; font-weight: 700; font-size: 13px; cursor: pointer;">All (<span id="cnt-all">0</span>)</button>
-                            <button class="order-filter-btn" data-status="Pending" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #ffeeba; background: #fff3cd; color: #856404; font-weight: 700; font-size: 13px; cursor: pointer;">Pending (<span id="cnt-pending">0</span>)</button>
-                            <button class="order-filter-btn" data-status="Approved" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #c3e6cb; background: #d4edda; color: #155724; font-weight: 700; font-size: 13px; cursor: pointer;">Approved (<span id="cnt-approved">0</span>)</button>
-                            <button class="order-filter-btn" data-status="Processing" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #b8daff; background: #d1ecf1; color: #0c5460; font-weight: 700; font-size: 13px; cursor: pointer;">Processing (<span id="cnt-processing">0</span>)</button>
-                            <button class="order-filter-btn" data-status="Delivered" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #b2f2bb; background: #e6fcf5; color: #0ca678; font-weight: 700; font-size: 13px; cursor: pointer;">Delivered (<span id="cnt-delivered">0</span>)</button>
-                            <button class="order-filter-btn" data-status="Cancelled" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #f5c6cb; background: #f8d7da; color: #721c24; font-weight: 700; font-size: 13px; cursor: pointer;">Cancelled (<span id="cnt-cancelled">0</span>)</button>
+                        <div class="order-filter-pills">
+                            <button class="order-filter-btn active" onclick="goToOrdersTab('ALL')" data-status="ALL"><i class="fas fa-list"></i> All (<span id="cnt-all">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Incomplete')" data-status="Incomplete"><i class="fas fa-exclamation-triangle" style="color:#64748b;"></i> Incomplete (<span id="cnt-incomplete">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Pending')" data-status="Pending"><i class="fas fa-clock" style="color:#f59e0b;"></i> Pending (<span id="cnt-pending">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Confirmed')" data-status="Confirmed"><i class="fas fa-check" style="color:#2563eb;"></i> Confirmed (<span id="cnt-confirmed">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Processing')" data-status="Processing"><i class="fas fa-cog fa-spin" style="color:#6366f1;"></i> Processing (<span id="cnt-processing">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Packed')" data-status="Packed"><i class="fas fa-box" style="color:#8b5cf6;"></i> Packed (<span id="cnt-packed">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Shipped')" data-status="Shipped"><i class="fas fa-shipping-fast" style="color:#7e22ce;"></i> Shipped (<span id="cnt-shipped">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Delivered')" data-status="Delivered"><i class="fas fa-check-double" style="color:#10b981;"></i> Delivered (<span id="cnt-delivered">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Cancelled')" data-status="Cancelled"><i class="fas fa-times" style="color:#ef4444;"></i> Cancelled (<span id="cnt-cancelled">0</span>)</button>
+                            <button class="order-filter-btn" onclick="goToOrdersTab('Refunded')" data-status="Refunded"><i class="fas fa-undo" style="color:#64748b;"></i> Refunded (<span id="cnt-refunded">0</span>)</button>
                         </div>
 
                         <!-- Desktop Table View -->
@@ -2234,7 +2695,10 @@
                                 </tbody>
                             </table>
                         </div>
-                         <!-- DEDICATED HOMEPAGE POPUP TAB PANEL -->
+                    </div>
+                </div>
+
+                <!-- DEDICATED HOMEPAGE POPUP TAB PANEL -->
                 <div id="manage-popup-tab" class="tab-content">
                     <div class="panel-box" data-aos="fade-up" style="margin-bottom: 25px;">
                         <div class="panel-header">

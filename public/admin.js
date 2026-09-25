@@ -1092,15 +1092,19 @@ async function fetchOrders() {
 }
 
 function updateOrderCounts(orders) {
-    const counts = { ALL: orders.length, Pending: 0, Approved: 0, Processing: 0, Delivered: 0, Cancelled: 0 };
+    const counts = { ALL: orders.length, Incomplete: 0, Pending: 0, Confirmed: 0, Processing: 0, Packed: 0, Shipped: 0, Delivered: 0, Cancelled: 0, Refunded: 0 };
     orders.forEach(o => {
-        const st = o.status || 'Pending';
+        let st = o.status || 'Pending';
+        if (st === 'Approved') st = 'Confirmed';
         if (counts[st] !== undefined) counts[st]++;
     });
 
-    ['all','pending','approved','processing','delivered','cancelled'].forEach(key => {
+    ['all', 'incomplete', 'pending', 'confirmed', 'processing', 'packed', 'shipped', 'delivered', 'cancelled', 'refunded'].forEach(key => {
         const el = document.getElementById(`cnt-${key}`);
-        if (el) el.textContent = counts[key === 'all' ? 'ALL' : key.charAt(0).toUpperCase() + key.slice(1)];
+        if (el) {
+            const mapKey = key === 'all' ? 'ALL' : key.charAt(0).toUpperCase() + key.slice(1);
+            el.textContent = counts[mapKey] || 0;
+        }
     });
 }
 
@@ -1189,28 +1193,41 @@ function renderFilteredOrders() {
     }
 
     pageOrders.forEach(order => {
-        const date = new Date(order.orderDate).toLocaleString();
+        const date = new Date(order.orderDate).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
         const itemsList = (order.cartItems || []).map(item => `${item.name} (x${item.quantity})`).join(', ');
         const displayOrderNum = order.orderNumber || 'N/A'; 
         const orderStatus = order.status || 'Pending';
-        let statusBadge = `<span class="badge badge-warning">Pending</span>`;
-        if (orderStatus === 'Processing') {
-            statusBadge = `<span class="badge badge-primary" style="background:#dbeafe; color:#1e40af;">Processing</span>`;
-        } else if (orderStatus === 'Approved') {
-            statusBadge = `<span class="badge badge-success">Approved</span>`;
+        
+        let statusBadge = `<span class="badge-pending"><i class="fas fa-clock"></i> Pending</span>`;
+        if (orderStatus === 'Confirmed' || orderStatus === 'Approved') {
+            statusBadge = `<span class="badge-confirmed"><i class="fas fa-check-circle"></i> Confirmed</span>`;
+        } else if (orderStatus === 'Processing') {
+            statusBadge = `<span class="badge-processing"><i class="fas fa-cog fa-spin"></i> Processing</span>`;
+        } else if (orderStatus === 'Packed') {
+            statusBadge = `<span class="badge-packed"><i class="fas fa-box"></i> Packed</span>`;
+        } else if (orderStatus === 'Shipped') {
+            statusBadge = `<span class="badge-shipped"><i class="fas fa-shipping-fast"></i> Shipped</span>`;
         } else if (orderStatus === 'Delivered') {
-            statusBadge = `<span class="badge badge-success" style="background:#bbf7d0; color:#166534;">Delivered</span>`;
+            statusBadge = `<span class="badge-delivered"><i class="fas fa-check-double"></i> Delivered</span>`;
         } else if (orderStatus === 'Cancelled') {
-            statusBadge = `<span class="badge badge-danger">Cancelled</span>`;
+            statusBadge = `<span class="badge-cancelled"><i class="fas fa-times-circle"></i> Cancelled</span>`;
+        } else if (orderStatus === 'Refunded') {
+            statusBadge = `<span class="badge-refunded"><i class="fas fa-undo"></i> Refunded</span>`;
+        } else if (orderStatus === 'Incomplete') {
+            statusBadge = `<span class="badge-incomplete"><i class="fas fa-exclamation-triangle"></i> Incomplete</span>`;
         }
 
         const statusSelectHtml = `
-            <select onchange="handleOrderStatusDropdownChange(this, '${order._id}', '${orderStatus}')" class="order-status-select" style="padding:4px 8px; font-size:12px; border-radius:6px; border:1px solid #e2e8f0; outline:none; background:#f8fafc; color:#475569; font-weight:500; cursor:pointer;">
+            <select onchange="handleOrderStatusDropdownChange(this, '${order._id}', '${orderStatus}')" class="order-status-select" style="padding:5px 10px; font-size:12px; border-radius:8px; border:1.5px solid #cbd5e1; outline:none; background:#ffffff; color:#1e293b; font-weight:600; cursor:pointer;">
                 <option value="Pending" ${orderStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
-                <option value="Approved" ${orderStatus === 'Approved' ? 'selected' : ''}>✅ Approved</option>
+                <option value="Confirmed" ${orderStatus === 'Confirmed' || orderStatus === 'Approved' ? 'selected' : ''}>✅ Confirmed</option>
                 <option value="Processing" ${orderStatus === 'Processing' ? 'selected' : ''}>⚙️ Processing</option>
-                <option value="Delivered" ${orderStatus === 'Delivered' ? 'selected' : ''}>📦 Delivered</option>
+                <option value="Packed" ${orderStatus === 'Packed' ? 'selected' : ''}>📦 Packed</option>
+                <option value="Shipped" ${orderStatus === 'Shipped' ? 'selected' : ''}>🚚 Shipped</option>
+                <option value="Delivered" ${orderStatus === 'Delivered' ? 'selected' : ''}>🎉 Delivered</option>
                 <option value="Cancelled" ${orderStatus === 'Cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                <option value="Refunded" ${orderStatus === 'Refunded' ? 'selected' : ''}>🔄 Refunded</option>
+                <option value="Incomplete" ${orderStatus === 'Incomplete' ? 'selected' : ''}>⚠️ Incomplete</option>
             </select>
         `;
 
